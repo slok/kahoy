@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/slok/kahoy/internal/log"
 )
 
 var (
@@ -12,9 +16,57 @@ var (
 	Version = "dev"
 )
 
+// GlobalConfig is the configuration shared by all the commands.
+type GlobalConfig struct {
+	Logger log.Logger
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
+}
+
 // Run runs the main application.
 func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.Writer) error {
-	fmt.Fprintf(stdout, "Hellow world! %s", Version)
+	// Cmd configuration.
+	config, err := NewCmdConfig(args[1:])
+	if err != nil {
+		return fmt.Errorf("could not load command configuration")
+	}
+
+	// Set up logger.
+	logrusLog := logrus.New()
+	logrusLog.Out = stderr // By default logger goes to stderr (so it can split stdout prints).
+	logrusLogEntry := logrus.NewEntry(logrusLog)
+	if config.Global.Debug {
+		logrusLogEntry.Logger.SetLevel(logrus.DebugLevel)
+	}
+	logger := log.NewLogrus(logrusLogEntry).WithValues(log.Kv{
+		"app":     "kahoy",
+		"version": Version,
+	})
+
+	// Global configuration.
+	gConfig := GlobalConfig{
+		Logger: logger,
+		Stdin:  stdin,
+		Stdout: stdout,
+		Stderr: stderr,
+	}
+
+	// Mapping for each command func and select the correct one.
+	commands := map[string]func(ctx context.Context, config CmdConfig, globalConfig GlobalConfig) error{
+		CmdArgApply: RunApply,
+	}
+	cmd, ok := commands[config.Command]
+	if !ok {
+		return fmt.Errorf("command %q is not valid", config.Command)
+	}
+
+	// Run the command.
+	err = cmd(ctx, *config, gConfig)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
