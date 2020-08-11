@@ -13,6 +13,7 @@ import (
 
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
+	storagefs "github.com/slok/kahoy/internal/storage/fs"
 )
 
 // YAMLObjectSerializer handles YAML based raw data, by decoding and encoding from/into
@@ -60,3 +61,6 @@ func (y YAMLObjectSerializer) DecodeObjects(ctx context.Context, raw []byte) ([]
 
 	return res, nil
 }
+
+// Interface assertion.
+var _ storagefs.K8sObjectDecoder = YAMLObjectSerializer{}
