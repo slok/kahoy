@@ -3,9 +3,10 @@ package model_test
 import (
 	"testing"
 
-	"github.com/slok/kahoy/internal/model"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	"github.com/slok/kahoy/internal/model"
 )
 
 func TestGenResourceID(t *testing.T) {
