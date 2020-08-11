@@ -11,7 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func TestYAMLObjectLoaderLoadObjects(t *testing.T) {
+func TestYAMLObjectDecoderDecodeObjects(t *testing.T) {
 	// Helper alias for verbosity of unstructured internal maps.
 	type (
 		tm = map[string]interface{}
@@ -166,8 +166,8 @@ spec:
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			loader := kubernetes.NewYAMLObjectLoader(log.Noop)
-			gotObjs, err := loader.LoadObjects(context.TODO(), []byte(test.rawObjects))
+			loader := kubernetes.NewYAMLObjectSerializer(log.Noop)
+			gotObjs, err := loader.DecodeObjects(context.TODO(), []byte(test.rawObjects))
 
 			if test.expErr {
 				assert.Error(err)
