@@ -20,7 +20,16 @@ type ResourceRepository interface {
 	ListResources(ctx context.Context, opts ResourceListOpts) (*ResourceList, error)
 }
 
+// GroupListOpts are the options for Group list action on the repository.
+type GroupListOpts struct{}
+
+// GroupList is a list of groups.
+type GroupList struct {
+	Items []model.Group
+}
+
 // GroupRepository knows to retrieve resource groups.
 type GroupRepository interface {
 	GetGroup(ctx context.Context, id string) (*model.Group, error)
+	ListGroups(ctx context.Context, opts GroupListOpts) (*GroupList, error)
 }

@@ -28,7 +28,7 @@ func NewResourceRepository(resources map[string]model.Resource) ResourceReposito
 	}
 }
 
-// GetResource satisfies storage..ResourceRepository interface.
+// GetResource satisfies storage.ResourceRepository interface.
 func (r ResourceRepository) GetResource(_ context.Context, id string) (*model.Resource, error) {
 	resource, ok := r.resources[id]
 	if !ok {
@@ -38,7 +38,7 @@ func (r ResourceRepository) GetResource(_ context.Context, id string) (*model.Re
 	return &resource, nil
 }
 
-// ListResources satisfies storage..ResourceRepository interface.
+// ListResources satisfies storage.ResourceRepository interface.
 func (r ResourceRepository) ListResources(_ context.Context, _ storage.ResourceListOpts) (*storage.ResourceList, error) {
 	ress := make([]model.Resource, 0, len(r.resources))
 	for _, res := range r.resources {
@@ -77,4 +77,16 @@ func (g GroupRepository) GetGroup(_ context.Context, id string) (*model.Group, e
 	}
 
 	return &group, nil
+}
+
+// ListGroups satisfies storage.GroupRepository interface.
+func (g GroupRepository) ListGroups(ctx context.Context, opts storage.GroupListOpts) (*storage.GroupList, error) {
+	groups := make([]model.Group, 0, len(g.groups))
+	for _, group := range g.groups {
+		groups = append(groups, group)
+	}
+
+	return &storage.GroupList{
+		Items: groups,
+	}, nil
 }
