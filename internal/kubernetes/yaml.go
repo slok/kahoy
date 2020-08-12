@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"regexp"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
 
 	"github.com/slok/kahoy/internal/log"
@@ -19,16 +21,18 @@ import (
 // YAMLObjectSerializer handles YAML based raw data, by decoding and encoding from/into
 // Kubernetes model objects.
 type YAMLObjectSerializer struct {
-	serializer runtime.Serializer
-	logger     log.Logger
+	encoder runtime.Encoder
+	decoder runtime.Decoder
+	logger  log.Logger
 }
 
 // NewYAMLObjectSerializer returns a new YAMLNewYAMLObjectSerializer.
 func NewYAMLObjectSerializer(logger log.Logger) YAMLObjectSerializer {
 	return YAMLObjectSerializer{
 		// Create a unstructured yaml decoder (we don't know what type of objects are we loading).
-		serializer: yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme),
-		logger:     logger.WithValues(log.Kv{"app-svc": "kubernetes.YAMLObjectSerializer"}),
+		encoder: json.NewYAMLSerializer(json.DefaultMetaFactory, nil, nil),
+		decoder: yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme),
+		logger:  logger.WithValues(log.Kv{"app-svc": "kubernetes.YAMLObjectSerializer"}),
 	}
 }
 
@@ -52,7 +56,7 @@ func (y YAMLObjectSerializer) DecodeObjects(ctx context.Context, raw []byte) ([]
 			continue
 		}
 
-		obj, _, err := y.serializer.Decode([]byte(rawObj), nil, nil)
+		obj, _, err := y.decoder.Decode([]byte(rawObj), nil, nil)
 		if err != nil {
 			return nil, fmt.Errorf("could not decode kubernetes object %w", err)
 		}
@@ -60,6 +64,31 @@ func (y YAMLObjectSerializer) DecodeObjects(ctx context.Context, raw []byte) ([]
 	}
 
 	return res, nil
+}
+
+// EncodeObjects encodes Kubernetes objects into YAML data, supports multiple objects on the same
+// YAML raw data.
+func (y YAMLObjectSerializer) EncodeObjects(ctx context.Context, objs []model.K8sObject) ([]byte, error) {
+	var buffer bytes.Buffer
+	for _, obj := range objs {
+		if obj == nil {
+			continue
+		}
+
+		_, _ = buffer.WriteString("---\n")
+
+		err := y.encoder.Encode(obj, &buffer)
+		if err != nil {
+			return nil, fmt.Errorf("could not encode %s/%s kubernetes object: %w", obj.GetNamespace(), obj.GetName(), err)
+		}
+	}
+
+	data, err := ioutil.ReadAll(&buffer)
+	if err != nil {
+		return nil, fmt.Errorf("could not read data from buffer: %w", err)
+	}
+
+	return data, nil
 }
 
 // Interface assertion.
