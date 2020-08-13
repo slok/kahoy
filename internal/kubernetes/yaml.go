@@ -15,6 +15,7 @@ import (
 
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
+	"github.com/slok/kahoy/internal/resource/kubectl"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
 )
 
@@ -25,6 +26,12 @@ type YAMLObjectSerializer struct {
 	decoder runtime.Decoder
 	logger  log.Logger
 }
+
+// Interface assertion.
+var (
+	_ storagefs.K8sObjectDecoder = YAMLObjectSerializer{}
+	_ kubectl.K8sObjectEncoder   = YAMLObjectSerializer{}
+)
 
 // NewYAMLObjectSerializer returns a new YAMLNewYAMLObjectSerializer.
 func NewYAMLObjectSerializer(logger log.Logger) YAMLObjectSerializer {
@@ -90,6 +97,3 @@ func (y YAMLObjectSerializer) EncodeObjects(ctx context.Context, objs []model.K8
 
 	return data, nil
 }
-
-// Interface assertion.
-var _ storagefs.K8sObjectDecoder = YAMLObjectSerializer{}
