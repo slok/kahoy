@@ -15,6 +15,18 @@ func newKubectlCmdArgs(opts []kubectlCmdOption) []string {
 
 type kubectlCmdOption func([]string) []string
 
+func withApplyCmd() kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, "apply")
+	}
+}
+
+func withDeleteCmd() kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, "delete")
+	}
+}
+
 func withDiffCmd() kubectlCmdOption {
 	return func(args []string) []string {
 		return append(args, "diff")
