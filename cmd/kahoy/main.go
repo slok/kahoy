@@ -29,20 +29,27 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	// Cmd configuration.
 	config, err := NewCmdConfig(args[1:])
 	if err != nil {
-		return fmt.Errorf("could not load command configuration")
+		return fmt.Errorf("could not load command configuration: %w", err)
 	}
 
 	// Set up logger.
-	logrusLog := logrus.New()
-	logrusLog.Out = stderr // By default logger goes to stderr (so it can split stdout prints).
-	logrusLogEntry := logrus.NewEntry(logrusLog)
-	if config.Global.Debug {
-		logrusLogEntry.Logger.SetLevel(logrus.DebugLevel)
+	var logger log.Logger = log.Noop
+	if !config.Global.NoLog {
+		// If not logger disabled use logrus logger.
+		logrusLog := logrus.New()
+		logrusLog.Out = stderr // By default logger goes to stderr (so it can split stdout prints).
+		logrusLogEntry := logrus.NewEntry(logrusLog)
+		if config.Global.Debug {
+			logrusLogEntry.Logger.SetLevel(logrus.DebugLevel)
+		}
+		logger = log.NewLogrus(logrusLogEntry)
 	}
-	logger := log.NewLogrus(logrusLogEntry).WithValues(log.Kv{
+
+	logger = logger.WithValues(log.Kv{
 		"app":     "kahoy",
 		"version": Version,
 	})
+	logger.Debugf("debug level is enabled") // Will log only when debug enabled.
 
 	// Global configuration.
 	gConfig := GlobalConfig{
