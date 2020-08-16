@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 
 	"github.com/fatih/color"
 
@@ -17,11 +18,12 @@ type pfunc = func(format string, a ...interface{}) string
 type dryRunManager struct {
 	out io.Writer
 
-	redSprintf       pfunc
-	yellowSprintf    pfunc
-	whiteBoldSprintf pfunc
-	cyanSprintf      pfunc
-	greenSprintf     pfunc
+	redSprintf        pfunc
+	yellowBoldSprintf pfunc
+	whiteBoldSprintf  pfunc
+	cyanSprintf       pfunc
+	greenSprintf      pfunc
+	blueSprintf       pfunc
 }
 
 // NewDryRunManager returns a resource manager that dry runs the changes
@@ -32,36 +34,41 @@ func NewDryRunManager(disableColor bool, out io.Writer) Manager {
 	}
 
 	redSprintf := fmt.Sprintf
-	yellowSprintf := fmt.Sprintf
+	yellowBoldSprintf := fmt.Sprintf
 	whiteBoldSprintf := fmt.Sprintf
 	cyanSprintf := fmt.Sprintf
 	greenSprintf := fmt.Sprintf
+	blueSprintf := fmt.Sprintf
 	if !disableColor {
 		color.NoColor = false // This is required because Color infers and uses globals, in our case we manage with explicit flag and force this.
 		redSprintf = color.New(color.FgRed).Sprintf
-		yellowSprintf = color.New(color.FgYellow).Sprintf
+		yellowBoldSprintf = color.New(color.FgYellow, color.Bold).Sprintf
 		whiteBoldSprintf = color.New(color.FgWhite, color.Bold).Sprintf
 		cyanSprintf = color.New(color.FgCyan).Sprintf
 		greenSprintf = color.New(color.FgGreen).Sprintf
+		blueSprintf = color.New(color.FgBlue).Sprintf
 	}
 
 	return dryRunManager{
 		out: out,
 
-		redSprintf:       redSprintf,
-		yellowSprintf:    yellowSprintf,
-		whiteBoldSprintf: whiteBoldSprintf,
-		cyanSprintf:      cyanSprintf,
-		greenSprintf:     greenSprintf,
+		redSprintf:        redSprintf,
+		yellowBoldSprintf: yellowBoldSprintf,
+		whiteBoldSprintf:  whiteBoldSprintf,
+		cyanSprintf:       cyanSprintf,
+		greenSprintf:      greenSprintf,
+		blueSprintf:       blueSprintf,
 	}
 }
 
 func (d dryRunManager) Apply(ctx context.Context, resources []model.Resource) error {
+	d.sort(resources)
 	d.printTree("Apply", resources, d.greenSprintf)
 	return nil
 }
 
 func (d dryRunManager) Delete(ctx context.Context, resources []model.Resource) error {
+	d.sort(resources)
 	d.printTree("Delete", resources, d.redSprintf)
 	return nil
 }
@@ -78,7 +85,7 @@ func (d dryRunManager) printTree(title string, resources []model.Resource, print
 	}
 
 	c := 0
-	d.printf("\n⯈ %s\n", d.whiteBoldSprintf(title))
+	d.printf("\n⯈ %s %s\n", d.whiteBoldSprintf(title), d.blueSprintf("(%d resources)", len(resources)))
 	for groupID, ress := range resByGroup {
 		// Print groups.
 		joinSymbol := `├── `
@@ -87,7 +94,7 @@ func (d dryRunManager) printTree(title string, resources []model.Resource, print
 			joinSymbol = `└── `
 			groupSymbol = ` `
 		}
-		d.printf("%s⯈ %s\n", joinSymbol, d.yellowSprintf(groupID))
+		d.printf("%s⯈ %s %s\n", joinSymbol, d.yellowBoldSprintf(groupID), d.blueSprintf("(%d resources)", len(ress)))
 
 		// Print resources.
 		for i, res := range ress {
@@ -105,4 +112,11 @@ func (d dryRunManager) printTree(title string, resources []model.Resource, print
 
 func (d dryRunManager) printf(format string, a ...interface{}) {
 	fmt.Fprintf(d.out, format, a...)
+}
+
+func (d dryRunManager) sort(rs []model.Resource) {
+	sort.SliceStable(rs, func(i, j int) bool {
+		ri, rj := rs[i], rs[j]
+		return ri.GroupID+ri.ID < rj.GroupID+rj.ID
+	})
 }
