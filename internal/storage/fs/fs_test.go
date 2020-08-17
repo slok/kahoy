@@ -281,8 +281,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Directories should be ignored.": {
 			cfg: fs.RepositoryConfig{
-				Path:        "/tmp/test",
-				IgnoreRegex: []string{".*/test2"},
+				Path:         "/tmp/test",
+				ExcludeRegex: []string{".*/test2"},
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 2 dirs.
@@ -296,6 +296,76 @@ func TestRepositoryLoadFS(t *testing.T) {
 					walkfn := args[1].(filepath.WalkFunc)
 					_ = walkfn(f1Path, f1, nil)
 					_ = walkfn(f2Path, f2, nil)
+				})
+			},
+			expResources: []model.Resource{},
+			expGroups:    []model.Group{},
+		},
+
+		"Included should be included and ignore others.": {
+			cfg: fs.RepositoryConfig{
+				Path:         "/tmp/test",
+				IncludeRegex: []string{".*/test2"},
+			},
+			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
+				// Mock 3 files.
+				f1Path := "/tmp/test/test-1.yaml"
+				f1 := testInfoFile{name: "test1", isDir: false}
+				f2Path := "/tmp/test2/test-1.yaml"
+				f2 := testInfoFile{name: "test2", isDir: false}
+				f3Path := "/tmp/test3/test-1.yaml"
+				f3 := testInfoFile{name: "test3", isDir: false}
+
+				// The file that is included.
+				mfsm.On("ReadFile", "/tmp/test2/test-1.yaml").Once().Return([]byte("f1"), nil)
+				objs := []model.K8sObject{
+					newConfigmap("test-ns", "test-name"),
+				}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
+
+				// Mock all fs walks that will trigger the other mocks.
+				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+					walkfn := args[1].(filepath.WalkFunc)
+					_ = walkfn(f1Path, f1, nil)
+					_ = walkfn(f2Path, f2, nil)
+					_ = walkfn(f3Path, f3, nil)
+				})
+			},
+			expResources: []model.Resource{
+				{
+					ID:           "core/v1/ConfigMap/test-ns/test-name",
+					Name:         "test-name",
+					GroupID:      "test2",
+					ManifestPath: "/tmp/test2/test-1.yaml",
+					K8sObject:    newConfigmap("test-ns", "test-name"),
+				},
+			},
+			expGroups: []model.Group{
+				{ID: "test2", Path: "/tmp/test2"},
+			},
+		},
+
+		"Excludes should have priority over includes.": {
+			cfg: fs.RepositoryConfig{
+				Path:         "/tmp/test",
+				ExcludeRegex: []string{".*/test2"},
+				IncludeRegex: []string{".*/test2"},
+			},
+			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
+				// Mock 3 files.
+				f1Path := "/tmp/test/test-1.yaml"
+				f1 := testInfoFile{name: "test1", isDir: false}
+				f2Path := "/tmp/test2/test-1.yaml"
+				f2 := testInfoFile{name: "test2", isDir: false}
+				f3Path := "/tmp/test3/test-1.yaml"
+				f3 := testInfoFile{name: "test3", isDir: false}
+
+				// Mock all fs walks that will trigger the other mocks.
+				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+					walkfn := args[1].(filepath.WalkFunc)
+					_ = walkfn(f1Path, f1, nil)
+					_ = walkfn(f2Path, f2, nil)
+					_ = walkfn(f3Path, f3, nil)
 				})
 			},
 			expResources: []model.Resource{},
@@ -323,8 +393,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having ignores on files, it should ignore matched files.": {
 			cfg: fs.RepositoryConfig{
-				Path:        "/tmp/test",
-				IgnoreRegex: []string{".*test-2.*"},
+				Path:         "/tmp/test",
+				ExcludeRegex: []string{".*test-2.*"},
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
