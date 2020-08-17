@@ -44,10 +44,12 @@ type FileSystemManager interface {
 
 // Repository returns resources from the file system.
 type Repository struct {
-	k8sDecoder  K8sObjectDecoder
-	fsManager   FileSystemManager
-	logger      log.Logger
-	ignoreRegex []*regexp.Regexp
+	k8sDecoder    K8sObjectDecoder
+	fsManager     FileSystemManager
+	logger        log.Logger
+	excludeRegex  []*regexp.Regexp
+	includeRegex  []*regexp.Regexp
+	defaultIgnore bool
 
 	resourceMemoryRepo storagememory.ResourceRepository
 	groupMemoryRepo    storagememory.GroupRepository
@@ -61,14 +63,16 @@ var (
 
 // RepositoryConfig is the configuration of ResourceRepository.
 type RepositoryConfig struct {
-	IgnoreRegex       []string
+	ExcludeRegex      []string
+	IncludeRegex      []string
 	Path              string
 	FSManager         FileSystemManager
 	KubernetesDecoder K8sObjectDecoder
 	Logger            log.Logger
 
 	// Internal.
-	compiledIgnoreRegex []*regexp.Regexp
+	compiledExcludeRegex []*regexp.Regexp
+	compiledIncludeRegex []*regexp.Regexp
 }
 
 func (c *RepositoryConfig) defaults() error {
@@ -93,12 +97,20 @@ func (c *RepositoryConfig) defaults() error {
 	})
 
 	// Compile regex.
-	for _, r := range c.IgnoreRegex {
+	for _, r := range c.ExcludeRegex {
 		cr, err := regexp.Compile(r)
 		if err != nil {
 			return fmt.Errorf("could not compile %q regex: %w", r, err)
 		}
-		c.compiledIgnoreRegex = append(c.compiledIgnoreRegex, cr)
+		c.compiledExcludeRegex = append(c.compiledExcludeRegex, cr)
+	}
+
+	for _, r := range c.IncludeRegex {
+		cr, err := regexp.Compile(r)
+		if err != nil {
+			return fmt.Errorf("could not compile %q regex: %w", r, err)
+		}
+		c.compiledIncludeRegex = append(c.compiledIncludeRegex, cr)
 	}
 
 	return nil
@@ -112,10 +124,12 @@ func NewRepository(config RepositoryConfig) (*Repository, error) {
 	}
 
 	r := &Repository{
-		k8sDecoder:  config.KubernetesDecoder,
-		fsManager:   config.FSManager,
-		logger:      config.Logger,
-		ignoreRegex: config.compiledIgnoreRegex,
+		k8sDecoder:    config.KubernetesDecoder,
+		fsManager:     config.FSManager,
+		logger:        config.Logger,
+		excludeRegex:  config.compiledExcludeRegex,
+		includeRegex:  config.compiledIncludeRegex,
+		defaultIgnore: len(config.compiledIncludeRegex) > 0, // If we have any include rule, by default we ignore.
 	}
 
 	err = r.loadFS(config.Path)
@@ -142,11 +156,6 @@ func (r *Repository) loadFS(path string) error {
 		}
 
 		if r.shouldIgnore(path) {
-			if info.IsDir() {
-				logger.Debugf("ignoring dir: %q \n", path)
-				return filepath.SkipDir
-			}
-
 			logger.Debugf("ignoring file: %q \n", path)
 			return nil
 		}
@@ -212,13 +221,19 @@ func (r *Repository) loadFS(path string) error {
 }
 
 func (r *Repository) shouldIgnore(path string) bool {
-	for _, rgx := range r.ignoreRegex {
+	for _, rgx := range r.excludeRegex {
 		if rgx.MatchString(path) {
 			return true
 		}
 	}
 
-	return false
+	for _, rgx := range r.includeRegex {
+		if rgx.MatchString(path) {
+			return false
+		}
+	}
+
+	return r.defaultIgnore
 }
 
 func (r *Repository) loadK8sObjects(path string) ([]model.K8sObject, error) {

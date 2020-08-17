@@ -31,7 +31,8 @@ type CmdConfig struct {
 		ManifestsPathOld string
 		ManifestsPathNew string
 		DiffMode         bool
-		IgnoreManifests  []string
+		ExcludeManifests []string
+		IncludeManifests []string
 		DryRun           bool
 	}
 }
@@ -57,7 +58,8 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("diff", "diff instead of applying changes.").BoolVar(&c.Apply.DiffMode)
 	apply.Flag("fs-old-manifests-path", "kubernetes current manifests path.").Required().StringVar(&c.Apply.ManifestsPathOld)
 	apply.Flag("fs-new-manifests-path", "kubernetes expected manifests path.").Required().StringVar(&c.Apply.ManifestsPathNew)
-	apply.Flag("fs-ignore", "regex to ignore manifest files and dirs (can be repeated).").StringsVar(&c.Apply.IgnoreManifests)
+	apply.Flag("fs-exclude", "regex to ignore manifest files and dirs. Can be repeated.").StringsVar(&c.Apply.ExcludeManifests)
+	apply.Flag("fs-include", "regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").StringsVar(&c.Apply.IncludeManifests)
 	apply.Flag("dry-run", "execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
 
 	// Parse the commandline.

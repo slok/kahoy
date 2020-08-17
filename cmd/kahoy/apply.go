@@ -23,7 +23,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	kubernetesSerializer := kubernetes.NewYAMLObjectSerializer(logger)
 
 	currentRepoStorage, err := storagefs.NewRepository(storagefs.RepositoryConfig{
-		IgnoreRegex:       cmdConfig.Apply.IgnoreManifests,
+		ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
+		IncludeRegex:      cmdConfig.Apply.IncludeManifests,
 		Path:              cmdConfig.Apply.ManifestsPathOld,
 		KubernetesDecoder: kubernetesSerializer,
 		Logger:            logger,
@@ -33,7 +34,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	expectedRepoStorage, err := storagefs.NewRepository(storagefs.RepositoryConfig{
-		IgnoreRegex:       cmdConfig.Apply.IgnoreManifests,
+		ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
+		IncludeRegex:      cmdConfig.Apply.IncludeManifests,
 		Path:              cmdConfig.Apply.ManifestsPathNew,
 		KubernetesDecoder: kubernetesSerializer,
 		Logger:            logger,
