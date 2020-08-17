@@ -28,7 +28,8 @@ FROM alpine:latest
 RUN apk --no-cache add \
     ca-certificates \
     bash \
-    git
+    git \
+    colordiff
 
 COPY --from=build-stage /src/bin/kahoy /usr/local/bin/kahoy
 COPY --from=build-stage /usr/bin/kubectl /usr/local/bin/kubectl
