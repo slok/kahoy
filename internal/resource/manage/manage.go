@@ -1,4 +1,4 @@
-package resource
+package manage
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 	"github.com/slok/kahoy/internal/model"
 )
 
-// Manager knows how to manage resources on clusters.
-type Manager interface {
+// ResourceManager knows how to manage resources on clusters.
+type ResourceManager interface {
 	Apply(ctx context.Context, resources []model.Resource) error
 	Delete(ctx context.Context, resources []model.Resource) error
 }
@@ -18,7 +18,7 @@ type noopManager struct {
 }
 
 // NewNoopManager returns a resource manager that noops the operations and logs them
-func NewNoopManager(logger log.Logger) Manager {
+func NewNoopManager(logger log.Logger) ResourceManager {
 	return noopManager{
 		logger: logger.WithValues(log.Kv{"app-svc": "resource.NoopManager"}),
 	}

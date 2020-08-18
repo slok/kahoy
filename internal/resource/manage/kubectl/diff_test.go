@@ -14,8 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/slok/kahoy/internal/model"
-	"github.com/slok/kahoy/internal/resource/kubectl"
-	"github.com/slok/kahoy/internal/resource/kubectl/kubectlmock"
+	"github.com/slok/kahoy/internal/resource/manage/kubectl"
+	"github.com/slok/kahoy/internal/resource/manage/kubectl/kubectlmock"
 )
 
 // expCmdMatcher returns an *exec.Cmd matcher for  mock.MatchedBy.

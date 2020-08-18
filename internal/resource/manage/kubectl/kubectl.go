@@ -10,7 +10,7 @@ import (
 
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
-	"github.com/slok/kahoy/internal/resource"
+	"github.com/slok/kahoy/internal/resource/manage"
 )
 
 // ManagerConfig is the configuration for NewManager.
@@ -71,7 +71,7 @@ type manager struct {
 }
 
 // NewManager returns a resource Manager based on Kubctl that will apply changes.
-func NewManager(config ManagerConfig) (resource.Manager, error) {
+func NewManager(config ManagerConfig) (manage.ResourceManager, error) {
 	err := config.defaults()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)

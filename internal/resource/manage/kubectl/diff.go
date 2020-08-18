@@ -13,7 +13,7 @@ import (
 
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
-	"github.com/slok/kahoy/internal/resource"
+	"github.com/slok/kahoy/internal/resource/manage"
 )
 
 // FSManager knows how to manage resources on the fs.
@@ -101,7 +101,7 @@ type diffManager struct {
 
 // NewDiffManager returns a resource Manager based on Kubctl that will
 // output diff changes.
-func NewDiffManager(config DiffManagerConfig) (resource.Manager, error) {
+func NewDiffManager(config DiffManagerConfig) (manage.ResourceManager, error) {
 	err := config.defaults()
 	if err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)

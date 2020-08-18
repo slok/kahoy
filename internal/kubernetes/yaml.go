@@ -15,7 +15,7 @@ import (
 
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
-	"github.com/slok/kahoy/internal/resource/kubectl"
+	"github.com/slok/kahoy/internal/resource/manage/kubectl"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
 )
 

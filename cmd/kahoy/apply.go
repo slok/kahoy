@@ -8,8 +8,8 @@ import (
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
 	"github.com/slok/kahoy/internal/plan"
-	"github.com/slok/kahoy/internal/resource"
-	resourcekubectl "github.com/slok/kahoy/internal/resource/kubectl"
+	resourcemanage "github.com/slok/kahoy/internal/resource/manage"
+	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
 	"github.com/slok/kahoy/internal/storage"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
 )
@@ -68,12 +68,12 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	// Execute them with the correct manager.
-	var manager resource.Manager = resource.NewNoopManager(logger)
+	var manager resourcemanage.ResourceManager = resourcemanage.NewNoopManager(logger)
 	switch {
 	case cmdConfig.Apply.DryRun:
-		manager = resource.NewDryRunManager(cmdConfig.Global.NoColor, nil)
+		manager = resourcemanage.NewDryRunManager(cmdConfig.Global.NoColor, nil)
 	case cmdConfig.Apply.DiffMode:
-		manager, err = resourcekubectl.NewDiffManager(resourcekubectl.DiffManagerConfig{
+		manager, err = managekubectl.NewDiffManager(managekubectl.DiffManagerConfig{
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
 			KubeContext: cmdConfig.Apply.KubeContext,
 			YAMLEncoder: kubernetesSerializer,
@@ -83,7 +83,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			return fmt.Errorf("could not create diff resource manager: %w", err)
 		}
 	default:
-		manager, err = resourcekubectl.NewManager(resourcekubectl.ManagerConfig{
+		manager, err = managekubectl.NewManager(managekubectl.ManagerConfig{
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
 			KubeContext: cmdConfig.Apply.KubeContext,
 			YAMLEncoder: kubernetesSerializer,
