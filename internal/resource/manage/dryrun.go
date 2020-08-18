@@ -1,4 +1,4 @@
-package resource
+package manage
 
 import (
 	"context"
@@ -28,7 +28,7 @@ type dryRunManager struct {
 
 // NewDryRunManager returns a resource manager that dry runs the changes
 // without the need of an apiserver.
-func NewDryRunManager(disableColor bool, out io.Writer) Manager {
+func NewDryRunManager(disableColor bool, out io.Writer) ResourceManager {
 	if out == nil {
 		out = os.Stdout
 	}

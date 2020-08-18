@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/kahoy/internal/model"
-	"github.com/slok/kahoy/internal/resource/kubectl"
-	"github.com/slok/kahoy/internal/resource/kubectl/kubectlmock"
+	"github.com/slok/kahoy/internal/resource/manage/kubectl"
+	"github.com/slok/kahoy/internal/resource/manage/kubectl/kubectlmock"
 )
 
 func TestManagerApply(t *testing.T) {
