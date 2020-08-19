@@ -5,11 +5,12 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/slok/kahoy/internal/model"
 	"github.com/slok/kahoy/internal/resource/process"
 	"github.com/slok/kahoy/internal/resource/process/processmock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestResourceProcessorChain(t *testing.T) {

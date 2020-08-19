@@ -10,6 +10,7 @@ import (
 	"github.com/slok/kahoy/internal/plan"
 	resourcemanage "github.com/slok/kahoy/internal/resource/manage"
 	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
+	resourceprocess "github.com/slok/kahoy/internal/resource/process"
 	"github.com/slok/kahoy/internal/storage"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
 )
@@ -65,6 +66,23 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	applyRes, deleteRes, err := splitPlan(statePlan)
 	if err != nil {
 		return err
+	}
+
+	// Process planned resources.
+	exclKubeTypeProc, err := resourceprocess.NewExcludeKubeTypeProcessor(cmdConfig.Apply.ExcludeKubeTypeResources, logger)
+	if err != nil {
+		return fmt.Errorf("could not create Kubernetes resorce type exclude processor: %w", err)
+	}
+	resProc := resourceprocess.NewResourceProcessorChain(exclKubeTypeProc)
+
+	applyRes, err = resProc.Process(ctx, applyRes)
+	if err != nil {
+		return fmt.Errorf("error while processing apply state resources: %w", err)
+	}
+
+	deleteRes, err = resProc.Process(ctx, deleteRes)
+	if err != nil {
+		return fmt.Errorf("error while processing delete state resources: %w", err)
 	}
 
 	// Execute them with the correct manager.
