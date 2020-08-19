@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/slok/kahoy/internal/git"
 	"github.com/slok/kahoy/internal/kubernetes"
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
@@ -20,12 +21,22 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	logger := globalConfig.Logger.WithValues(log.Kv{"cmd": "apply"})
 	logger.Infof("running command")
 
-	// Create dependencies.
+	// If we have git diff include the Git diff based filter.
+	fsIncludes := cmdConfig.Apply.IncludeManifests
+	if cmdConfig.Apply.GitDiffFile != nil {
+		logger.Infof("using git diff FS includes")
+		diffIncludes := git.DiffNameOnlyToFSInclude(cmdConfig.Apply.GitDiffFile)
+		cmdConfig.Apply.GitDiffFile.Close()
+		fsIncludes = append(fsIncludes, diffIncludes...)
+	}
+
+	// Create YAML serializer.
 	kubernetesSerializer := kubernetes.NewYAMLObjectSerializer(logger)
 
+	// Create repositories.
 	currentRepoStorage, err := storagefs.NewRepository(storagefs.RepositoryConfig{
 		ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
-		IncludeRegex:      cmdConfig.Apply.IncludeManifests,
+		IncludeRegex:      fsIncludes,
 		Path:              cmdConfig.Apply.ManifestsPathOld,
 		KubernetesDecoder: kubernetesSerializer,
 		Logger:            logger,
@@ -36,7 +47,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	expectedRepoStorage, err := storagefs.NewRepository(storagefs.RepositoryConfig{
 		ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
-		IncludeRegex:      cmdConfig.Apply.IncludeManifests,
+		IncludeRegex:      fsIncludes,
 		Path:              cmdConfig.Apply.ManifestsPathNew,
 		KubernetesDecoder: kubernetesSerializer,
 		Logger:            logger,
@@ -45,7 +56,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		return fmt.Errorf("could not create fs %q repository storage: %w", cmdConfig.Apply.ManifestsPathNew, err)
 	}
 
-	// Prepare for plan.
+	// Get resources from repositories.
 	currentRes, err := currentRepoStorage.ListResources(ctx, storage.ResourceListOpts{})
 	if err != nil {
 		return fmt.Errorf("could not retrieve the list of current resources: %w", err)
@@ -83,6 +94,11 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	deleteRes, err = resProc.Process(ctx, deleteRes)
 	if err != nil {
 		return fmt.Errorf("error while processing delete state resources: %w", err)
+	}
+
+	if len(applyRes)+len(deleteRes) <= 0 {
+		logger.Infof("no resources to apply/delete, exiting...")
+		return nil
 	}
 
 	// Execute them with the correct manager.

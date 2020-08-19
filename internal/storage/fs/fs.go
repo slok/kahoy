@@ -27,6 +27,10 @@ func (stdFSManager) ReadFile(path string) ([]byte, error) {
 	return ioutil.ReadFile(path)
 }
 
+func (stdFSManager) Abs(path string) (string, error) {
+	return filepath.Abs(path)
+}
+
 // K8sObjectDecoder knows how to decode Kubernetes object from manifests.
 type K8sObjectDecoder interface {
 	DecodeObjects(ctx context.Context, raw []byte) ([]model.K8sObject, error)
@@ -38,6 +42,7 @@ type K8sObjectDecoder interface {
 type FileSystemManager interface {
 	Walk(root string, walkFn filepath.WalkFunc) error
 	ReadFile(path string) ([]byte, error)
+	Abs(path string) (string, error)
 }
 
 //go:generate mockery --case underscore --output fsmock --outpkg fsmock --name FileSystemManager
@@ -155,14 +160,19 @@ func (r *Repository) loadFS(path string) error {
 			return err
 		}
 
-		if r.shouldIgnore(path) {
-			logger.Debugf("ignoring file: %q \n", path)
-			return nil
-		}
-
 		// Directories and non YAML files don't need to be handled.
 		extension := strings.ToLower(filepath.Ext(path))
 		if info.IsDir() || (extension != ".yml" && extension != ".yaml") {
+			return nil
+		}
+
+		// Check if we need to ignore, using absolute path.
+		absPath, err := r.fsManager.Abs(path)
+		if err != nil {
+			return err
+		}
+		if r.shouldIgnore(absPath) {
+			logger.Debugf("ignoring file: %q", absPath)
 			return nil
 		}
 
