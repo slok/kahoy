@@ -93,6 +93,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 				// Mock 1 file.
 				f1Path := "/tmp/test/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
 				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
 				objs := []model.K8sObject{newConfigmap("test-ns", "test-name")}
 				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
@@ -125,6 +126,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 				// Mock 1 file.
 				f1Path := "/tmp/test/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
 				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
 				objs := []model.K8sObject{
 					newConfigmap("test-ns", "test-name"),
@@ -167,6 +169,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 				// Mock 2 files.
 				f1Path := "/tmp/test/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
 				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
 				objs := []model.K8sObject{
 					newConfigmap("test-ns", "test-name"),
@@ -175,6 +178,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 				f2Path := "/tmp/test/test-2.yaml"
 				f2 := testInfoFile{name: "test-2.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/test-2.yaml").Once().Return("/tmp/test/test-2.yaml", nil)
 				mfsm.On("ReadFile", "/tmp/test/test-2.yaml").Once().Return([]byte("f2"), nil)
 				objs2 := []model.K8sObject{
 					newConfigmap("test-ns2", "test-name2"),
@@ -217,6 +221,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 				// Mock 2 files.
 				f1Path := "/tmp/test/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
 				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
 				objs := []model.K8sObject{
 					newConfigmap("test-ns", "test-name"),
@@ -225,6 +230,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 				f2Path := "/tmp/test/test2/test-2.yaml"
 				f2 := testInfoFile{name: "test-2.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/test2/test-2.yaml").Once().Return("/tmp/test/test2/test-2.yaml", nil)
 				mfsm.On("ReadFile", "/tmp/test/test2/test-2.yaml").Once().Return([]byte("f2"), nil)
 				objs2 := []model.K8sObject{
 					newConfigmap("test-ns2", "test-name2"),
@@ -310,10 +316,13 @@ func TestRepositoryLoadFS(t *testing.T) {
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 3 files.
 				f1Path := "/tmp/test/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
 				f1 := testInfoFile{name: "test1", isDir: false}
 				f2Path := "/tmp/test2/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test2/test-1.yaml").Once().Return("/tmp/test2/test-1.yaml", nil)
 				f2 := testInfoFile{name: "test2", isDir: false}
 				f3Path := "/tmp/test3/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test3/test-1.yaml").Once().Return("/tmp/test3/test-1.yaml", nil)
 				f3 := testInfoFile{name: "test3", isDir: false}
 
 				// The file that is included.
@@ -354,10 +363,13 @@ func TestRepositoryLoadFS(t *testing.T) {
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 3 files.
 				f1Path := "/tmp/test/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
 				f1 := testInfoFile{name: "test1", isDir: false}
 				f2Path := "/tmp/test2/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test2/test-1.yaml").Once().Return("/tmp/test2/test-1.yaml", nil)
 				f2 := testInfoFile{name: "test2", isDir: false}
 				f3Path := "/tmp/test3/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test3/test-1.yaml").Once().Return("/tmp/test3/test-1.yaml", nil)
 				f3 := testInfoFile{name: "test3", isDir: false}
 
 				// Mock all fs walks that will trigger the other mocks.
@@ -400,6 +412,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 				// Mock 1 file.
 				f1Path := "/tmp/test/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
 				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
 				objs := []model.K8sObject{
 					newConfigmap("test-ns", "test-name"),
@@ -408,6 +421,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 				// Ignored file.
 				f2Path := "/tmp/test/test-2.yaml"
+				mfsm.On("Abs", "/tmp/test/test-2.yaml").Once().Return("/tmp/test/test-2.yaml", nil)
 				f2 := testInfoFile{name: "test-2.yaml", isDir: false}
 
 				// Mock all fs walks that will trigger the other mocks.

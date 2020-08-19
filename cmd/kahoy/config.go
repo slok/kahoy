@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"path/filepath"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -34,6 +35,7 @@ type CmdConfig struct {
 		ExcludeManifests         []string
 		IncludeManifests         []string
 		ExcludeKubeTypeResources []string
+		GitDiffFile              *os.File
 		DryRun                   bool
 	}
 }
@@ -61,6 +63,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("fs-new-manifests-path", "kubernetes expected manifests path.").Required().StringVar(&c.Apply.ManifestsPathNew)
 	apply.Flag("fs-exclude", "regex to ignore manifest files and dirs. Can be repeated.").StringsVar(&c.Apply.ExcludeManifests)
 	apply.Flag("fs-include", "regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").StringsVar(&c.Apply.IncludeManifests)
+	apply.Flag("fs-include-git-diff", "name-only git diff (`git diff --name-only`) content path, that will be used as the filter everything else except these when loading manifests.").FileVar(&c.Apply.GitDiffFile)
 	apply.Flag("kube-exclude-type", "regex to ignore Kubernetes resources by api version and type (apps/v1/Deployment, v1/Pod...). Can be repeated.").StringsVar(&c.Apply.ExcludeKubeTypeResources)
 	apply.Flag("dry-run", "execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
 
