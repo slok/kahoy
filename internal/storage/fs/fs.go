@@ -103,6 +103,9 @@ func (c *RepositoryConfig) defaults() error {
 
 	// Compile regex.
 	for _, r := range c.ExcludeRegex {
+		if r == "" {
+			continue
+		}
 		cr, err := regexp.Compile(r)
 		if err != nil {
 			return fmt.Errorf("could not compile %q regex: %w", r, err)
@@ -111,6 +114,9 @@ func (c *RepositoryConfig) defaults() error {
 	}
 
 	for _, r := range c.IncludeRegex {
+		if r == "" {
+			continue
+		}
 		cr, err := regexp.Compile(r)
 		if err != nil {
 			return fmt.Errorf("could not compile %q regex: %w", r, err)

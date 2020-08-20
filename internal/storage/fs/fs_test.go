@@ -285,27 +285,48 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expGroups:    []model.Group{},
 		},
 
-		"Directories should be ignored.": {
+		"Directories and excluded regex should be ignored.": {
 			cfg: fs.RepositoryConfig{
-				Path:         "/tmp/test",
-				ExcludeRegex: []string{".*/test2"},
+				Path:         "/tmp",
+				ExcludeRegex: []string{".*/test2", ""},
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
-				// Mock 2 dirs.
+				// Mock dirs.
 				f1Path := "/tmp/test"
 				f1 := testInfoFile{name: "test", isDir: true}
 				f2Path := "/tmp/test2"
-				f2 := testInfoFile{name: "test2", isDir: true}
+				f2 := testInfoFile{name: "test2"}
+				f3Path := "/tmp/test3/test3.yaml"
+				f3 := testInfoFile{name: "test3.yaml"}
+
+				// The file that is included.
+				mfsm.On("ReadFile", "/tmp/test3/test3.yaml").Once().Return([]byte("f3"), nil)
+				mfsm.On("Abs", "/tmp/test3/test3.yaml").Once().Return("/tmp/test3/test3.yaml", nil)
+				objs := []model.K8sObject{
+					newConfigmap("test-ns", "test-name3"),
+				}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f3")).Once().Return(objs, nil)
 
 				// Mock all fs walks that will trigger the other mocks.
-				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+				mfsm.On("Walk", "/tmp", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
 					walkfn := args[1].(filepath.WalkFunc)
 					_ = walkfn(f1Path, f1, nil)
 					_ = walkfn(f2Path, f2, nil)
+					_ = walkfn(f3Path, f3, nil)
 				})
 			},
-			expResources: []model.Resource{},
-			expGroups:    []model.Group{},
+			expResources: []model.Resource{
+				{
+					ID:           "core/v1/ConfigMap/test-ns/test-name3",
+					Name:         "test-name3",
+					GroupID:      "test3",
+					ManifestPath: "/tmp/test3/test3.yaml",
+					K8sObject:    newConfigmap("test-ns", "test-name3"),
+				},
+			},
+			expGroups: []model.Group{
+				{ID: "test3", Path: "/tmp/test3"},
+			},
 		},
 
 		"Included should be included and ignore others.": {

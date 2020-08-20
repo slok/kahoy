@@ -18,6 +18,9 @@ func NewExcludeKubeTypeProcessor(kubeTypeRegex []string, logger log.Logger) (Res
 
 	compiledRegex := make([]*regexp.Regexp, 0, len(kubeTypeRegex))
 	for _, r := range kubeTypeRegex {
+		if r == "" {
+			continue
+		}
 		cr, err := regexp.Compile(r)
 		if err != nil {
 			return nil, fmt.Errorf("invalid regex %q: %w", r, err)
