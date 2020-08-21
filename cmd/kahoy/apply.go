@@ -34,35 +34,25 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	kubernetesSerializer := kubernetes.NewYAMLObjectSerializer(logger)
 
 	// Create repositories.
-	currentRepoStorage, err := storagefs.NewRepository(storagefs.RepositoryConfig{
+	oldRepo, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
 		ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
 		IncludeRegex:      fsIncludes,
-		Path:              cmdConfig.Apply.ManifestsPathOld,
+		OldPath:           cmdConfig.Apply.ManifestsPathOld,
+		NewPath:           cmdConfig.Apply.ManifestsPathNew,
 		KubernetesDecoder: kubernetesSerializer,
 		Logger:            logger,
 	})
 	if err != nil {
-		return fmt.Errorf("could not create fs %q repository storage: %w", cmdConfig.Apply.ManifestsPathOld, err)
-	}
-
-	expectedRepoStorage, err := storagefs.NewRepository(storagefs.RepositoryConfig{
-		ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
-		IncludeRegex:      fsIncludes,
-		Path:              cmdConfig.Apply.ManifestsPathNew,
-		KubernetesDecoder: kubernetesSerializer,
-		Logger:            logger,
-	})
-	if err != nil {
-		return fmt.Errorf("could not create fs %q repository storage: %w", cmdConfig.Apply.ManifestsPathNew, err)
+		return fmt.Errorf("could not create fs repos storage: %w", err)
 	}
 
 	// Get resources from repositories.
-	currentRes, err := currentRepoStorage.ListResources(ctx, storage.ResourceListOpts{})
+	currentRes, err := oldRepo.ListResources(ctx, storage.ResourceListOpts{})
 	if err != nil {
 		return fmt.Errorf("could not retrieve the list of current resources: %w", err)
 	}
 
-	expectedRes, err := expectedRepoStorage.ListResources(ctx, storage.ResourceListOpts{})
+	expectedRes, err := newRepo.ListResources(ctx, storage.ResourceListOpts{})
 	if err != nil {
 		return fmt.Errorf("could not retrieve the list of expected resources: %w", err)
 	}
