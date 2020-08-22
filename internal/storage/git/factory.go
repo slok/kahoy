@@ -13,8 +13,9 @@ import (
 	"github.com/slok/kahoy/internal/storage/fs"
 )
 
-// Only allow loading current direcotry repositories, this will remove
-// lots of corner cases related with the repo loading.
+// Only allow loading Git repos from current directory. This will remove
+// lots of corner cases related with the repo loading and make the app more
+// reliable.
 const gitRepoPath = "."
 
 // RepositoriesConfig is the configuration for NewRepositories
@@ -32,6 +33,12 @@ type RepositoriesConfig struct {
 	// If we are on the default branch this will be neccesary.
 	GitBeforeCommitSHA string
 	GitDefaultBranch   string
+
+	// go-git loaded repositories, if not passed, it will load them into memory based from
+	// the current path.
+	// Normally `nil` because are handled by factory and only passed for testing purposes.
+	GoGitOldRepo GoGitRepoClient
+	GoGitNewRepo GoGitRepoClient
 }
 
 func (c *RepositoriesConfig) defaults() error {
@@ -49,7 +56,7 @@ func (c *RepositoriesConfig) defaults() error {
 	}
 
 	if filepath.IsAbs(c.NewRelPath) {
-		return fmt.Errorf("new path %q  is absolute, must be relative to the git repository", c.NewRelPath)
+		return fmt.Errorf("new path %q is absolute, must be relative to the git repository", c.NewRelPath)
 	}
 
 	return nil
@@ -72,24 +79,17 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 		return nil, nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 
-	// Load git repo in memory.
-	config.Logger.Debugf("loading git repositories into memory")
-
-	oldGitRepo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{URL: gitRepoPath})
+	// Load git repo in memory if required.
+	oldGitRepo, newGitRepo, err := loadGitRepositories(config)
 	if err != nil {
-		return nil, nil, fmt.Errorf("could not clone Git repository into memory: %w", err)
-	}
-
-	newGitRepo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{URL: gitRepoPath})
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not clone Git repository into memory: %w", err)
+		return nil, nil, fmt.Errorf("could not load git repositores: %w", err)
 	}
 
 	// Search git before commit if required.
 	var gitBeforeHash plumbing.Hash
 	if config.GitBeforeCommitSHA == "" {
 		config.Logger.Debugf("searching git before commit using common parent")
-		hash, err := getBeforeCommit(oldGitRepo, config.GitDefaultBranch)
+		hash, err := getBeforeCommit(newGitRepo, config.GitDefaultBranch)
 		if err != nil {
 			return nil, nil, fmt.Errorf("could not get git before commit: %w", err)
 		}
@@ -98,23 +98,23 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 		gitBeforeHash = plumbing.NewHash(config.GitBeforeCommitSHA)
 	}
 
-	// Get both repos worktrees.
-	oldWorkTree, err := oldGitRepo.Worktree()
+	// Get both file systems.
+	oldRepoFs, err := oldGitRepo.FileSystem()
 	if err != nil {
 		return nil, nil, err
 	}
-	newWorkTree, err := newGitRepo.Worktree()
+	newRepoFs, err := newGitRepo.FileSystem()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// Set old git repo in the `before commit` state.
-	err = oldWorkTree.Checkout(&git.CheckoutOptions{Hash: gitBeforeHash})
+	err = oldGitRepo.Checkout(&git.CheckoutOptions{Hash: gitBeforeHash})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Debug working tree refs.
+	// Get both repository HEAD refs.
 	oldRef, err := oldGitRepo.Head()
 	if err != nil {
 		return nil, nil, err
@@ -125,20 +125,19 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 	}
 
 	// Validations to help the user in case of misusage.
-	if oldRef.Hash().String() == newRef.Hash().String() {
+	// Check old and new repos are not in the same state.
+	if oldRef.Hash() == newRef.Hash() {
 		return nil, nil, fmt.Errorf("old and new repo HEAD ref can't be the same (%s) use 'before commit'", oldRef.Hash())
 	}
 
-	oldPath := filepath.Join("/", config.OldRelPath)
-	_, err = oldWorkTree.Filesystem.Stat(oldPath)
+	// Check our paths on each repo exist.
+	_, err = oldRepoFs.Stat(config.OldRelPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("old git repo path %q: %w", oldPath, err)
+		return nil, nil, fmt.Errorf("old git repo path %q: %w", config.OldRelPath, err)
 	}
-
-	newPath := filepath.Join("/", config.NewRelPath)
-	_, err = newWorkTree.Filesystem.Stat(newPath)
+	_, err = newRepoFs.Stat(config.NewRelPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("new git repo path %q: %w", newPath, err)
+		return nil, nil, fmt.Errorf("new git repo path %q: %w", config.NewRelPath, err)
 	}
 
 	config.Logger.Debugf("old repository worktree in %q commit", oldRef.Hash())
@@ -158,7 +157,7 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 			"repo-state": "old",
 			"git-rev":    oldRef.Hash().String(),
 		}),
-		FSManager: newBillyFsManager(oldWorkTree.Filesystem),
+		FSManager: newBillyFsManager(oldRepoFs),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not create old Git fs %q repository storage: %w", config.OldRelPath, err)
@@ -173,10 +172,37 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 			"repo-state": "new",
 			"git-rev":    newRef.Hash().String(),
 		}),
-		FSManager: newBillyFsManager(newWorkTree.Filesystem),
+		FSManager: newBillyFsManager(newRepoFs),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not create new Git fs %q repository storage: %w", config.OldRelPath, err)
+	}
+
+	return oldRepo, newRepo, nil
+}
+
+func loadGitRepositories(config RepositoriesConfig) (old, new GoGitRepoClient, err error) {
+	oldRepo := config.GoGitOldRepo
+	newRepo := config.GoGitNewRepo
+
+	if oldRepo == nil {
+		config.Logger.Debugf("loading old git repository into memory")
+		goGitRepo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{URL: gitRepoPath})
+		if err != nil {
+			return nil, nil, fmt.Errorf("could not clone Git repository into memory: %w", err)
+		}
+
+		oldRepo = goGitRepoClient{repo: *goGitRepo}
+	}
+
+	if newRepo == nil {
+		config.Logger.Debugf("loading new git repository into memory")
+		goGitRepo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{URL: gitRepoPath})
+		if err != nil {
+			return nil, nil, fmt.Errorf("could not clone Git repository into memory: %w", err)
+		}
+
+		newRepo = goGitRepoClient{repo: *goGitRepo}
 	}
 
 	return oldRepo, newRepo, nil
@@ -190,7 +216,7 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 // ---o---o---1 (default branch)
 //
 // We would get 1 as the before commit.
-func getBeforeCommit(newRepo *git.Repository, branch string) (*plumbing.Hash, error) {
+func getBeforeCommit(newRepo GoGitRepoClient, branch string) (*plumbing.Hash, error) {
 	// Get HEAD commit.
 	ref, err := newRepo.Head()
 	if err != nil {
@@ -217,7 +243,7 @@ func getBeforeCommit(newRepo *git.Repository, branch string) (*plumbing.Hash, er
 	}
 
 	// Get the common parent commit using `merge-base`.
-	commit, err := currentCommit.MergeBase(branchCommit)
+	commit, err := newRepo.MergeBase(currentCommit, branchCommit)
 	if err != nil {
 		return nil, err
 	}
