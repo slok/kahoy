@@ -24,7 +24,9 @@ func NewRepositories(config RepositoriesConfig) (oldRepo, newRepo *Repository, e
 		IncludeRegex:      config.IncludeRegex,
 		Path:              config.OldPath,
 		KubernetesDecoder: config.KubernetesDecoder,
-		Logger:            config.Logger,
+		Logger: config.Logger.WithValues(log.Kv{
+			"repo-state": "old",
+		}),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not create old fs %q repository storage: %w", config.OldPath, err)
@@ -35,7 +37,9 @@ func NewRepositories(config RepositoriesConfig) (oldRepo, newRepo *Repository, e
 		IncludeRegex:      config.IncludeRegex,
 		Path:              config.NewPath,
 		KubernetesDecoder: config.KubernetesDecoder,
-		Logger:            config.Logger,
+		Logger: config.Logger.WithValues(log.Kv{
+			"repo-state": "new",
+		}),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not create new fs %q repository storage: %w", config.OldPath, err)
