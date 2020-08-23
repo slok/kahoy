@@ -14,11 +14,15 @@ import (
 	resourceprocess "github.com/slok/kahoy/internal/resource/process"
 	"github.com/slok/kahoy/internal/storage"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
+	storagegit "github.com/slok/kahoy/internal/storage/git"
 )
 
 // RunApply runs the apply command.
 func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfig) error {
-	logger := globalConfig.Logger.WithValues(log.Kv{"cmd": "apply"})
+	logger := globalConfig.Logger.WithValues(log.Kv{
+		"cmd":  "apply",
+		"mode": cmdConfig.Apply.Mode,
+	})
 	logger.Infof("running command")
 
 	// If we have git diff include the Git diff based filter.
@@ -33,26 +37,54 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	// Create YAML serializer.
 	kubernetesSerializer := kubernetes.NewYAMLObjectSerializer(logger)
 
-	// Create repositories.
-	oldRepo, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
-		ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
-		IncludeRegex:      fsIncludes,
-		OldPath:           cmdConfig.Apply.ManifestsPathOld,
-		NewPath:           cmdConfig.Apply.ManifestsPathNew,
-		KubernetesDecoder: kubernetesSerializer,
-		Logger:            logger,
-	})
-	if err != nil {
-		return fmt.Errorf("could not create fs repos storage: %w", err)
+	var (
+		oldResourceRepo, newResourceRepo storage.ResourceRepository
+	)
+	switch cmdConfig.Apply.Mode {
+	case ApplyModeGit:
+		oldRepo, newRepo, err := storagegit.NewRepositories(storagegit.RepositoriesConfig{
+			ExcludeRegex:       cmdConfig.Apply.ExcludeManifests,
+			IncludeRegex:       fsIncludes,
+			OldRelPath:         cmdConfig.Apply.ManifestsPathOld,
+			NewRelPath:         cmdConfig.Apply.ManifestsPathNew,
+			GitBeforeCommitSHA: cmdConfig.Apply.GitBeforeCommit,
+			GitDefaultBranch:   cmdConfig.Apply.GitDefaultBranch,
+			KubernetesDecoder:  kubernetesSerializer,
+			Logger:             logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create git based fs repos storage: %w", err)
+		}
+
+		oldResourceRepo = oldRepo
+		newResourceRepo = newRepo
+
+	case ApplyModePaths:
+		oldRepo, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
+			ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
+			IncludeRegex:      fsIncludes,
+			OldPath:           cmdConfig.Apply.ManifestsPathOld,
+			NewPath:           cmdConfig.Apply.ManifestsPathNew,
+			KubernetesDecoder: kubernetesSerializer,
+			Logger:            logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create fs repos storage: %w", err)
+		}
+
+		oldResourceRepo = oldRepo
+		newResourceRepo = newRepo
+	default:
+		return fmt.Errorf("unknown apply mode: %s", cmdConfig.Apply.Mode)
 	}
 
 	// Get resources from repositories.
-	currentRes, err := oldRepo.ListResources(ctx, storage.ResourceListOpts{})
+	currentRes, err := oldResourceRepo.ListResources(ctx, storage.ResourceListOpts{})
 	if err != nil {
 		return fmt.Errorf("could not retrieve the list of current resources: %w", err)
 	}
 
-	expectedRes, err := newRepo.ListResources(ctx, storage.ResourceListOpts{})
+	expectedRes, err := newResourceRepo.ListResources(ctx, storage.ResourceListOpts{})
 	if err != nil {
 		return fmt.Errorf("could not retrieve the list of expected resources: %w", err)
 	}
