@@ -13,9 +13,11 @@ type GoGitRepoClient interface {
 	Head() (*plumbing.Reference, error)
 	Checkout(opts *git.CheckoutOptions) error
 	FileSystem() (billy.Filesystem, error)
-	MergeBase(current, other *object.Commit) ([]*object.Commit, error)
 	CommitObject(h plumbing.Hash) (*object.Commit, error)
 	ResolveRevision(rev plumbing.Revision) (*plumbing.Hash, error)
+	// Operations independent of the repository.
+	MergeBase(current, other *object.Commit) ([]*object.Commit, error)
+	Patch(current, other *object.Commit) (*object.Patch, error)
 }
 
 //go:generate mockery --case underscore --output gitmock --outpkg gitmock --name GoGitRepoClient
@@ -57,4 +59,8 @@ func (g goGitRepoClient) CommitObject(h plumbing.Hash) (*object.Commit, error) {
 
 func (g goGitRepoClient) ResolveRevision(rev plumbing.Revision) (*plumbing.Hash, error) {
 	return g.repo.ResolveRevision(rev)
+}
+
+func (g goGitRepoClient) Patch(current, other *object.Commit) (*object.Patch, error) {
+	return current.Patch(other)
 }

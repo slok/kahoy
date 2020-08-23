@@ -124,6 +124,29 @@ func (_m *GoGitRepoClient) MergeBase(current *object.Commit, other *object.Commi
 	return r0, r1
 }
 
+// Patch provides a mock function with given fields: current, other
+func (_m *GoGitRepoClient) Patch(current *object.Commit, other *object.Commit) (*object.Patch, error) {
+	ret := _m.Called(current, other)
+
+	var r0 *object.Patch
+	if rf, ok := ret.Get(0).(func(*object.Commit, *object.Commit) *object.Patch); ok {
+		r0 = rf(current, other)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*object.Patch)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*object.Commit, *object.Commit) error); ok {
+		r1 = rf(current, other)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ResolveRevision provides a mock function with given fields: rev
 func (_m *GoGitRepoClient) ResolveRevision(rev plumbing.Revision) (*plumbing.Hash, error) {
 	ret := _m.Called(rev)

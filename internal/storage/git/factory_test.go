@@ -259,6 +259,37 @@ func TestNewRepositories(t *testing.T) {
 			},
 			expErr: true,
 		},
+
+		"If git diff filter is used, it should get a diff patch between before-commit and HEAD commits.": {
+			config: git.RepositoriesConfig{
+				OldRelPath:           "./manifests",
+				NewRelPath:           "./manifests",
+				GitBeforeCommitSHA:   "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
+				GitDiffIncludeFilter: true,
+			},
+			mock: func(mOld, mNew *gitmock.GoGitRepoClient) {
+				oldFs, newFs := memfs.New(), memfs.New()
+				_, _ = oldFs.Create("/manifests")
+				_, _ = newFs.Create("/manifests")
+				mOld.On("FileSystem").Once().Return(oldFs, nil)
+				mNew.On("FileSystem").Once().Return(newFs, nil)
+
+				mOld.On("Checkout", mock.Anything).Once().Return(nil)
+
+				beforeRef := plumbing.NewReferenceFromStrings("", "448aa55561b85897120f611e2da67ac2d0e7a8bf")
+				mOld.On("Head").Once().Return(beforeRef, nil)
+				headRef := plumbing.NewReferenceFromStrings("", "f69577b7a14bb6d112188cd75029f4aa6605b944")
+				mNew.On("Head").Once().Return(headRef, nil)
+
+				// Check diff.
+				beforeCommit := &object.Commit{Hash: beforeRef.Hash()}
+				mNew.On("CommitObject", beforeRef.Hash()).Once().Return(beforeCommit, nil)
+				headCommit := &object.Commit{Hash: headRef.Hash()}
+				mNew.On("CommitObject", headRef.Hash()).Once().Return(headCommit, nil)
+				mNew.On("Patch", beforeCommit, headCommit).Once().Return(&object.Patch{}, nil)
+
+			},
+		},
 	}
 
 	for name, test := range tests {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/slok/kahoy/internal/git"
 	"github.com/slok/kahoy/internal/kubernetes"
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
@@ -25,15 +24,6 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	})
 	logger.Infof("running command")
 
-	// If we have git diff include the Git diff based filter.
-	fsIncludes := cmdConfig.Apply.IncludeManifests
-	if cmdConfig.Apply.GitDiffFile != nil {
-		logger.Infof("using git diff FS includes")
-		diffIncludes := git.DiffNameOnlyToFSInclude(cmdConfig.Apply.GitDiffFile)
-		cmdConfig.Apply.GitDiffFile.Close()
-		fsIncludes = append(fsIncludes, diffIncludes...)
-	}
-
 	// Create YAML serializer.
 	kubernetesSerializer := kubernetes.NewYAMLObjectSerializer(logger)
 
@@ -43,14 +33,15 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	switch cmdConfig.Apply.Mode {
 	case ApplyModeGit:
 		oldRepo, newRepo, err := storagegit.NewRepositories(storagegit.RepositoriesConfig{
-			ExcludeRegex:       cmdConfig.Apply.ExcludeManifests,
-			IncludeRegex:       fsIncludes,
-			OldRelPath:         cmdConfig.Apply.ManifestsPathOld,
-			NewRelPath:         cmdConfig.Apply.ManifestsPathNew,
-			GitBeforeCommitSHA: cmdConfig.Apply.GitBeforeCommit,
-			GitDefaultBranch:   cmdConfig.Apply.GitDefaultBranch,
-			KubernetesDecoder:  kubernetesSerializer,
-			Logger:             logger,
+			ExcludeRegex:         cmdConfig.Apply.ExcludeManifests,
+			IncludeRegex:         cmdConfig.Apply.IncludeManifests,
+			OldRelPath:           cmdConfig.Apply.ManifestsPathOld,
+			NewRelPath:           cmdConfig.Apply.ManifestsPathNew,
+			GitBeforeCommitSHA:   cmdConfig.Apply.GitBeforeCommit,
+			GitDefaultBranch:     cmdConfig.Apply.GitDefaultBranch,
+			GitDiffIncludeFilter: cmdConfig.Apply.GitDiffFilter,
+			KubernetesDecoder:    kubernetesSerializer,
+			Logger:               logger,
 		})
 		if err != nil {
 			return fmt.Errorf("could not create git based fs repos storage: %w", err)
@@ -62,7 +53,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	case ApplyModePaths:
 		oldRepo, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
 			ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
-			IncludeRegex:      fsIncludes,
+			IncludeRegex:      cmdConfig.Apply.IncludeManifests,
 			OldPath:           cmdConfig.Apply.ManifestsPathOld,
 			NewPath:           cmdConfig.Apply.ManifestsPathNew,
 			KubernetesDecoder: kubernetesSerializer,

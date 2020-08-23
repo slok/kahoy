@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -41,9 +40,9 @@ type CmdConfig struct {
 		ExcludeManifests         []string
 		IncludeManifests         []string
 		ExcludeKubeTypeResources []string
-		GitDiffFile              *os.File
 		GitBeforeCommit          string
 		GitDefaultBranch         string
+		GitDiffFilter            bool
 		Mode                     string
 		DryRun                   bool
 	}
@@ -74,7 +73,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("fs-new-manifests-path", "kubernetes expected manifests path.").Required().StringVar(&c.Apply.ManifestsPathNew)
 	apply.Flag("fs-exclude", "regex to ignore manifest files and dirs. Can be repeated.").StringsVar(&c.Apply.ExcludeManifests)
 	apply.Flag("fs-include", "regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").StringsVar(&c.Apply.IncludeManifests)
-	apply.Flag("fs-include-git-diff", "name-only git diff (`git diff --name-only`) content path, that will be used as the filter everything else except these when loading manifests.").FileVar(&c.Apply.GitDiffFile)
+	apply.Flag("git-diff-filter", "excludes everything except the files changed in before-commit and HEAD git diff.").BoolVar(&c.Apply.GitDiffFilter)
 	apply.Flag("git-before-commit-sha", "the git hash used as the old state to get the apply/delete plan, if not passed, it will search using merge-base common ancestor of current HEAD and default branch.").StringVar(&c.Apply.GitBeforeCommit)
 	apply.Flag("git-default-branch", "git repository default branch.").Default("origin/master").StringVar(&c.Apply.GitDefaultBranch)
 	apply.Flag("kube-exclude-type", "regex to ignore Kubernetes resources by api version and type (apps/v1/Deployment, v1/Pod...). Can be repeated.").StringsVar(&c.Apply.ExcludeKubeTypeResources)
