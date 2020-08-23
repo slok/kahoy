@@ -93,7 +93,7 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 	// Search git before commit if required.
 	var gitBeforeHash plumbing.Hash
 	if config.GitBeforeCommitSHA == "" {
-		config.Logger.Debugf("searching git before commit using common parent")
+		config.Logger.Debugf("searching git before commit using common parent of HEAD and %s", config.GitDefaultBranch)
 		hash, err := getBeforeCommit(newGitRepo, config.GitDefaultBranch)
 		if err != nil {
 			return nil, nil, fmt.Errorf("could not get git before commit: %w", err)
