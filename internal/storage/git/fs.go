@@ -3,6 +3,7 @@ package git
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/go-git/go-billy/v5"
@@ -18,30 +19,33 @@ var _ fs.FileSystemManager = billyFsManager{}
 
 // newbillyFsManager returns a new compatible fs.FileSystemManager based on a
 // go-git repo fs system (go-billy).
+// TODO(slok): Implement SkipDir error.
 func newBillyFsManager(repoFs billy.Filesystem) billyFsManager {
 	return billyFsManager{fs: repoFs}
 }
 
 func (b billyFsManager) Walk(root string, walkFn filepath.WalkFunc) error {
-	files, err := b.fs.ReadDir(root)
+	info, err := b.fs.Lstat(root)
+	if err != nil {
+		return err
+	}
+
+	return b.walk(root, info, walkFn)
+}
+
+func (b billyFsManager) walk(path string, info os.FileInfo, walkFn filepath.WalkFunc) error {
+	if !info.IsDir() {
+		return walkFn(path, info, nil)
+	}
+
+	files, err := b.fs.ReadDir(path)
 	if err != nil {
 		return err
 	}
 
 	for _, file := range files {
-		path := b.fs.Join(root, file.Name())
-
-		// If is a file, use our walkf func.
-		if !file.IsDir() {
-			err := walkFn(path, file, nil)
-			if err != nil {
-				return err
-			}
-			continue
-		}
-
-		// Continue walking.
-		err := b.Walk(path, walkFn)
+		path := b.fs.Join(path, file.Name())
+		err := b.walk(path, file, walkFn)
 		if err != nil {
 			return err
 		}
