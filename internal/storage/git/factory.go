@@ -14,10 +14,13 @@ import (
 	"github.com/slok/kahoy/internal/storage/fs"
 )
 
-// Only allow loading Git repos from current directory. This will remove
-// lots of corner cases related with the repo loading and make the app more
-// reliable.
-const gitRepoPath = "."
+const (
+	// Only allow loading Git repos from current directory. This will remove
+	// lots of corner cases related with the repo loading and make the app more
+	// reliable.
+	gitRepoPath         = "."
+	gitClonesRemoteName = "origin"
+)
 
 // RepositoriesConfig is the configuration for NewRepositories
 type RepositoriesConfig struct {
@@ -33,15 +36,17 @@ type RepositoriesConfig struct {
 	// of HEAD.
 	// If we are on the default branch this will be neccesary.
 	GitBeforeCommitSHA string
-	GitDefaultBranch   string
+	// GitDefaultBranch is the base branch that will be used when no GitBeforeCommitSHA setting is passed.
+	// This branch will be the one used against HEAD to get the common parent commit  by using merge-base.
+	// Only local branches are support, other refs are not supported (remote branch, tag, hash...)
+	GitDefaultBranch string
 	// GitDiffIncludeFilter will filter everything except the files modified (edit, create, delete)
 	// between the two Git repository states, this is, before-commit and HEAD.
 	// This could be translated as: `git diff --name-only before-commit HEAD`.
 	GitDiffIncludeFilter bool
 
-	// go-git loaded repositories, if not passed, it will load them into memory based from
-	// the current path.
-	// Normally `nil` because are handled by factory and only passed for testing purposes.
+	// Don't use these, used for testing purposes. Normally `nil` because are created correctly by the factory.
+	// Go-git loaded repositories, if `nil` it will clone them into memory from the current disk path (`.`).
 	GoGitOldRepo GoGitRepoClient
 	GoGitNewRepo GoGitRepoClient
 }
@@ -78,6 +83,10 @@ func (c *RepositoriesConfig) defaults() error {
 //
 // We end with 2 fs.Repositories that are based on memory and each one has different data based
 // on the commit history that we have been preparing before creating them.
+//
+// Note: Cloned repos (memory) will have original repo (fs) local branches as remotes because of
+//       the clone, so to use local branch refs, we need to use remote notation, and remote
+//       branches are not supported.
 func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err error) {
 	err = config.defaults()
 	if err != nil {
@@ -195,35 +204,37 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 	return oldRepo, newRepo, nil
 }
 
+// loadGitRepositories will clone the repositories into memory.
+// NOTE: When cloning our local repository from disk into memory, original (fs)
+//       repository remote refs will be lost. The remotes on our new memory clones
+//       will be the local refs of our disk repository.
 func loadGitRepositories(config RepositoriesConfig) (old, new GoGitRepoClient, err error) {
 	oldRepo := config.GoGitOldRepo
 	newRepo := config.GoGitNewRepo
 
 	if oldRepo == nil {
 		config.Logger.Debugf("loading old git repository into memory")
-		goGitRepo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{URL: gitRepoPath})
+		goGitRepo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{URL: gitRepoPath, RemoteName: gitClonesRemoteName})
 		if err != nil {
 			return nil, nil, fmt.Errorf("could not clone Git repository into memory: %w", err)
 		}
-
 		oldRepo = goGitRepoClient{repo: *goGitRepo}
 	}
 
 	if newRepo == nil {
 		config.Logger.Debugf("loading new git repository into memory")
-		goGitRepo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{URL: gitRepoPath})
+		goGitRepo, err := git.Clone(memory.NewStorage(), memfs.New(), &git.CloneOptions{URL: gitRepoPath, RemoteName: gitClonesRemoteName})
 		if err != nil {
 			return nil, nil, fmt.Errorf("could not clone Git repository into memory: %w", err)
 		}
-
 		newRepo = goGitRepoClient{repo: *goGitRepo}
 	}
 
 	return oldRepo, newRepo, nil
 }
 
-// getBeforeCommit searches using merge-base common parent on HEAD and a
-// default branch (e.g origin/master).
+// getBeforeCommit searches common parent using merge-base on HEAD and a
+// default branch (e.g master).
 //
 //              o---o---o (HEAD)
 //             /
@@ -246,10 +257,13 @@ func getBeforeCommit(newRepo GoGitRepoClient, branch string) (*plumbing.Hash, er
 		return nil, err
 	}
 
-	// Get common branch commit.
-	revHash, err := newRepo.ResolveRevision(plumbing.Revision(branch))
+	// Get branch commit.
+	// We use the branch name as a remote beacause our cloned repositories into memory
+	// have the original repo (fs) local refs as remotes.
+	branchRef := plumbing.NewRemoteReferenceName(gitClonesRemoteName, branch)
+	revHash, err := newRepo.ResolveRevision(plumbing.Revision(branchRef))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not translate branch ref %q to commit hash: %w", branch, err)
 	}
 	branchCommit, err := newRepo.CommitObject(*revHash)
 	if err != nil {

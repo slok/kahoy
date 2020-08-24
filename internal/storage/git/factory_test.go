@@ -228,7 +228,7 @@ func TestNewRepositories(t *testing.T) {
 				mNew.On("CommitObject", expHash).Once().Return(commit, nil)
 
 				// Check get other branch commit.
-				expOtherBranch := plumbing.Revision("main")
+				expOtherBranch := plumbing.Revision("refs/remotes/origin/main")
 				otherHEADHash := plumbing.NewHash("1dd111de9c9b61d7955e08078ef58a92460f7cca")
 				mNew.On("ResolveRevision", expOtherBranch).Once().Return(&otherHEADHash, nil)
 				otherCommit := &object.Commit{Hash: otherHEADHash}
