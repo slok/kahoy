@@ -39,6 +39,10 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 		logrusLog := logrus.New()
 		logrusLog.Out = stderr // By default logger goes to stderr (so it can split stdout prints).
 		logrusLogEntry := logrus.NewEntry(logrusLog)
+		logrusLogEntry.Logger.SetFormatter(&logrus.TextFormatter{
+			ForceColors:   !config.Global.NoColor,
+			DisableColors: config.Global.NoColor,
+		})
 		if config.Global.Debug {
 			logrusLogEntry.Logger.SetLevel(logrus.DebugLevel)
 		}
