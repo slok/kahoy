@@ -75,7 +75,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("fs-include", "regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").StringsVar(&c.Apply.IncludeManifests)
 	apply.Flag("git-diff-filter", "excludes everything except the files changed in before-commit and HEAD git diff.").BoolVar(&c.Apply.GitDiffFilter)
 	apply.Flag("git-before-commit-sha", "the git hash used as the old state to get the apply/delete plan, if not passed, it will search using merge-base common ancestor of current HEAD and default branch.").StringVar(&c.Apply.GitBeforeCommit)
-	apply.Flag("git-default-branch", "git repository default branch.").Default("origin/master").StringVar(&c.Apply.GitDefaultBranch)
+	apply.Flag("git-default-branch", "git repository default branch. Used to search common parent (default-branch and HEAD) when 'before-commit' not provided. Only supports local branches (no remote branches, tags, hashes...).").Default("master").StringVar(&c.Apply.GitDefaultBranch)
 	apply.Flag("kube-exclude-type", "regex to ignore Kubernetes resources by api version and type (apps/v1/Deployment, v1/Pod...). Can be repeated.").StringsVar(&c.Apply.ExcludeKubeTypeResources)
 
 	// Parse the commandline.
