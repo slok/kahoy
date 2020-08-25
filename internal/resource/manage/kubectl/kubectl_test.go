@@ -200,7 +200,7 @@ func TestManagerDelete(t *testing.T) {
 				mk.On("EncodeObjects", mock.Anything, expK8sResources).Once().Return([]byte("test"), nil)
 
 				exp := expCmdMatcher(
-					[]string{"kubectl", "delete", "-f", "-"},
+					[]string{"kubectl", "delete", "--ignore-not-found=true", "-f", "-"},
 					"test",
 				)
 				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
@@ -233,7 +233,7 @@ func TestManagerDelete(t *testing.T) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
 				exp := expCmdMatcher(
-					[]string{"whatever", "delete", "-f", "-"},
+					[]string{"whatever", "delete", "--ignore-not-found=true", "-f", "-"},
 					"test",
 				)
 				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
@@ -249,7 +249,7 @@ func TestManagerDelete(t *testing.T) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
 				exp := expCmdMatcher(
-					[]string{"kubectl", "delete", "--context", "whatever", "-f", "-"},
+					[]string{"kubectl", "delete", "--context", "whatever", "--ignore-not-found=true", "-f", "-"},
 					"test",
 				)
 				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
@@ -265,7 +265,7 @@ func TestManagerDelete(t *testing.T) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
 				exp := expCmdMatcher(
-					[]string{"kubectl", "delete", "--kubeconfig", "whatever", "-f", "-"},
+					[]string{"kubectl", "delete", "--kubeconfig", "whatever", "--ignore-not-found=true", "-f", "-"},
 					"test",
 				)
 				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
