@@ -72,6 +72,12 @@ func withServerSide(serverSide bool) kubectlCmdOption {
 	}
 }
 
+func withIgnoreNotFound(ignoreNotFound bool) kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, fmt.Sprintf("--ignore-not-found=%t", ignoreNotFound))
+	}
+}
+
 func withStdIn() kubectlCmdOption {
 	return func(args []string) []string {
 		return append(args, "-f", "-")

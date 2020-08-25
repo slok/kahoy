@@ -91,6 +91,7 @@ func NewManager(config ManagerConfig) (manage.ResourceManager, error) {
 		withDeleteCmd(),
 		withContext(config.KubeContext),
 		withConfig(config.KubeConfig),
+		withIgnoreNotFound(true),
 		withStdIn(),
 	})
 
