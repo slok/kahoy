@@ -55,6 +55,7 @@ type Repository struct {
 	excludeRegex  []*regexp.Regexp
 	includeRegex  []*regexp.Regexp
 	defaultIgnore bool
+	rootGroupID   string
 
 	resourceMemoryRepo storagememory.ResourceRepository
 	groupMemoryRepo    storagememory.GroupRepository
@@ -73,6 +74,7 @@ type RepositoryConfig struct {
 	Path              string
 	FSManager         FileSystemManager
 	KubernetesDecoder K8sObjectDecoder
+	RootGroupID       string
 	Logger            log.Logger
 
 	// Internal.
@@ -100,6 +102,13 @@ func (c *RepositoryConfig) defaults() error {
 		"app-svc":   "fs.Repository",
 		"root-path": c.Path,
 	})
+
+	// Clean path (Important for Group Id).
+	c.Path = filepath.Clean(c.Path)
+
+	if c.RootGroupID == "" {
+		c.RootGroupID = "root"
+	}
 
 	// Compile regex.
 	for _, r := range c.ExcludeRegex {
@@ -138,6 +147,7 @@ func NewRepository(config RepositoryConfig) (*Repository, error) {
 		k8sDecoder:    config.KubernetesDecoder,
 		fsManager:     config.FSManager,
 		logger:        config.Logger,
+		rootGroupID:   config.RootGroupID,
 		excludeRegex:  config.compiledExcludeRegex,
 		includeRegex:  config.compiledIncludeRegex,
 		defaultIgnore: len(config.compiledIncludeRegex) > 0, // If we have any include rule, by default we ignore.
@@ -153,13 +163,18 @@ func NewRepository(config RepositoryConfig) (*Repository, error) {
 
 // loadFS will load all the resource and groups from the root FS path.
 // the loaded resources will be loaded into a memory repository.
-func (r *Repository) loadFS(path string) error {
+func (r *Repository) loadFS(rootPath string) error {
 	// Walk doesn't apply concurrency, its safe to mutate these variables in
 	// this context from the walkFn context.
 	groups := map[string]model.Group{}
 	resources := map[string]model.Resource{}
+	// Used to strip the initial part of the path to get the group ID
+	groupIDRegexReplace, err := regexp.Compile(fmt.Sprintf(`%s\/?`, rootPath))
+	if err != nil {
+		return fmt.Errorf("could not compile groupID regex: %w", err)
+	}
 
-	err := r.fsManager.Walk(path, func(path string, info os.FileInfo, err error) error {
+	err = r.fsManager.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		logger := r.logger.WithValues(log.Kv{"path": path})
 		if err != nil {
 			logger.Warningf("could not access a path: %s", err)
@@ -184,7 +199,10 @@ func (r *Repository) loadFS(path string) error {
 
 		// Get group information.
 		groupPath := filepath.Dir(path)
-		groupID := filepath.Base(filepath.Dir(path))
+		groupID := groupIDRegexReplace.ReplaceAllString(filepath.Dir(path), "")
+		if groupID == "" {
+			groupID = r.rootGroupID
+		}
 
 		// Read file and load kubernetes objects.
 		objs, err := r.loadK8sObjects(path)
@@ -211,17 +229,7 @@ func (r *Repository) loadFS(path string) error {
 		}
 
 		// Check if we already have the group and check if two different groups have the same name.
-		group, ok := groups[groupID]
-		if ok {
-			if groupPath != group.Path {
-				return fmt.Errorf("%w: group collision, %q and %q", internalerrors.ErrNotValid, groupPath, group.Path)
-			}
-			return nil
-		}
-		groups[groupID] = model.Group{
-			ID:   groupID,
-			Path: groupPath,
-		}
+		groups[groupID] = model.NewGroup(groupID, groupPath, model.GroupConfig{})
 
 		return nil
 	})

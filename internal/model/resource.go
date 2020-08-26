@@ -39,6 +39,23 @@ func GenResourceID(obj K8sObject) string {
 
 // Group represents a group of resources.
 type Group struct {
-	ID   string
-	Path string
+	ID       string
+	Path     string
+	Priority int
+}
+
+// NewGroup returns a new group using app group configuration.
+func NewGroup(id, path string, config GroupConfig) Group {
+	const defaultPriority = 1000
+
+	priority := defaultPriority
+	if config.Priority != nil {
+		priority = *config.Priority
+	}
+
+	return Group{
+		ID:       id,
+		Path:     path,
+		Priority: priority,
+	}
 }

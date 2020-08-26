@@ -91,6 +91,205 @@ func TestRepositoryLoadFS(t *testing.T) {
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
+				f1Path := "/tmp/test/group1/test-1.yaml"
+				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/group1/test-1.yaml").Once().Return("/tmp/test/group1/test-1.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group1/test-1.yaml").Once().Return([]byte("f1"), nil)
+				objs := []model.K8sObject{newConfigmap("test-ns", "test-name")}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
+
+				// Mock all fs walks that will trigger the other mocks.
+				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+					walkfn := args[1].(filepath.WalkFunc)
+					_ = walkfn(f1Path, f1, nil)
+				})
+			},
+			expResources: []model.Resource{
+				{
+					ID:           "core/v1/ConfigMap/test-ns/test-name",
+					Name:         "test-name",
+					GroupID:      "group1",
+					ManifestPath: "/tmp/test/group1/test-1.yaml",
+					K8sObject:    newConfigmap("test-ns", "test-name"),
+				},
+			},
+			expGroups: []model.Group{
+				{ID: "group1", Path: "/tmp/test/group1", Priority: 1000},
+			},
+		},
+
+		"Having a file with multiple resources present resource one single resource should be load all resources with a single group.": {
+			cfg: fs.RepositoryConfig{
+				Path: "/tmp/test",
+			},
+			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
+				// Mock 1 file.
+				f1Path := "/tmp/test/group1/test-1.yaml"
+				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/group1/test-1.yaml").Once().Return("/tmp/test/group1/test-1.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group1/test-1.yaml").Once().Return([]byte("f1"), nil)
+				objs := []model.K8sObject{
+					newConfigmap("test-ns", "test-name"),
+					newConfigmap("test-ns2", "test-name2"),
+				}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
+
+				// Mock all fs walks that will trigger the other mocks.
+				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+					walkfn := args[1].(filepath.WalkFunc)
+					_ = walkfn(f1Path, f1, nil)
+				})
+			},
+			expResources: []model.Resource{
+				{
+					ID:           "core/v1/ConfigMap/test-ns/test-name",
+					Name:         "test-name",
+					GroupID:      "group1",
+					ManifestPath: "/tmp/test/group1/test-1.yaml",
+					K8sObject:    newConfigmap("test-ns", "test-name"),
+				},
+				{
+					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
+					Name:         "test-name2",
+					GroupID:      "group1",
+					ManifestPath: "/tmp/test/group1/test-1.yaml",
+					K8sObject:    newConfigmap("test-ns2", "test-name2"),
+				},
+			},
+			expGroups: []model.Group{
+				{ID: "group1", Path: "/tmp/test/group1", Priority: 1000},
+			},
+		},
+
+		"Having multiple files in same group should load all resources with the single group.": {
+			cfg: fs.RepositoryConfig{
+				Path: "/tmp/test",
+			},
+			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
+				// Mock 2 files.
+				f1Path := "/tmp/test/group1/test-1.yaml"
+				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/group1/test-1.yaml").Once().Return("/tmp/test/group1/test-1.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group1/test-1.yaml").Once().Return([]byte("f1"), nil)
+				objs := []model.K8sObject{
+					newConfigmap("test-ns", "test-name"),
+				}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
+
+				f2Path := "/tmp/test/group1/test-2.yaml"
+				f2 := testInfoFile{name: "test-2.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/group1/test-2.yaml").Once().Return("/tmp/test/group1/test-2.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group1/test-2.yaml").Once().Return([]byte("f2"), nil)
+				objs2 := []model.K8sObject{
+					newConfigmap("test-ns2", "test-name2"),
+				}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f2")).Once().Return(objs2, nil)
+
+				// Mock all fs walks that will trigger the other mocks.
+				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+					walkfn := args[1].(filepath.WalkFunc)
+					_ = walkfn(f1Path, f1, nil)
+					_ = walkfn(f2Path, f2, nil)
+				})
+			},
+			expResources: []model.Resource{
+				{
+					ID:           "core/v1/ConfigMap/test-ns/test-name",
+					Name:         "test-name",
+					GroupID:      "group1",
+					ManifestPath: "/tmp/test/group1/test-1.yaml",
+					K8sObject:    newConfigmap("test-ns", "test-name"),
+				},
+				{
+					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
+					Name:         "test-name2",
+					GroupID:      "group1",
+					ManifestPath: "/tmp/test/group1/test-2.yaml",
+					K8sObject:    newConfigmap("test-ns2", "test-name2"),
+				},
+			},
+			expGroups: []model.Group{
+				{ID: "group1", Path: "/tmp/test/group1", Priority: 1000},
+			},
+		},
+
+		"Having multiple files in different groups (and subdirectories) should be load all resources with multiple group.": {
+			cfg: fs.RepositoryConfig{
+				Path: "/tmp/test",
+			},
+			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
+				// Mock 2 files.
+				f1Path := "/tmp/test/group1/test-1.yaml"
+				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/group1/test-1.yaml").Once().Return("/tmp/test/group1/test-1.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group1/test-1.yaml").Once().Return([]byte("f1"), nil)
+				objs := []model.K8sObject{
+					newConfigmap("test-ns", "test-name"),
+				}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
+
+				f2Path := "/tmp/test/group2/test-2.yaml"
+				f2 := testInfoFile{name: "test-2.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/group2/test-2.yaml").Once().Return("/tmp/test/group2/test-2.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group2/test-2.yaml").Once().Return([]byte("f2"), nil)
+				objs2 := []model.K8sObject{
+					newConfigmap("test-ns2", "test-name2"),
+				}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f2")).Once().Return(objs2, nil)
+
+				f3Path := "/tmp/test/group2/subgroup3/test-3.yaml"
+				f3 := testInfoFile{name: "test-3.yaml", isDir: false}
+				mfsm.On("Abs", "/tmp/test/group2/subgroup3/test-3.yaml").Once().Return("/tmp/test/group2/subgroup3/test-3.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group2/subgroup3/test-3.yaml").Once().Return([]byte("f3"), nil)
+				objs3 := []model.K8sObject{
+					newConfigmap("test-ns3", "test-name3"),
+				}
+				mkd.On("DecodeObjects", mock.Anything, []byte("f3")).Once().Return(objs3, nil)
+
+				// Mock all fs walks that will trigger the other mocks.
+				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+					walkfn := args[1].(filepath.WalkFunc)
+					_ = walkfn(f1Path, f1, nil)
+					_ = walkfn(f2Path, f2, nil)
+					_ = walkfn(f3Path, f3, nil)
+				})
+			},
+			expResources: []model.Resource{
+				{
+					ID:           "core/v1/ConfigMap/test-ns/test-name",
+					Name:         "test-name",
+					GroupID:      "group1",
+					ManifestPath: "/tmp/test/group1/test-1.yaml",
+					K8sObject:    newConfigmap("test-ns", "test-name"),
+				},
+				{
+					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
+					Name:         "test-name2",
+					GroupID:      "group2",
+					ManifestPath: "/tmp/test/group2/test-2.yaml",
+					K8sObject:    newConfigmap("test-ns2", "test-name2"),
+				},
+				{
+					ID:           "core/v1/ConfigMap/test-ns3/test-name3",
+					Name:         "test-name3",
+					GroupID:      "group2/subgroup3",
+					ManifestPath: "/tmp/test/group2/subgroup3/test-3.yaml",
+					K8sObject:    newConfigmap("test-ns3", "test-name3"),
+				},
+			},
+			expGroups: []model.Group{
+				{ID: "group1", Path: "/tmp/test/group1", Priority: 1000},
+				{ID: "group2", Path: "/tmp/test/group2", Priority: 1000},
+				{ID: "group2/subgroup3", Path: "/tmp/test/group2/subgroup3", Priority: 1000},
+			},
+		},
+
+		"Having files in root path, should be on the default root group id.": {
+			cfg: fs.RepositoryConfig{
+				Path: "/tmp/test",
+			},
+			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
+				// Mock 1 file.
 				f1Path := "/tmp/test/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
 				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
@@ -108,19 +307,20 @@ func TestRepositoryLoadFS(t *testing.T) {
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
 					Name:         "test-name",
-					GroupID:      "test",
+					GroupID:      "root",
 					ManifestPath: "/tmp/test/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
 				},
 			},
 			expGroups: []model.Group{
-				{ID: "test", Path: "/tmp/test"},
+				{ID: "root", Path: "/tmp/test", Priority: 1000},
 			},
 		},
 
-		"Having a file with multiple resources present resource one single resource should be load all resources with a single group.": {
+		"Having files in root path (custom), should be on the default root path.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				Path:        "/tmp/test",
+				RootGroupID: "whatever",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
@@ -128,10 +328,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
 				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
 				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
-				objs := []model.K8sObject{
-					newConfigmap("test-ns", "test-name"),
-					newConfigmap("test-ns2", "test-name2"),
-				}
+				objs := []model.K8sObject{newConfigmap("test-ns", "test-name")}
 				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
 
 				// Mock all fs walks that will trigger the other mocks.
@@ -144,125 +341,13 @@ func TestRepositoryLoadFS(t *testing.T) {
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
 					Name:         "test-name",
-					GroupID:      "test",
+					GroupID:      "whatever",
 					ManifestPath: "/tmp/test/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
 				},
-				{
-					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
-					Name:         "test-name2",
-					GroupID:      "test",
-					ManifestPath: "/tmp/test/test-1.yaml",
-					K8sObject:    newConfigmap("test-ns2", "test-name2"),
-				},
 			},
 			expGroups: []model.Group{
-				{ID: "test", Path: "/tmp/test"},
-			},
-		},
-
-		"Having multiple files in same group should load all resources with the single group.": {
-			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
-			},
-			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
-				// Mock 2 files.
-				f1Path := "/tmp/test/test-1.yaml"
-				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
-				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
-				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
-				objs := []model.K8sObject{
-					newConfigmap("test-ns", "test-name"),
-				}
-				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
-
-				f2Path := "/tmp/test/test-2.yaml"
-				f2 := testInfoFile{name: "test-2.yaml", isDir: false}
-				mfsm.On("Abs", "/tmp/test/test-2.yaml").Once().Return("/tmp/test/test-2.yaml", nil)
-				mfsm.On("ReadFile", "/tmp/test/test-2.yaml").Once().Return([]byte("f2"), nil)
-				objs2 := []model.K8sObject{
-					newConfigmap("test-ns2", "test-name2"),
-				}
-				mkd.On("DecodeObjects", mock.Anything, []byte("f2")).Once().Return(objs2, nil)
-
-				// Mock all fs walks that will trigger the other mocks.
-				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
-					walkfn := args[1].(filepath.WalkFunc)
-					_ = walkfn(f1Path, f1, nil)
-					_ = walkfn(f2Path, f2, nil)
-				})
-			},
-			expResources: []model.Resource{
-				{
-					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
-					GroupID:      "test",
-					ManifestPath: "/tmp/test/test-1.yaml",
-					K8sObject:    newConfigmap("test-ns", "test-name"),
-				},
-				{
-					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
-					Name:         "test-name2",
-					GroupID:      "test",
-					ManifestPath: "/tmp/test/test-2.yaml",
-					K8sObject:    newConfigmap("test-ns2", "test-name2"),
-				},
-			},
-			expGroups: []model.Group{
-				{ID: "test", Path: "/tmp/test"},
-			},
-		},
-
-		"Having multiple files in different groups should be load all resources with multiple group.": {
-			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
-			},
-			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
-				// Mock 2 files.
-				f1Path := "/tmp/test/test-1.yaml"
-				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
-				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
-				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
-				objs := []model.K8sObject{
-					newConfigmap("test-ns", "test-name"),
-				}
-				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
-
-				f2Path := "/tmp/test/test2/test-2.yaml"
-				f2 := testInfoFile{name: "test-2.yaml", isDir: false}
-				mfsm.On("Abs", "/tmp/test/test2/test-2.yaml").Once().Return("/tmp/test/test2/test-2.yaml", nil)
-				mfsm.On("ReadFile", "/tmp/test/test2/test-2.yaml").Once().Return([]byte("f2"), nil)
-				objs2 := []model.K8sObject{
-					newConfigmap("test-ns2", "test-name2"),
-				}
-				mkd.On("DecodeObjects", mock.Anything, []byte("f2")).Once().Return(objs2, nil)
-
-				// Mock all fs walks that will trigger the other mocks.
-				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
-					walkfn := args[1].(filepath.WalkFunc)
-					_ = walkfn(f1Path, f1, nil)
-					_ = walkfn(f2Path, f2, nil)
-				})
-			},
-			expResources: []model.Resource{
-				{
-					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
-					GroupID:      "test",
-					ManifestPath: "/tmp/test/test-1.yaml",
-					K8sObject:    newConfigmap("test-ns", "test-name"),
-				},
-				{
-					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
-					Name:         "test-name2",
-					GroupID:      "test2",
-					ManifestPath: "/tmp/test/test2/test-2.yaml",
-					K8sObject:    newConfigmap("test-ns2", "test-name2"),
-				},
-			},
-			expGroups: []model.Group{
-				{ID: "test", Path: "/tmp/test"},
-				{ID: "test2", Path: "/tmp/test/test2"},
+				{ID: "whatever", Path: "/tmp/test", Priority: 1000},
 			},
 		},
 
@@ -272,7 +357,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
-				f1Path := "/tmp/test/test-1.json"
+				f1Path := "/tmp/test/group1/test-1.json"
 				f1 := testInfoFile{name: "test-1.json", isDir: false}
 
 				// Mock all fs walks that will trigger the other mocks.
@@ -287,28 +372,31 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Directories and excluded regex should be ignored.": {
 			cfg: fs.RepositoryConfig{
-				Path:         "/tmp",
-				ExcludeRegex: []string{".*/test2", ""},
+				Path:         "/tmp/test",
+				ExcludeRegex: []string{".*/group2", ""},
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock dirs.
-				f1Path := "/tmp/test"
-				f1 := testInfoFile{name: "test", isDir: true}
-				f2Path := "/tmp/test2"
-				f2 := testInfoFile{name: "test2"}
-				f3Path := "/tmp/test3/test3.yaml"
+				f1Path := "/tmp/test/group1"
+				f1 := testInfoFile{name: "group1", isDir: true}
+				f2Path := "/tmp/test/group2/test2.yaml"
+				f2 := testInfoFile{name: "group2"}
+				f3Path := "/tmp/test/group3/test3.yaml"
 				f3 := testInfoFile{name: "test3.yaml"}
 
+				// The ignored file.
+				mfsm.On("Abs", "/tmp/test/group2/test2.yaml").Once().Return("/tmp/test/group2/test2.yaml", nil)
+
 				// The file that is included.
-				mfsm.On("ReadFile", "/tmp/test3/test3.yaml").Once().Return([]byte("f3"), nil)
-				mfsm.On("Abs", "/tmp/test3/test3.yaml").Once().Return("/tmp/test3/test3.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group3/test3.yaml").Once().Return([]byte("f3"), nil)
+				mfsm.On("Abs", "/tmp/test/group3/test3.yaml").Once().Return("/tmp/test/group3/test3.yaml", nil)
 				objs := []model.K8sObject{
 					newConfigmap("test-ns", "test-name3"),
 				}
 				mkd.On("DecodeObjects", mock.Anything, []byte("f3")).Once().Return(objs, nil)
 
 				// Mock all fs walks that will trigger the other mocks.
-				mfsm.On("Walk", "/tmp", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+				mfsm.On("Walk", "/tmp/test", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
 					walkfn := args[1].(filepath.WalkFunc)
 					_ = walkfn(f1Path, f1, nil)
 					_ = walkfn(f2Path, f2, nil)
@@ -319,35 +407,35 @@ func TestRepositoryLoadFS(t *testing.T) {
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name3",
 					Name:         "test-name3",
-					GroupID:      "test3",
-					ManifestPath: "/tmp/test3/test3.yaml",
+					GroupID:      "group3",
+					ManifestPath: "/tmp/test/group3/test3.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name3"),
 				},
 			},
 			expGroups: []model.Group{
-				{ID: "test3", Path: "/tmp/test3"},
+				{ID: "group3", Path: "/tmp/test/group3", Priority: 1000},
 			},
 		},
 
 		"Included should be included and ignore others.": {
 			cfg: fs.RepositoryConfig{
 				Path:         "/tmp/test",
-				IncludeRegex: []string{".*/test2"},
+				IncludeRegex: []string{".*/group2"},
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 3 files.
-				f1Path := "/tmp/test/test-1.yaml"
-				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
+				f1Path := "/tmp/test/group1/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test/group1/test-1.yaml").Once().Return("/tmp/test/group1/test-1.yaml", nil)
 				f1 := testInfoFile{name: "test1", isDir: false}
-				f2Path := "/tmp/test2/test-1.yaml"
-				mfsm.On("Abs", "/tmp/test2/test-1.yaml").Once().Return("/tmp/test2/test-1.yaml", nil)
+				f2Path := "/tmp/test/group2/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test/group2/test-1.yaml").Once().Return("/tmp/test/group2/test-1.yaml", nil)
 				f2 := testInfoFile{name: "test2", isDir: false}
-				f3Path := "/tmp/test3/test-1.yaml"
-				mfsm.On("Abs", "/tmp/test3/test-1.yaml").Once().Return("/tmp/test3/test-1.yaml", nil)
+				f3Path := "/tmp/test/group3/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test/group3/test-1.yaml").Once().Return("/tmp/test/group3/test-1.yaml", nil)
 				f3 := testInfoFile{name: "test3", isDir: false}
 
 				// The file that is included.
-				mfsm.On("ReadFile", "/tmp/test2/test-1.yaml").Once().Return([]byte("f1"), nil)
+				mfsm.On("ReadFile", "/tmp/test/group2/test-1.yaml").Once().Return([]byte("f1"), nil)
 				objs := []model.K8sObject{
 					newConfigmap("test-ns", "test-name"),
 				}
@@ -365,32 +453,32 @@ func TestRepositoryLoadFS(t *testing.T) {
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
 					Name:         "test-name",
-					GroupID:      "test2",
-					ManifestPath: "/tmp/test2/test-1.yaml",
+					GroupID:      "group2",
+					ManifestPath: "/tmp/test/group2/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
 				},
 			},
 			expGroups: []model.Group{
-				{ID: "test2", Path: "/tmp/test2"},
+				{ID: "group2", Path: "/tmp/test/group2", Priority: 1000},
 			},
 		},
 
 		"Excludes should have priority over includes.": {
 			cfg: fs.RepositoryConfig{
 				Path:         "/tmp/test",
-				ExcludeRegex: []string{".*/test2"},
-				IncludeRegex: []string{".*/test2"},
+				ExcludeRegex: []string{".*/group2"},
+				IncludeRegex: []string{".*/group2"},
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 3 files.
-				f1Path := "/tmp/test/test-1.yaml"
-				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
+				f1Path := "/tmp/test/group1/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test/group1/test-1.yaml").Once().Return("/tmp/test/group1/test-1.yaml", nil)
 				f1 := testInfoFile{name: "test1", isDir: false}
-				f2Path := "/tmp/test2/test-1.yaml"
-				mfsm.On("Abs", "/tmp/test2/test-1.yaml").Once().Return("/tmp/test2/test-1.yaml", nil)
+				f2Path := "/tmp/test/group2/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test/group2/test-1.yaml").Once().Return("/tmp/test/group2/test-1.yaml", nil)
 				f2 := testInfoFile{name: "test2", isDir: false}
-				f3Path := "/tmp/test3/test-1.yaml"
-				mfsm.On("Abs", "/tmp/test3/test-1.yaml").Once().Return("/tmp/test3/test-1.yaml", nil)
+				f3Path := "/tmp/test/group3/test-1.yaml"
+				mfsm.On("Abs", "/tmp/test/group3/test-1.yaml").Once().Return("/tmp/test/group3/test-1.yaml", nil)
 				f3 := testInfoFile{name: "test3", isDir: false}
 
 				// Mock all fs walks that will trigger the other mocks.
@@ -411,7 +499,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
-				f1Path := "/tmp/test/test-1.yaml"
+				f1Path := "/tmp/test/group1/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
 
 				// Mock all fs walks that will trigger the other mocks.
@@ -431,18 +519,18 @@ func TestRepositoryLoadFS(t *testing.T) {
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
-				f1Path := "/tmp/test/test-1.yaml"
+				f1Path := "/tmp/test/group1/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
-				mfsm.On("Abs", "/tmp/test/test-1.yaml").Once().Return("/tmp/test/test-1.yaml", nil)
-				mfsm.On("ReadFile", "/tmp/test/test-1.yaml").Once().Return([]byte("f1"), nil)
+				mfsm.On("Abs", "/tmp/test/group1/test-1.yaml").Once().Return("/tmp/test/group1/test-1.yaml", nil)
+				mfsm.On("ReadFile", "/tmp/test/group1/test-1.yaml").Once().Return([]byte("f1"), nil)
 				objs := []model.K8sObject{
 					newConfigmap("test-ns", "test-name"),
 				}
 				mkd.On("DecodeObjects", mock.Anything, []byte("f1")).Once().Return(objs, nil)
 
 				// Ignored file.
-				f2Path := "/tmp/test/test-2.yaml"
-				mfsm.On("Abs", "/tmp/test/test-2.yaml").Once().Return("/tmp/test/test-2.yaml", nil)
+				f2Path := "/tmp/test/group1/test-2.yaml"
+				mfsm.On("Abs", "/tmp/test/group1/test-2.yaml").Once().Return("/tmp/test/group1/test-2.yaml", nil)
 				f2 := testInfoFile{name: "test-2.yaml", isDir: false}
 
 				// Mock all fs walks that will trigger the other mocks.
@@ -456,13 +544,13 @@ func TestRepositoryLoadFS(t *testing.T) {
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
 					Name:         "test-name",
-					GroupID:      "test",
-					ManifestPath: "/tmp/test/test-1.yaml",
+					GroupID:      "group1",
+					ManifestPath: "/tmp/test/group1/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
 				},
 			},
 			expGroups: []model.Group{
-				{ID: "test", Path: "/tmp/test"},
+				{ID: "group1", Path: "/tmp/test/group1", Priority: 1000},
 			},
 		},
 	}
