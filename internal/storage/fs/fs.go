@@ -168,7 +168,7 @@ func (r *Repository) loadFS(rootPath string) error {
 	// this context from the walkFn context.
 	groups := map[string]model.Group{}
 	resources := map[string]model.Resource{}
-	// Used to strip the initial part of the path to get the group ID
+	// Used to strip the initial part of the path to get the group ID.
 	groupIDRegexReplace, err := regexp.Compile(fmt.Sprintf(`%s\/?`, rootPath))
 	if err != nil {
 		return fmt.Errorf("could not compile groupID regex: %w", err)
