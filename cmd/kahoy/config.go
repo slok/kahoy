@@ -12,6 +12,11 @@ const (
 	CmdArgApply = "apply"
 )
 
+// Defaults.
+const (
+	DefaultConfigFile = "kahoy.yml"
+)
+
 // Apply modes.
 const (
 	ApplyModePaths = "paths"
@@ -25,9 +30,10 @@ type CmdConfig struct {
 
 	// Global is the configuration shared by all commands.
 	Global struct {
-		Debug   bool
-		NoColor bool
-		NoLog   bool
+		Debug      bool
+		NoColor    bool
+		NoLog      bool
+		ConfigFile string
 	}
 
 	// Apply is the apply command configuration.
@@ -61,6 +67,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	app.Flag("debug", "Enable debug mode.").BoolVar(&c.Global.Debug)
 	app.Flag("no-color", "Disable color.").BoolVar(&c.Global.NoColor)
 	app.Flag("no-log", "Disable logger.").BoolVar(&c.Global.NoLog)
+	app.Flag("config-file", "App configuration file.").Default(DefaultConfigFile).StringVar(&c.Global.ConfigFile)
 
 	// Apply command.
 	apply := app.Command(CmdArgApply, "Will take all the manifests in the directory and apply to a Kubernetes cluster.")

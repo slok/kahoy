@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/slok/kahoy/internal/configuration"
 	"github.com/slok/kahoy/internal/log"
+	"github.com/slok/kahoy/internal/model"
 )
 
 var (
@@ -18,10 +21,11 @@ var (
 
 // GlobalConfig is the configuration shared by all the commands.
 type GlobalConfig struct {
-	Logger log.Logger
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
+	AppConfig model.AppConfig
+	Logger    log.Logger
+	Stdin     io.Reader
+	Stdout    io.Writer
+	Stderr    io.Writer
 }
 
 // Run runs the main application.
@@ -55,12 +59,35 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	})
 	logger.Debugf("debug level is enabled") // Will log only when debug enabled.
 
-	// Global configuration.
+	// Load app configuration if present.
+	var appConfig model.AppConfig
+	configData, err := ioutil.ReadFile(config.Global.ConfigFile)
+	if err != nil {
+		// If the default configuration file is missing, don't fail, if is a custom one fail.
+		if config.Global.ConfigFile != DefaultConfigFile || !os.IsNotExist(err) {
+			return fmt.Errorf("could not load %q config file: %w", config.Global.ConfigFile, err)
+		}
+	} else {
+		cfg, err := configuration.NewYAMLV1Loader(string(configData)).Load(ctx)
+		if err != nil {
+			return fmt.Errorf("could not load app configuration: %w", err)
+		}
+		appConfig = *cfg
+		logger.WithValues(log.Kv{"config-file": config.Global.ConfigFile}).Infof("app configuration loaded")
+	}
+
+	err = appConfig.Validate(ctx)
+	if err != nil {
+		return fmt.Errorf("invalid app configuration: %w", err)
+	}
+
+	// Set global configuration.
 	gConfig := GlobalConfig{
-		Logger: logger,
-		Stdin:  stdin,
-		Stdout: stdout,
-		Stderr: stderr,
+		AppConfig: appConfig,
+		Logger:    logger,
+		Stdin:     stdin,
+		Stdout:    stdout,
+		Stderr:    stderr,
 	}
 
 	// Mapping for each command func and select the correct one.
