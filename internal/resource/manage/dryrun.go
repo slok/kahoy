@@ -108,6 +108,7 @@ func (d dryRunManager) printTree(title string, resources []model.Resource, print
 
 		c++
 	}
+	fmt.Println()
 }
 
 func (d dryRunManager) printf(format string, a ...interface{}) {

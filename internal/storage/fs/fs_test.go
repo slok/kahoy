@@ -66,7 +66,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 	}{
 		"Having an error while loading the FS, should return the error.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				Path:      "/tmp/test",
+				AppConfig: &model.AppConfig{},
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				mfsm.On("Walk", mock.Anything, mock.Anything).Once().Return(errWanted)
@@ -76,7 +77,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having no files should not load resources.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				AppConfig: &model.AppConfig{},
+				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				mfsm.On("Walk", mock.Anything, mock.Anything).Once().Return(nil)
@@ -87,7 +89,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having a file with one resource present resource one single resource should be returned.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				AppConfig: &model.AppConfig{},
+				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
@@ -120,7 +123,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having a file with multiple resources present resource one single resource should be load all resources with a single group.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				AppConfig: &model.AppConfig{},
+				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
@@ -163,7 +167,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having multiple files in same group should load all resources with the single group.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				AppConfig: &model.AppConfig{},
+				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 2 files.
@@ -215,7 +220,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having multiple files in different groups (and subdirectories) should be load all resources with multiple group.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				AppConfig: &model.AppConfig{},
+				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 2 files.
@@ -286,7 +292,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having files in root path, should be on the default root group id.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				AppConfig: &model.AppConfig{},
+				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
@@ -319,6 +326,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having files in root path (custom), should be on the default root path.": {
 			cfg: fs.RepositoryConfig{
+				AppConfig:   &model.AppConfig{},
 				Path:        "/tmp/test",
 				RootGroupID: "whatever",
 			},
@@ -353,7 +361,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having a non yaml file, should be ignored.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				AppConfig: &model.AppConfig{},
+				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
@@ -372,6 +381,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Directories and excluded regex should be ignored.": {
 			cfg: fs.RepositoryConfig{
+				AppConfig:    &model.AppConfig{},
 				Path:         "/tmp/test",
 				ExcludeRegex: []string{".*/group2", ""},
 			},
@@ -419,6 +429,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Included should be included and ignore others.": {
 			cfg: fs.RepositoryConfig{
+				AppConfig:    &model.AppConfig{},
 				Path:         "/tmp/test",
 				IncludeRegex: []string{".*/group2"},
 			},
@@ -465,6 +476,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Excludes should have priority over includes.": {
 			cfg: fs.RepositoryConfig{
+				AppConfig:    &model.AppConfig{},
 				Path:         "/tmp/test",
 				ExcludeRegex: []string{".*/group2"},
 				IncludeRegex: []string{".*/group2"},
@@ -495,7 +507,8 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"An error on walk should stop the walk on the FS.": {
 			cfg: fs.RepositoryConfig{
-				Path: "/tmp/test",
+				AppConfig: &model.AppConfig{},
+				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
 				// Mock 1 file.
@@ -514,6 +527,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 
 		"Having ignores on files, it should ignore matched files.": {
 			cfg: fs.RepositoryConfig{
+				AppConfig:    &model.AppConfig{},
 				Path:         "/tmp/test",
 				ExcludeRegex: []string{".*test-2.*"},
 			},

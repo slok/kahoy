@@ -56,6 +56,7 @@ type Repository struct {
 	includeRegex  []*regexp.Regexp
 	defaultIgnore bool
 	rootGroupID   string
+	appConfig     model.AppConfig
 
 	resourceMemoryRepo storagememory.ResourceRepository
 	groupMemoryRepo    storagememory.GroupRepository
@@ -76,6 +77,7 @@ type RepositoryConfig struct {
 	KubernetesDecoder K8sObjectDecoder
 	RootGroupID       string
 	Logger            log.Logger
+	AppConfig         *model.AppConfig
 
 	// Internal.
 	compiledExcludeRegex []*regexp.Regexp
@@ -122,6 +124,10 @@ func (c *RepositoryConfig) defaults() error {
 		c.compiledExcludeRegex = append(c.compiledExcludeRegex, cr)
 	}
 
+	if c.AppConfig == nil {
+		return fmt.Errorf("app configuration is required")
+	}
+
 	for _, r := range c.IncludeRegex {
 		if r == "" {
 			continue
@@ -148,6 +154,7 @@ func NewRepository(config RepositoryConfig) (*Repository, error) {
 		fsManager:     config.FSManager,
 		logger:        config.Logger,
 		rootGroupID:   config.RootGroupID,
+		appConfig:     *config.AppConfig,
 		excludeRegex:  config.compiledExcludeRegex,
 		includeRegex:  config.compiledIncludeRegex,
 		defaultIgnore: len(config.compiledIncludeRegex) > 0, // If we have any include rule, by default we ignore.
@@ -229,7 +236,8 @@ func (r *Repository) loadFS(rootPath string) error {
 		}
 
 		// Check if we already have the group and check if two different groups have the same name.
-		groups[groupID] = model.NewGroup(groupID, groupPath, model.GroupConfig{})
+		groupConfig := r.appConfig.Groups[groupID]
+		groups[groupID] = model.NewGroup(groupID, groupPath, groupConfig)
 
 		return nil
 	})

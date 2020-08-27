@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/slok/kahoy/internal/model"
 	"github.com/slok/kahoy/internal/storage/fs/fsmock"
 	"github.com/slok/kahoy/internal/storage/git"
 	"github.com/slok/kahoy/internal/storage/git/gitmock"
@@ -24,6 +25,7 @@ func TestNewRepositories(t *testing.T) {
 	}{
 		"If old repo path is absolute it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "/manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -34,6 +36,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If new repo path is absolute it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "/manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -44,6 +47,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If getting the old repo FS fails, it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -56,6 +60,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If getting the new repo FS fails, it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -69,6 +74,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If checkout on the old repo fails, it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -87,6 +93,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If getting the old repo HEAD fails, it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -107,6 +114,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If getting the new repo HEAD fails, it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -128,6 +136,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If old and new repos have the same HEAD it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -149,6 +158,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If the old relative path does not exist, should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -169,6 +179,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If the new relative path does not exist, should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -189,6 +200,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If before commit is passed, it should not search for it and create correctly the repositories (Happy path without search before commit).": {
 			config: git.RepositoriesConfig{
+				AppConfig:          &model.AppConfig{},
 				OldRelPath:         "./manifests",
 				NewRelPath:         "./manifests",
 				GitBeforeCommitSHA: "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",
@@ -210,6 +222,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If not before commit is passed, it should search for it and create correctly the repositories (Happy path with search before commit).": {
 			config: git.RepositoriesConfig{
+				AppConfig:        &model.AppConfig{},
 				OldRelPath:       "./manifests",
 				NewRelPath:       "./manifests",
 				GitDefaultBranch: "main",
@@ -249,6 +262,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If search before commit in done in the default branch it should fail.": {
 			config: git.RepositoriesConfig{
+				AppConfig:        &model.AppConfig{},
 				OldRelPath:       "./manifests",
 				NewRelPath:       "./manifests",
 				GitDefaultBranch: "main",
@@ -262,6 +276,7 @@ func TestNewRepositories(t *testing.T) {
 
 		"If git diff filter is used, it should get a diff patch between before-commit and HEAD commits.": {
 			config: git.RepositoriesConfig{
+				AppConfig:            &model.AppConfig{},
 				OldRelPath:           "./manifests",
 				NewRelPath:           "./manifests",
 				GitBeforeCommitSHA:   "cfd490e528d1c49b093cee3818cb63e2e0e8f3ef",

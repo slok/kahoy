@@ -20,6 +20,8 @@ type ResourceRepository interface {
 	ListResources(ctx context.Context, opts ResourceListOpts) (*ResourceList, error)
 }
 
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name ResourceRepository
+
 // GroupListOpts are the options for Group list action on the repository.
 type GroupListOpts struct{}
 
@@ -33,3 +35,5 @@ type GroupRepository interface {
 	GetGroup(ctx context.Context, id string) (*model.Group, error)
 	ListGroups(ctx context.Context, opts GroupListOpts) (*GroupList, error)
 }
+
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name GroupRepository
