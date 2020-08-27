@@ -11,6 +11,7 @@ import (
 	"github.com/go-git/go-git/v5/storage/memory"
 
 	"github.com/slok/kahoy/internal/log"
+	"github.com/slok/kahoy/internal/model"
 	"github.com/slok/kahoy/internal/storage/fs"
 )
 
@@ -29,6 +30,7 @@ type RepositoriesConfig struct {
 	OldRelPath        string
 	NewRelPath        string
 	KubernetesDecoder fs.K8sObjectDecoder
+	AppConfig         *model.AppConfig
 	Logger            log.Logger
 
 	// GitBeforeCommitSHA Used to set the Git old repo state.
@@ -176,6 +178,7 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 		IncludeRegex:      config.IncludeRegex,
 		Path:              config.OldRelPath,
 		KubernetesDecoder: config.KubernetesDecoder,
+		AppConfig:         config.AppConfig,
 		Logger: config.Logger.WithValues(log.Kv{
 			"repo-state": "old",
 			"git-rev":    oldRef.Hash().String(),
@@ -191,6 +194,7 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 		IncludeRegex:      config.IncludeRegex,
 		Path:              config.NewRelPath,
 		KubernetesDecoder: config.KubernetesDecoder,
+		AppConfig:         config.AppConfig,
 		Logger: config.Logger.WithValues(log.Kv{
 			"repo-state": "new",
 			"git-rev":    newRef.Hash().String(),

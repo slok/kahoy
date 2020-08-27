@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/slok/kahoy/internal/log"
+	"github.com/slok/kahoy/internal/model"
 )
 
 // RepositoriesConfig is the configuration for NewRepositories
@@ -13,6 +14,7 @@ type RepositoriesConfig struct {
 	OldPath           string
 	NewPath           string
 	KubernetesDecoder K8sObjectDecoder
+	AppConfig         *model.AppConfig
 	Logger            log.Logger
 }
 
@@ -24,6 +26,7 @@ func NewRepositories(config RepositoriesConfig) (oldRepo, newRepo *Repository, e
 		IncludeRegex:      config.IncludeRegex,
 		Path:              config.OldPath,
 		KubernetesDecoder: config.KubernetesDecoder,
+		AppConfig:         config.AppConfig,
 		Logger: config.Logger.WithValues(log.Kv{
 			"repo-state": "old",
 		}),
@@ -37,6 +40,7 @@ func NewRepositories(config RepositoriesConfig) (oldRepo, newRepo *Repository, e
 		IncludeRegex:      config.IncludeRegex,
 		Path:              config.NewPath,
 		KubernetesDecoder: config.KubernetesDecoder,
+		AppConfig:         config.AppConfig,
 		Logger: config.Logger.WithValues(log.Kv{
 			"repo-state": "new",
 		}),

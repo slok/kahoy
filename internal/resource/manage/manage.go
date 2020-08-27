@@ -13,6 +13,8 @@ type ResourceManager interface {
 	Delete(ctx context.Context, resources []model.Resource) error
 }
 
+//go:generate mockery --case underscore --output managemock --outpkg managemock --name ResourceManager
+
 type noopManager struct {
 	logger log.Logger
 }

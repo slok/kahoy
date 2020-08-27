@@ -9,6 +9,7 @@ import (
 	"github.com/slok/kahoy/internal/model"
 	"github.com/slok/kahoy/internal/plan"
 	resourcemanage "github.com/slok/kahoy/internal/resource/manage"
+	managebatch "github.com/slok/kahoy/internal/resource/manage/batch"
 	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
 	resourceprocess "github.com/slok/kahoy/internal/resource/process"
 	"github.com/slok/kahoy/internal/storage"
@@ -29,6 +30,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	var (
 		oldResourceRepo, newResourceRepo storage.ResourceRepository
+		newGroupRepo                     storage.GroupRepository
 	)
 	switch cmdConfig.Apply.Mode {
 	case ApplyModeGit:
@@ -41,6 +43,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			GitDefaultBranch:     cmdConfig.Apply.GitDefaultBranch,
 			GitDiffIncludeFilter: cmdConfig.Apply.GitDiffFilter,
 			KubernetesDecoder:    kubernetesSerializer,
+			AppConfig:            &globalConfig.AppConfig,
 			Logger:               logger,
 		})
 		if err != nil {
@@ -49,6 +52,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 		oldResourceRepo = oldRepo
 		newResourceRepo = newRepo
+		newGroupRepo = newRepo
 
 	case ApplyModePaths:
 		oldRepo, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
@@ -57,6 +61,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			OldPath:           cmdConfig.Apply.ManifestsPathOld,
 			NewPath:           cmdConfig.Apply.ManifestsPathNew,
 			KubernetesDecoder: kubernetesSerializer,
+			AppConfig:         &globalConfig.AppConfig,
 			Logger:            logger,
 		})
 		if err != nil {
@@ -65,6 +70,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 		oldResourceRepo = oldRepo
 		newResourceRepo = newRepo
+		newGroupRepo = newRepo
 	default:
 		return fmt.Errorf("unknown apply mode: %s", cmdConfig.Apply.Mode)
 	}
@@ -139,6 +145,16 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		if err != nil {
 			return fmt.Errorf("could not create resource manager: %w", err)
 		}
+	}
+
+	// Wrap manager with batch managers.
+	manager, err = managebatch.NewPriorityManager(managebatch.PriorityManagerConfig{
+		Manager:         manager,
+		Logger:          logger,
+		GroupRepository: newGroupRepo,
+	})
+	if err != nil {
+		return fmt.Errorf("could not create batch manager: %w", err)
 	}
 
 	err = manager.Apply(ctx, applyRes)
