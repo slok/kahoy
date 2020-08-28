@@ -310,7 +310,6 @@ func askYesNo() (bool, error) {
 
 	s = strings.TrimSpace(s)
 	s = strings.ToLower(s)
-	fmt.Println("Value of s: " + s)
 
 	if s == "y" || s == "yes" {
 		return true, nil
