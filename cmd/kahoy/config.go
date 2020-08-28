@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -76,7 +77,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("diff", "diff instead of applying changes.").BoolVar(&c.Apply.DiffMode)
 	apply.Flag("dry-run", "execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
 	apply.Flag("mode", "selects how apply will select the state, load manifests... git needs to be executed from a git repository.").Default(ApplyModeGit).EnumVar(&c.Apply.Mode, ApplyModePaths, ApplyModeGit)
-	apply.Flag("fs-old-manifests-path", "kubernetes current manifests path.").Required().StringVar(&c.Apply.ManifestsPathOld)
+	apply.Flag("fs-old-manifests-path", "kubernetes current manifests path.").StringVar(&c.Apply.ManifestsPathOld)
 	apply.Flag("fs-new-manifests-path", "kubernetes expected manifests path.").Required().StringVar(&c.Apply.ManifestsPathNew)
 	apply.Flag("fs-exclude", "regex to ignore manifest files and dirs. Can be repeated.").StringsVar(&c.Apply.ExcludeManifests)
 	apply.Flag("fs-include", "regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").StringsVar(&c.Apply.IncludeManifests)
@@ -92,5 +93,36 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	}
 	c.Command = cmd
 
+	err = c.validate()
+	if err != nil {
+		return nil, fmt.Errorf("invalid cmd configuration: %w", err)
+	}
+
 	return &c, nil
+}
+
+func (c *CmdConfig) validate() error {
+	if c.Apply.DryRun && c.Apply.DiffMode {
+		return fmt.Errorf(`only one of "dry run" and "diff" execution modes can be used at the same time`)
+	}
+
+	switch c.Apply.Mode {
+	case ApplyModePaths:
+		if c.Apply.ManifestsPathOld == "" {
+			return fmt.Errorf("manifests old path is required when using %q mode", ApplyModePaths)
+		}
+
+	case ApplyModeGit:
+		if c.Apply.ManifestsPathOld == "" {
+			c.Apply.ManifestsPathOld = c.Apply.ManifestsPathNew
+		}
+
+		if c.Apply.GitDefaultBranch == "" && c.Apply.GitBeforeCommit == "" {
+			return fmt.Errorf(`at least one of "git default branch" or "git before commit" is required`)
+		}
+	default:
+		return fmt.Errorf("unknown mode: %q", c.Apply.Mode)
+	}
+
+	return nil
 }
