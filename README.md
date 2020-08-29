@@ -1,6 +1,12 @@
-# Kahoy [![Build Status][ci-image]][ci-url] [![Go Report Card][goreport-image]][goreport-url]
+<p align="center">
+    <img src="docs/img/logo.png" width="25%" align="center" alt="kahoy">
+</p>
 
-_When [Kubectl] is to simple for your needs and available deployment solutions out there too complex_
+# Kahoy
+
+[![Build Status][ci-image]][ci-url] [![Go Report Card][goreport-image]][goreport-url]
+
+> When [Kubectl] is to simple for your needs and available deployment solutions too complex.
 
 Maintain Kubernetes resources in sync easily.
 
