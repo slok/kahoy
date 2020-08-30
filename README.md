@@ -6,7 +6,7 @@
 
 [![Build Status][ci-image]][ci-url] [![Go Report Card][goreport-image]][goreport-url]
 
-> When [Kubectl] is to simple for your needs and available deployment solutions too complex.
+> When [Kubectl] is too simple for your needs and available deployment solutions too complex.
 
 Maintain Kubernetes resources in sync easily.
 
@@ -34,11 +34,11 @@ Kahoy is a minimal and flexible tool to sync/deploy your Kubernetes resource **r
 
 Focuses on Gitops, and Kubernetes resources (not apps/releases/services/whatever) and understands git repositories.
 
-Unlike other tools, Kahoy will adapt to your needs and not the other way around, its been designed and developed to be generic and flexible enought for raw manifests without adding unneed complexity.
+Unlike other tools, Kahoy will adapt to your needs and not the other way around, its been designed and developed to be generic and flexible enough for raw manifests without adding unneeded complexity.
 
 ## :checkered_flag: Features
 
-- Simple, flexible and lightweight.
+- Simple, flexible, and lightweight.
 - Deploys a deletes Kubernetes resources.
 - Plans what to delete or deploy based on two manifest states (old and new).
 - Garbage collection resources.
@@ -48,7 +48,7 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 - Gitops ready (split commands, understands git repositories).
 - Use full syncs or partial syncs based on git diffs.
 - Deploy priorities.
-- Multiple of filtering options (file paths, resource namespace, types...).
+- Multiple filtering options (file paths, resource namespace, types...).
 - Uses Kubernetes >=v1.18 and server-side apply.
 
 ## :shipit: Install
@@ -73,8 +73,8 @@ For more advanced ways of using this, check:
 
 ## :mag: Scope
 
-- No templating, the generation and mutation of the YAMLs is out of the scope (use other tools and then Kahoy, e.g kustomize+kahoy).
-- Manage lifecycle of the Kubernetes resources (Deployment and deletion of resources) using raw YAML files.
+- No templating, the generation, and mutation of the YAMLs are out of the scope (use other tools and then Kahoy, e.g kustomize+kahoy).
+- Manage the lifecycle of Kubernetes resources (Deployment and deletion of resources) using raw YAML files.
 - Focus on Gitops and CI step/jobs (dry run, diff, apply).
 - Simplicity and flexibility.
 - Just a bit smarter than Kubectl.
@@ -84,18 +84,18 @@ If you need complex flows for your Kubernetes resources is likely that Kahoy is 
 
 ## :pencil2: Concepts
 
-Kahoy doesn't depend on app/service, labels/selectors or any other kind of app grouping concept, it uses these 3 concepts:
+Kahoy doesn't depend on app/service, labels/selectors, or any other kind of app grouping concept, it uses these 3 concepts:
 
 ### State
 
 Kahoy plans what to apply or delete based on an `old` and a `new` state of manifests. These states can come from different sources:
 
 - `paths`: Given 2 filesystem paths, it will use one for the old state and the other for the new state.
-- `git`: Given 2 revisions (depends on the `git` mode), it will use the old git revision to get the manifests state in that moment, and the new git revision to get the manifests state on that moment.
+- `git`: Given 2 revisions (depends on the `git` mode), it will use the old git revision to get the manifest's state at that moment, and the new git revision to get the manifest's state on that moment.
 
 ### Resource
 
-Is a Kubernetes resource, Kahoy will identify resources by type, ns and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename...) will not affect at the plan. E.g:
+Is a Kubernetes resource, Kahoy will identify resources by type, ns, and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename...) will not affect at the plan. E.g:
 
 Having these 2 manifests:
 
@@ -143,7 +143,7 @@ Kahoy would load 4 resources with these IDs:
 - `core/v1/ServiceAccount/monitoring/grafana`
 - `networking.k8s.io/v1beta1/Ingress/monitoring/grafana`
 
-> Note: Because resources are identified by its `type`, `ns` and `name`, you can move around in files without affecting how Kahoy will identify them.
+> Note: Because resources are identified by its `type`, `ns`, and `name`, you can move around in files without affecting how Kahoy will identify them.
 
 ### Groups
 
@@ -170,7 +170,7 @@ Having this tree and our manifests root in `./manifests`
     └── ingress.yaml
 ```
 
-These would be the groups IDs:
+These would be the group IDs:
 
 - `alertgram`
 - `bilrost`
@@ -198,7 +198,7 @@ These would be the groups IDs:
 
 ### Dry-run
 
-Will plan what resources need to exist on the cluster and what need to be removed (client-side, no cluster required).
+Will plan what resources need to exist on the cluster and what needs to be removed (client-side, no cluster required).
 
 ![dry run](docs/img/dry-run.png)
 
@@ -218,9 +218,9 @@ Kahoy needs two manifest states (old and new) to plan what resources need to exi
 
 ### `paths` (File system)
 
-given 2 manifest file system paths, plans that needs to be applied against a cluster and what needs to be deleted.
+Given 2 manifest file system paths, plans what needs to be applied against a cluster, and what needs to be deleted.
 
-This one is the most generic one and can be used when you want to manage almost everyhting, e.g previous Kahoy execution, prepare using bash scripts, kustomize, secrets...
+This one is the most generic one and can be used when you want to manage almost everything, e.g previous Kahoy execution, prepare using bash scripts, kustomize, secrets...
 
 ### `git`
 
@@ -236,8 +236,8 @@ Apart from knowing how to get an old and a new state from a git repository. **Gi
 
 - When you have lost of resources:
   - Have a clear view of what is changing.
-  - Bazing fast deployments.
-- Operators sometimes change deployed manifests, this mode avids overwriting every manifest on each deployment.
+  - Blazing fast deployments.
+- Operators sometimes change deployed manifests, this mode avoids overwriting every manifest on each deployment.
 - Split full syncs with partial syncs (you can continue making a full sync every hour or whatever).
 
 ## :bulb: Use cases
@@ -262,7 +262,7 @@ Same as above but with `--diff` instead of `--dry-run`
 ### Deploying on master branch (when PR merged)
 
 Kahoy needs to compare our `HEAD` against the previous applied state, that's why we need the `before-commit`.
-In this example we use `--git-before-commit-sha` flag. Normally this variable can be obtained in the executing CI:
+In this example, we use `--git-before-commit-sha` flag. Normally this variable can be obtained in the executing CI:
 
 Github actions uses [Github context][gh-context], example:
 
@@ -288,7 +288,7 @@ TODO
 
 ### Exclude some manifest files (e.g encrypted secrets)
 
-If you have some files that you don't want to me managed by kahoy, you can ignore them at file system level using `--fs-exclude`. Can be repeated.
+If you have some files that you don't want to be managed by kahoy, you can ignore them at file system level using `--fs-exclude`. Can be repeated.
 
 E.g: exclude any file with the name secret on it.
 
@@ -300,7 +300,7 @@ kahoy apply \
 
 ### Delete all
 
-Instead using git, use the fs by using the `paths` mode. Use the new state as `dev/null`.
+Instead of using git, use the fs by using the `paths` mode. Use the new state as `dev/null`.
 
 ```bash
 kahoy apply \
@@ -311,7 +311,7 @@ kahoy apply \
 
 ### Deploy all
 
-Instead using git, use the fs by using the `paths` mode. Use the old state as `dev/null`.
+Instead of using git, use the fs by using the `paths` mode. Use the old state as `dev/null`.
 
 ```bash
 kahoy apply \
@@ -349,7 +349,7 @@ kahoy apply \
 
 ### batch by priorities
 
-Kahoy knows how to manage priorities. By defualt it will batch all the manifests with default priority (`1000`), but maybe you want to deploy some groups first (e.g CRDs or the NS.
+Kahoy knows how to manage priorities. By default it will batch all the manifests with a default priority (`1000`), but maybe you want to deploy some groups first (e.g CRDs or the NS.
 
 you would have `kahoy.yml` on your repo root (or any other path and use `--config-file`), with the group options:
 
@@ -376,11 +376,11 @@ TODO
 
 Kahoy born because available alternatives are too complex, Kubernetes is a complex system by itself, adding more complexity in the cases where is not needed, is not a good solution.
 
-- [Helm]: Tries solving other kind of problems, has templating (v2 tiller), concept of releases, used to deploy single apps... However, you can use helm for templating and kahoy to deploy the generated manifests.
+- [Helm]: Tries solving other kinds of problems, has templating (v2 tiller), the concept of releases, used to deploy single apps... However, you can use helm for templating and kahoy to deploy the generated manifests.
 - [Kustomize]: Similar scope as helm but with a different approach, like Helm, you can use kustomize for the templating and kahoy for deploying raw manifests.
 - [Kapp]: As Kahoy, tries solving the same problems of complexity that come with Helm, Kustomize... Very similar to Kahoy but with more complex options/flows, Kapp focuses on application level, Kahoy on Kubernetes resources, if you need something more complex than Kahoy, is likely that Kapp is your app.
-- [Flux]: Controller based flow, very powerfull but complex. If you want a more `pull` than `push` approach, maybe you want this.
-- [Kubectl]: Official tool. Is what kahoy uses under the hood, very powerfull tool, lots of options, although to make it work correctly with a group of manifests/repository... you will need scripting or something like Kahoy. _We could say that Kahoy is a small layer on top of Kubectl_.
+- [Flux]: Controller-based flow, very powerful but complex. If you want a more `pull` than `push` approach, maybe you want this.
+- [Kubectl]: Official tool. Is what kahoy uses under the hood, very powerful tool, lots of options, although to make it work correctly with a group of manifests/repository... you will need scripting or something like Kahoy. _We could say that Kahoy is a small layer on top of Kubectl_.
 
 [ci-image]: https://github.com/slok/kahoy/workflows/CI/badge.svg
 [ci-url]: https://github.com/slok/kahoy/actions
