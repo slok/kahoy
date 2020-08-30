@@ -251,9 +251,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	return nil
 }
 
-// splitPlan takes a list of resources form the plan and splits them by state
-// whether they are to be applied or deleted. This is convenient for the future
-// execution.
+// splitPlan takes a list of resources from the plan and splits them by state.
 func splitPlan(statePlan []plan.State) (apply, delete []model.Resource, err error) {
 	applyRes := []model.Resource{}
 	deleteRes := []model.Resource{}
