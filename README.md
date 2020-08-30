@@ -19,6 +19,7 @@ Maintain Kubernetes resources in sync easily.
 - [:tada: Introduction](#tada-introduction)
 - [:checkered_flag: Features](#checkered_flag-features)
 - [:shipit: Install](#shipit-install)
+- [:key: Getting started](#key-getting-started)
 - [:mag: Scope](#mag-scope)
 - [:pencil2: Concepts](#pencil2-concepts)
 - [:wrench: How does it work](#wrench-how-does-it-work)
@@ -30,29 +31,43 @@ Maintain Kubernetes resources in sync easily.
 
 Kahoy is a minimal and flexible tool to sync/deploy your Kubernetes resource **raw** manifests and a cluster.
 
-**Focuses on Gitops and Kubernetes resources, not apps/releases/services/whatever.**
+Focuses on Gitops, and Kubernetes resources (not apps/releases/services/whatever) and understands git repositories.
 
-Unlike other tools, Kahoy will adapt to your needs and not the other way around, its been designed and developed to be generic and flexible enought without adding unneed complexity.
+Unlike other tools, Kahoy will adapt to your needs and not the other way around, its been designed and developed to be generic and flexible enought for raw manifests without adding unneed complexity.
 
 ## :checkered_flag: Features
 
 - Simple, flexible and lightweight.
-- Plans `apply`s and `delete`s based on manifests (fs, git...) state.
-- Plans at Kubernetes resource level, not file/manifest level (no more resource deletions because files changed name).
-- Gitops ready (understands git history to plan, plan based on git diffs...).
-- Easy to integrate with an existing git repository of raw Kubernetes manifests.
-- Easy to integrate with a file system path of raw Kubernetes manifests.
-- Diff, Dry run, apply... (Can be executed separetly, helpful for CI state/jobs).
-- Easy to set up on CI (Github actions, Gitlab CI...).
+- Deploys a deletes Kubernetes resources.
+- Plans what to delete or deploy based on two manifest states (old and new).
+- Load states from different sources (fs, git...).
+- Plans at Kubernetes resource level (not file/manifest level, not app/release level)
+- Different execution modes: Diff, Dry run...
+- Gitops ready (split commands, understands git repositories).
+- Use full syncs or partial syncs based on git diffs.
 - Deploy priorities.
-- Don't depend on concepts as application, releases, service... Just Kubernetes resource (CRDs included).
-- Lots of filter options (file paths, resource namespace, types...).
+- Multiple of filtering options (file paths, resource namespace, types...).
+- Uses Kubernetes >=v1.18 and server-side apply.
 
 ## :shipit: Install
 
-- Docker: `docker pull slok/kahoy` (has all the tools required like `kubectl` and `git`).
+- Docker: Ready image with all the required tools (e.g Kubectl) `docker pull slok/kahoy`.
 - Releases: Go to [releases](https://github.com/slok/kahoy/releases).
-- Build from source: Clone the repo and `make build`.
+- Build from source: `git clone git@github.com:slok/kahoy.git && cd ./kahoy && make build`.
+
+## :key: Getting started
+
+A simple example that deploys/deletes what changed between the states `HEAD` (new) and `2cd4a1c1a7921ec593432cfdb9307dc8d6584862` (old) git revisions.
+
+```bash
+kahoy apply -n "./manifests" -c "2cd4a1c1a7921ec593432cfdb9307dc8d6584862"
+```
+
+For more advanced ways of using this check:
+
+- `kahoy apply --help`.
+- [Use cases](<(#bulb-use-cases)>) section.
+- Github actions example (TODO).
 
 ## :mag: Scope
 
@@ -67,19 +82,66 @@ If you need complex flows for your Kubernetes resources is likely that Kahoy is 
 
 ## :pencil2: Concepts
 
-Kahoy doesn't depend on app/service, labels/selectors or any other kind of app grouping concept:
+Kahoy doesn't depend on app/service, labels/selectors or any other kind of app grouping concept, it uses these 3 concepts:
 
 ### State
 
-Kahoy plans what to apply or delete based on an `old` and a `new` state of manifests. These state can come from different sources:
+Kahoy plans what to apply or delete based on an `old` and a `new` state of manifests. These states can come from different sources:
 
 - `paths`: Given 2 filesystem paths, it will use one for the old state and the other for the new state.
-
 - `git`: Given 2 revisions (depends on the `git` mode), it will use the old git revision to get the manifests state in that moment, and the new git revision to get the manifests state on that moment.
 
 ### Resource
 
-Is a Kubernetes resource, Kahoy will identify resources by type, ns and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename...) will not affect at the plan.
+Is a Kubernetes resource, Kahoy will identify resources by type, ns and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename...) will not affect at the plan. E.g:
+
+Having these 2 manifests:
+
+`grafana.yaml`:
+
+```yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+#...
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grafana
+  namespace: monitoring
+#...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+#...
+```
+
+`ingress.yaml`:
+
+```yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: grafana
+  namespace: monitoring
+#...
+```
+
+Kahoy would load 4 resources with these IDs:
+
+- `apps/v1/Deployment/monitoring/grafana`
+- `core/v1/Service/monitoring/grafana`
+- `core/v1/ServiceAccount/monitoring/grafana`
+- `networking.k8s.io/v1beta1/Ingress/monitoring/grafana`
+
+> Note: Because resources are identified by its `type`, `ns` and `name`, you can move around in files without affecting how Kahoy will identify them.
 
 ### Groups
 
@@ -114,8 +176,6 @@ These would be the groups IDs:
 - `grafana`
 - `grafana/grafana-dashboards`
 
-**Note: Because resources are identified by its `type`, `ns` and `name`, you can move around in files without affecting on how Kahoy will identify them**
-
 ## :wrench: How does it work
 
 - Load manifests into K8s resources.
@@ -148,7 +208,7 @@ Will get a diff against the server of the planned resources (server-side, cluste
 
 ### Default (Apply)
 
-Will apply the resources that need to exist and delete the ones that don't.
+Will apply the resources that need to exist and delete the ones that don't. Apply uses Kubectl and [server-side][serverside-apply] apply.
 
 ## :page_facing_up: Manifest source modes
 
@@ -331,3 +391,4 @@ Kahoy born because available alternatives are too complex, Kubernetes is a compl
 [kapp]: https://github.com/k14s/kapp
 [flux]: https://github.com/fluxcd/flux
 [kubectl]: https://kubernetes.io/docs/reference/kubectl/overview/
+[serverside-apply]: https://kubernetes.io/blog/2020/04/01/kubernetes-1.18-feature-server-side-apply-beta-2/#what-is-server-side-apply
