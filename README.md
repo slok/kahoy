@@ -26,6 +26,7 @@ Maintain Kubernetes resources in sync easily.
 - [:computer: Execution options](#computer-execution-options)
 - [:page_facing_up: Manifest source modes](#page_facing_up-manifest-source-modes)
 - [:bulb: Use cases](#bulb-use-cases)
+- [:tophat: Alternatives](#tophat-alternatives)
 
 ## :tada: Introduction
 
@@ -40,6 +41,7 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 - Simple, flexible and lightweight.
 - Deploys a deletes Kubernetes resources.
 - Plans what to delete or deploy based on two manifest states (old and new).
+- Garbage collection resources.
 - Load states from different sources (fs, git...).
 - Plans at Kubernetes resource level (not file/manifest level, not app/release level)
 - Different execution modes: Diff, Dry run...
@@ -63,11 +65,11 @@ A simple example that deploys/deletes what changed between the states `HEAD` (ne
 kahoy apply -n "./manifests" -c "2cd4a1c1a7921ec593432cfdb9307dc8d6584862"
 ```
 
-For more advanced ways of using this check:
+For more advanced ways of using this, check:
 
 - `kahoy apply --help`.
 - [Use cases](<(#bulb-use-cases)>) section.
-- Github actions example (TODO).
+- [Github actions example][github-actions-example].
 
 ## :mag: Scope
 
@@ -370,7 +372,7 @@ This will make Kahoy apply first the `ns` group, then `crd` group, then `system/
 
 TODO
 
-### Alternatives
+## :tophat: Alternatives
 
 Kahoy born because available alternatives are too complex, Kubernetes is a complex system by itself, adding more complexity in the cases where is not needed, is not a good solution.
 
@@ -392,3 +394,4 @@ Kahoy born because available alternatives are too complex, Kubernetes is a compl
 [flux]: https://github.com/fluxcd/flux
 [kubectl]: https://kubernetes.io/docs/reference/kubectl/overview/
 [serverside-apply]: https://kubernetes.io/blog/2020/04/01/kubernetes-1.18-feature-server-side-apply-beta-2/#what-is-server-side-apply
+[github-actions-example]: https://github.com/slok/kahoy-github-actions-example
