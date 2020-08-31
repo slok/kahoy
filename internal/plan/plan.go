@@ -28,31 +28,35 @@ type State struct {
 // Planner knows how to make an plan of resource state based on an old group
 // of resources and a new one.
 type Planner interface {
-	Plan(ctx context.Context, expected []model.Resource, current []model.Resource) ([]State, error)
+	Plan(ctx context.Context, old []model.Resource, new []model.Resource) ([]State, error)
 }
 
 type planner struct {
-	logger log.Logger
+	onlyOnDiff bool
+	logger     log.Logger
 }
 
 // NewPlanner returns a new planner.
-func NewPlanner(logger log.Logger) Planner {
+// The planner will take all the resources that exists on the new one, and delete
+// the ones that are not on the new one and are on the old one.
+func NewPlanner(onlyOnDiff bool, logger log.Logger) Planner {
 	return planner{
-		logger: logger.WithValues(log.Kv{"app-svc": "plan.Planner"}),
+		onlyOnDiff: onlyOnDiff,
+		logger:     logger.WithValues(log.Kv{"app-svc": "plan.Planner"}),
 	}
 }
 
 // Plan plans the states by comparing an expected state and the current state.
-func (p planner) Plan(ctx context.Context, expected []model.Resource, current []model.Resource) ([]State, error) {
-	currentIdx := indexResources(current)
-	expectedIdx := indexResources(expected)
+func (p planner) Plan(ctx context.Context, old []model.Resource, new []model.Resource) ([]State, error) {
+	oldIdx := indexResources(old)
+	newIdx := indexResources(new)
 
 	missingQ := 0
 	existsQ := 0
 	states := []State{}
 
 	// Add the ones that we know need to exist.
-	for _, r := range expectedIdx {
+	for _, r := range newIdx {
 		existsQ++
 		states = append(states, State{
 			State:    ResourceStateExists,
@@ -61,8 +65,8 @@ func (p planner) Plan(ctx context.Context, expected []model.Resource, current []
 	}
 
 	// Add the ones that have been deleted.
-	for id, r := range currentIdx {
-		_, ok := expectedIdx[id]
+	for id, r := range oldIdx {
+		_, ok := newIdx[id]
 		if ok {
 			continue
 		}

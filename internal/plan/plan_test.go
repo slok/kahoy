@@ -15,18 +15,18 @@ import (
 
 func TestPlannerPlan(t *testing.T) {
 	tests := map[string]struct {
-		currentRes  []model.Resource
-		expectedRes []model.Resource
-		expState    []plan.State
-		expErr      error
+		oldRes   []model.Resource
+		newRes   []model.Resource
+		expState []plan.State
+		expErr   error
 	}{
-		"Without current and expected resources, should plan empty list of states.": {
+		"Without old and new resources, should plan empty list of states.": {
 			expState: []plan.State{},
 		},
 
-		"Without current and with expected resources, should plan list withouth missing states.": {
-			currentRes: []model.Resource{},
-			expectedRes: []model.Resource{
+		"Without old and with new resources, should plan list withouth missing states.": {
+			oldRes: []model.Resource{},
+			newRes: []model.Resource{
 				{ID: "test0"},
 				{ID: "test1"},
 				{ID: "test2"},
@@ -40,14 +40,14 @@ func TestPlannerPlan(t *testing.T) {
 			},
 		},
 
-		"With same current and expected resources, should plan list withouth missing states.": {
-			currentRes: []model.Resource{
+		"With same old and new resources, should plan list withouth missing states.": {
+			oldRes: []model.Resource{
 				{ID: "test0"},
 				{ID: "test1"},
 				{ID: "test2"},
 				{ID: "test3"},
 			},
-			expectedRes: []model.Resource{
+			newRes: []model.Resource{
 				{ID: "test0"},
 				{ID: "test1"},
 				{ID: "test2"},
@@ -61,14 +61,14 @@ func TestPlannerPlan(t *testing.T) {
 			},
 		},
 
-		"With deleted in the expected resources, should plan list with missing states.": {
-			currentRes: []model.Resource{
+		"With deleted in the new resources, should plan list with missing states.": {
+			oldRes: []model.Resource{
 				{ID: "test0"},
 				{ID: "test1"},
 				{ID: "test2"},
 				{ID: "test3"},
 			},
-			expectedRes: []model.Resource{},
+			newRes: []model.Resource{},
 			expState: []plan.State{
 				{Resource: model.Resource{ID: "test0"}, State: plan.ResourceStateMissing},
 				{Resource: model.Resource{ID: "test1"}, State: plan.ResourceStateMissing},
@@ -77,14 +77,14 @@ func TestPlannerPlan(t *testing.T) {
 			},
 		},
 
-		"With some deleted and some new in the expected resources, should plan list with missing states.": {
-			currentRes: []model.Resource{
+		"With some deleted and some new in the new resources, should plan list with missing states.": {
+			oldRes: []model.Resource{
 				{ID: "test0"},
 				{ID: "test1"},
 				{ID: "test2"},
 				{ID: "test3"},
 			},
-			expectedRes: []model.Resource{
+			newRes: []model.Resource{
 				{ID: "test0"},
 				{ID: "test2"},
 				{ID: "test4"},
@@ -103,8 +103,8 @@ func TestPlannerPlan(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
-			p := plan.NewPlanner(log.Noop)
-			gotState, err := p.Plan(context.TODO(), test.expectedRes, test.currentRes)
+			p := plan.NewPlanner(false, log.Noop)
+			gotState, err := p.Plan(context.TODO(), test.oldRes, test.newRes)
 
 			if test.expErr != nil {
 				assert.True(errors.Is(err, test.expErr))
