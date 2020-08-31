@@ -26,6 +26,7 @@ Maintain Kubernetes resources in sync easily.
 - [:computer: Execution options](#computer-execution-options)
 - [:page_facing_up: Manifest source modes](#page_facing_up-manifest-source-modes)
 - [:bulb: Use cases](#bulb-use-cases)
+- [:question: F.A.Q](#question-faq)
 - [:tophat: Alternatives](#tophat-alternatives)
 
 ## :tada: Introduction
@@ -40,6 +41,7 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 
 - Simple, flexible, and lightweight.
 - Deploys a deletes Kubernetes resources.
+- Deploy anything, from a `Namespace`, `Deployment`... to a `CRD`.
 - Plans what to delete or deploy based on two manifest states (old and new).
 - Garbage collection resources.
 - Load states from different sources (fs, git...).
@@ -50,6 +52,7 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 - Deploy priorities.
 - Multiple filtering options (file paths, resource namespace, types...).
 - Uses Kubernetes >=v1.18 and server-side apply.
+- Push mode (triggered from CI), not pull (controller).
 
 ## :shipit: Install
 
@@ -284,7 +287,7 @@ Note: For Gitlab CI, this uses [env vars][gitlab-ci-env] (in `CI_COMMIT_BEFORE_S
 
 ### Schedule a full sync
 
-TODO
+Check this [Github actions example][github-actions-example] for more info.
 
 ### Exclude some manifest files (e.g encrypted secrets)
 
@@ -372,6 +375,166 @@ This will make Kahoy apply first the `ns` group, then `crd` group, then `system/
 
 TODO
 
+## :question: F.A.Q
+
+- [Can I deploy anything?](#can-i-deploy-anything)
+- [What does focused on resource level mean?](#what-does-focused-on-resource-level-mean)
+- [What about CRDs?](#what-about-crds)
+- [Why old and new states?](#why-old-and-new-states)
+- [Why file changes don't affect resources?](#why-file-changes-dont-affect-resources)
+- [Can I have multiple manifests envs on the same repository?](#can-i-have-multiple-manifests-envs-on-the-same-repository)
+- [Partial and full syncs?](#partial-and-full-syncs)
+- [How is Garbage collection handled?](#how-is-garbage-collection-handled)
+- [Why git?](#why-git)
+- [When to use paths mode?](#when-to-use-paths-mode)
+- [Env vars as options](#env-vars-as-options)
+- [Kustomize or helm manifest](#kustomize-or-helm-manifest)
+- [Encrypted secrets?](#encrypted-secrets)
+- [Non resource YAMLs](#non-resource-yamls)
+- [Ignore a resource](#ignore-a-resource)
+- [Github actions integration](#github-actions-integration)
+- [Configuration file](#configuration-file)
+
+### Can I deploy anything?
+
+Yes, Kahoy is focused on resource level, you will not need any app scope, labels to group them, or anything similar. You can deploy from 500 apps to 1 namespace.
+
+### What does focused on resource level mean?
+
+When we talk about resource level, it means that Kahoy identifies what to deploy/delete based on the Kubernetes resource ID (type + ns + name).
+
+Other solutions add concepts like release ([Helm]) or app ([Kapp]), these use/add special fields like labels to identify them.
+
+Not depending on these fields gives Kahoy, flexibility to deploy anything, and not depending on anything external to what the user defines in its manifests.
+
+However, if you want to group them by app/release, you can always generate these manifests using helm or kustomize templating and let them add those grouping labels, Kahoy will handle correctly the manifests/resources as they are.
+
+### What about CRDs?
+
+CRDs are also Kubernetes resources, Kahoy knows how to handle them.
+
+### Why old and new states?
+
+In order to be able to track resource changes (e.g track deletion of resource). We need a way to detect what resources have been created/changed/gone.
+
+As we explained in another question, Kahoy doesn't depend on special concepts like release/app/special labels... so to be able to track this we need to use something else, we use a previous (`old`) state and a current (`new`) state of the manifests, we compare them and then we can track what has changed.
+
+Normally the manifests are already in Git, Git has history, so getting this information from git is enough and integrates perfectly with code review flows and Kahoy.
+
+### Why file changes don't affect resources?
+
+Because Kahoy loads resources and then plans what has changed, e.g:
+
+You have a file called `app.yaml` and has these resources with the IDs:
+
+- A service called `app1` on the ns `apps`: `v1/Service/apps/app1`
+- A Deployment called `app1` on the ns `apps`: `apps/v1/Deployment/apps/app1`
+- An ingress called `app1` on the ns `apps`: `networking.k8s.io/v1beta1/Ingress/apps/app1`
+
+Now you split the file in
+
+- `deployment.yaml`: `apps/v1/Deployment/apps/app1`
+- `svc.yaml`: `v1/Service/apps/app1`
+- `ingress.yaml`: `networking.k8s.io/v1beta1/Ingress/apps/app1`
+
+For Kahoy internally, are the same.
+
+### Can I have multiple manifests envs on the same repository?
+
+Yes, Kahoy takes a root manifest-path, as long as that root is the one for the environment, it should be ok.
+
+You can invoke Kahoy `N` times, one per environment.
+
+### Partial and full syncs?
+
+Yes, partial syncs will apply only the changes from one git revision to another (`git diff`). full syncs apply all the repository.
+
+Check this [Github actions example][github-actions-example] for more info.
+
+### How is Garbage collection handled?
+
+Kahoy takes manifests in 2 states, an `old` state, and a `new` state. It compares both and checks what's missing in the `new` one comparing the `old` one. Those are the resources that will be deleted (garbage collected).
+
+### Why git?
+
+Git maintains history of the manifests, it tracks the changes, can be reverted, is known by almost everyone... this makes the manifests lifecycle to be reliable.
+
+This gives us the opportunity to track changes on our resources, applying a reliable flow based on code reviews (Pull requests).
+
+That's why Kahoy understands git, knows how to get two revisions, and compares the manifests that changed in those revisions, plan them and apply.
+
+Also having the ability to apply only the changes of a `git diff`, gives us a way of scaling better, more visibility and easy to integrate
+
+### When to use paths mode?
+
+Kahoy understands git and most of the time you will not need it if you are using a repository. However, if you want to make everything yourself, using `paths` mode gives you full control. e.g:
+
+- Prepare two manifest paths.
+  - `new` manifests is the main repository
+  - `old` manifests is a copy of `new` (`cp -r`) and checkout to a previous revision.
+- Use `--mode=paths` to pass those manifest paths (`--fs-old-manifests-path`, `--fs-new-manifests-path`) to the two repo paths in different states.
+- If you want to only apply on changes, use git diff to make N arguments with the option `--fs-include`.
+
+Check an example [script][bash-git-example] that prepares a git diff file and the two manifests paths with the different revisions.
+
+### Env vars as options
+
+You can use environment vars as options using `KAHOY_XXXX_XXXX`, cli args have priority. e.g:
+
+- `--debug`: `KAHOY_DEBUG`
+- `--kube-context`: `KAHOY_KUBE_CONTEXT`
+- `--mode`: `KAHOY_MODE`
+- `--fs-include`: `KAHOY_FS_INCLUDE`
+- ...
+
+### Kustomize or helm manifests
+
+You can maintain the generated manifests in git as a previous step to make the PRs, this would make that the final autogenerated manifests are committed and ready in the git history, ready to be used by Kahoy at any time (including CI) and cleaner on the PRs when multiple manifests change.
+
+### Encrypted secrets?
+
+Encrypted secrets can't be understood by Kahoy, there are different solutions:
+
+- Ignore encrypted files and apply them separately.
+  - Invoke Kahoy ignoring them using `--fs-exclude`.
+  - Decrypt the secrets.
+  - Apply them using Kahoy with `--mode=paths` and `--fs-include` option.
+- Move to a different solution where git repository doesn't have encrypted secrets (webhooks, controllers...).
+
+### Non resource YAMLs
+
+Kahoy will try loading all yamls as resources, if it fails, Kahoy will fail, this can be a problem when you have yamls that are not Kubernetes resources.
+
+Use `--fs-exclude`, it works with `paths` and `git` modes.
+
+### Ignore a resource
+
+You can ignore resources at different levels and using multiple filters.
+
+At file level you have `--fs-include` and `--fs-exclude`, these exclude or include based on filesystem path regexes.
+
+At Kubernetes resource level you have others:
+
+- `--kube-exclude-type`: Exclude based on Kubernetes type regex (e.g: `apps/*/Deployment, v1/Pod`)
+- TODO more of them
+
+### Github actions integration
+
+Check this [Github actions example][github-actions-example] for more info.
+
+### Configuration file
+
+Kahoy accepts a configuration file (by default `./kahoy.yml`) to set options, at this moment these are the options:
+
+```yaml
+version: v1
+
+# List of groups configuration.
+groups:
+  - id: crd # Identifies by group ID.
+    priority: 200 # Adds apply priority to all the resources in a group (by default `1000`).
+```
+
 ## :tophat: Alternatives
 
 Kahoy born because available alternatives are too complex, Kubernetes is a complex system by itself, adding more complexity in the cases where is not needed, is not a good solution.
@@ -395,3 +558,4 @@ Kahoy born because available alternatives are too complex, Kubernetes is a compl
 [kubectl]: https://kubernetes.io/docs/reference/kubectl/overview/
 [serverside-apply]: https://kubernetes.io/blog/2020/04/01/kubernetes-1.18-feature-server-side-apply-beta-2/#what-is-server-side-apply
 [github-actions-example]: https://github.com/slok/kahoy-github-actions-example
+[bash-git-example]: https://gist.github.com/slok/3f37c2a0dd823d5b66db869a468109ce
