@@ -388,7 +388,7 @@ TODO
 - [Why git?](#why-git)
 - [When to use paths mode?](#when-to-use-paths-mode)
 - [Env vars as options](#env-vars-as-options)
-- [Kustomize or helm manifest](#kustomize-or-helm-manifest)
+- [Kustomize or helm manifests](#kustomize-or-helm-manifests)
 - [Encrypted secrets?](#encrypted-secrets)
 - [Non resource YAMLs](#non-resource-yamls)
 - [Ignore a resource](#ignore-a-resource)
