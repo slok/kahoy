@@ -13,8 +13,9 @@ CHECK_CMD := ./scripts/check/check.sh
 DEV_IMAGE_NAME := slok/kahoy-dev
 PROD_IMAGE_NAME ?=  slok/kahoy
 
-DOCKER_RUN_CMD := docker run --env ostype=$(OSTYPE) -v ${PWD}:/src --rm -it ${DEV_IMAGE_NAME}
+DOCKER_RUN_CMD := docker run --env ostype=$(OSTYPE) -v ${PWD}:/src --rm ${DEV_IMAGE_NAME}
 BUILD_BINARY_CMD := VERSION=${VERSION} ./scripts/build/build.sh
+BUILD_BINARY_ALL_CMD := VERSION=${VERSION} ./scripts/build/build-all.sh
 BUILD_DEV_IMAGE_CMD := IMAGE=${DEV_IMAGE_NAME} DOCKER_FILE_PATH=./docker/dev/Dockerfile VERSION=latest ./scripts/build/build-image.sh
 BUILD_PROD_IMAGE_CMD := IMAGE=${PROD_IMAGE_NAME} DOCKER_FILE_PATH=./docker/prod/Dockerfile VERSION=${VERSION} ./scripts/build/build-image.sh
 PUBLISH_PROD_IMAGE_CMD := IMAGE=${PROD_IMAGE_NAME} VERSION=${VERSION} ./scripts/build/publish-image.sh
@@ -41,6 +42,9 @@ build-dev-image:  ## Builds the development docker image.
 
 build: build-dev-image ## Builds the production binary.
 	@$(DOCKER_RUN_CMD) /bin/sh -c '$(BUILD_BINARY_CMD)'
+
+build-all: build-dev-image ## Builds all archs production binaries.
+	@$(DOCKER_RUN_CMD) /bin/sh -c '$(BUILD_BINARY_ALL_CMD)'
 
 .PHONY: test
 test: build-dev-image  ## Runs unit test.
