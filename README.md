@@ -32,11 +32,15 @@ Maintain Kubernetes resources in sync easily.
 
 ## :tada: Introduction
 
-Kahoy is a minimal and flexible tool to sync/deploy your Kubernetes resource **raw** manifests and a cluster.
+Did you ever wish for a tool that could deploy all your manifests to a Kubernetes cluster without much hassle? Without worrying about applying the manifests in a specific order with kubectl, or setting up a complex CI workflow or even installing a more advanced tool that you first need to learn and observe.
 
-Focuses on Gitops, and Kubernetes resources (not apps/releases/services/whatever) and understands git repositories.
+You probably noticed a big gap between what can be done with kubectl and more advanced tools like Helm and Spinnaker. But.. what about all the cases where we just need a bit more than what kubectl can offer?
 
-Unlike other tools, Kahoy will adapt to your needs and not the other way around, its been designed and developed to be generic and flexible enough for raw manifests without adding unneeded complexity.
+Kahoy is a minimal and flexible tool to deploy your Kubernetes **raw** manifest resources to a cluster.
+
+It's based on GitOps principles, and **out of the box** Kubernetes resources. It does not need apps/releases/services/or any other Custom Resource Definitions to manage deployments.
+
+Kahoy will adapt to your needs and not the other way around, its been designed and developed to be generic and flexible enough for raw manifests without adding unneeded complexity.
 
 ## :checkered_flag: Features
 
@@ -66,13 +70,13 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 
 ## :key: Getting started
 
-A simple example that deploys/deletes what changed between the states `HEAD` (new) and `2cd4a1c1a7921ec593432cfdb9307dc8d6584862` (old) git revisions.
+A simple example that applies (and deletes if necessary) what changed between the states `HEAD` (new) and `2cd4a1c1a7921ec593432cfdb9307dc8d6584862` (old) git revisions.
 
 ```bash
 kahoy apply -n "./manifests" -c "2cd4a1c1a7921ec593432cfdb9307dc8d6584862"
 ```
 
-For more advanced ways of using this, check:
+And thats just one way of doing it, for more advanced ways of using this, check:
 
 - `kahoy apply --help`.
 - [Use cases](<(#bulb-use-cases)>) section.
@@ -81,18 +85,18 @@ For more advanced ways of using this, check:
 
 ## :mag: Scope
 
-- No templating, the generation, and mutation of the YAMLs are out of the scope (use other tools and then Kahoy, e.g kustomize+kahoy).
-- Manage the lifecycle of Kubernetes resources (Deployment and deletion of resources) using raw YAML files.
-- Focus on Gitops and CI step/jobs (dry run, diff, apply).
+- This tool does not perform any form of templating, the generation, and mutation of the YAMLs are out of the scope (We believe the are powerful tools that can be used together with Kahoy for that matter e.g kustomize+kahoy).
+- Manage the lifecycle of Kubernetes resources using raw YAML files and GitOps.
+- Run on CI (dry run, diff, apply)
 - Simplicity and flexibility.
 - Just a bit smarter than Kubectl.
-- Plan what will be applied and what deleted based in an old and a new manifest state (fs, git...).
+- Plan what should change declaring current and previous states (read about this in the Concepts section)
 
 If you need complex flows for your Kubernetes resources is likely that Kahoy is not for you.
 
 ## :pencil2: Concepts
 
-Kahoy doesn't depend on app/service, labels/selectors, or any other kind of app grouping concept, it uses these 3 concepts:
+Kahoy does not depend on any running service, labels or annotation selectors, or any other kind of app grouping concept. These are the only 3 concepts you need to know about:
 
 ### State
 
@@ -103,7 +107,7 @@ Kahoy plans what to apply or delete based on an `old` and a `new` state of manif
 
 ### Resource
 
-Is a Kubernetes resource, Kahoy will identify resources by type, ns, and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename...) will not affect at the plan. E.g:
+Is a Kubernetes resource, Kahoy will identify resources by type, namespace, and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename...) it will not affect at the plan. E.g:
 
 Having these 2 manifests:
 
@@ -155,7 +159,7 @@ Kahoy would load 4 resources with these IDs:
 
 ### Groups
 
-A group is a way of adding options (e.g deployment priority) to the resources in the group.
+A group is a way of adding options (e.g deployment priority) to the resources in the group. You could have one or many based on what you need.
 
 Kahoy will identify the groups by the path where the manifests are based on the root of the manifests. E.g:
 
