@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+## [v1.0.0] - 2020-08-31
+
 ### Added
 
 - Apply/delete resource Plan.
@@ -21,7 +23,5 @@
 - No color mode.
 - Debug mode.
 
-## [x.x.x] - 2020-xx-xx
-
-[unreleased]: https://github.com/slok/kahoy/slok/kahoy/compare/v0.1.0...HEAD
-[x.x.x]: https://github.com/slok/kahoy/slok/kahoy/releases/tag/vx.x.x
+[unreleased]: https://github.com/slok/kahoy/compare/v1.0.0...HEAD
+[v1.0.0]: https://github.com/slok/kahoy/releases/tag/v1.0.0
