@@ -35,16 +35,15 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	switch cmdConfig.Apply.Mode {
 	case ApplyModeGit:
 		oldRepo, newRepo, err := storagegit.NewRepositories(storagegit.RepositoriesConfig{
-			ExcludeRegex:         cmdConfig.Apply.ExcludeManifests,
-			IncludeRegex:         cmdConfig.Apply.IncludeManifests,
-			OldRelPath:           cmdConfig.Apply.ManifestsPathOld,
-			NewRelPath:           cmdConfig.Apply.ManifestsPathNew,
-			GitBeforeCommitSHA:   cmdConfig.Apply.GitBeforeCommit,
-			GitDefaultBranch:     cmdConfig.Apply.GitDefaultBranch,
-			GitDiffIncludeFilter: cmdConfig.Apply.GitDiffFilter,
-			KubernetesDecoder:    kubernetesSerializer,
-			AppConfig:            &globalConfig.AppConfig,
-			Logger:               logger,
+			ExcludeRegex:       cmdConfig.Apply.ExcludeManifests,
+			IncludeRegex:       cmdConfig.Apply.IncludeManifests,
+			OldRelPath:         cmdConfig.Apply.ManifestsPathOld,
+			NewRelPath:         cmdConfig.Apply.ManifestsPathNew,
+			GitBeforeCommitSHA: cmdConfig.Apply.GitBeforeCommit,
+			GitDefaultBranch:   cmdConfig.Apply.GitDefaultBranch,
+			KubernetesDecoder:  kubernetesSerializer,
+			AppConfig:          &globalConfig.AppConfig,
+			Logger:             logger,
 		})
 		if err != nil {
 			return fmt.Errorf("could not create git based fs repos storage: %w", err)
@@ -76,19 +75,19 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	// Get resources from repositories.
-	currentRes, err := oldResourceRepo.ListResources(ctx, storage.ResourceListOpts{})
+	oldRes, err := oldResourceRepo.ListResources(ctx, storage.ResourceListOpts{})
 	if err != nil {
 		return fmt.Errorf("could not retrieve the list of current resources: %w", err)
 	}
 
-	expectedRes, err := newResourceRepo.ListResources(ctx, storage.ResourceListOpts{})
+	newRes, err := newResourceRepo.ListResources(ctx, storage.ResourceListOpts{})
 	if err != nil {
 		return fmt.Errorf("could not retrieve the list of expected resources: %w", err)
 	}
 
 	// Plan our actions/states.
-	planner := plan.NewPlanner(logger)
-	statePlan, err := planner.Plan(ctx, expectedRes.Items, currentRes.Items)
+	planner := plan.NewPlanner(cmdConfig.Apply.IncludeChanges, logger)
+	statePlan, err := planner.Plan(ctx, oldRes.Items, newRes.Items)
 	if err != nil {
 		return fmt.Errorf("could not get a plan: %w", err)
 	}

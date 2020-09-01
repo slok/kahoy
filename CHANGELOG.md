@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+- Remove Git filtering in favor of generic filtering based on Kubernetes resource diff.
+- Add filtering based on changes at Kubernetes resource level.
+- Deprecate `--git-diff-filter` flag in favor of `--include-changes`.
+- Add `--include-changes` flag.
+
 ## [v1.0.0] - 2020-08-31
 
 ### Added

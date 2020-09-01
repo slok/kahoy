@@ -41,14 +41,14 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 
 - Simple, flexible, and lightweight.
 - Deploys a deletes Kubernetes resources.
-- Deploy anything, from a `Namespace`, `Deployment`... to a `CRD`.
+- Deploy anything, a `Namespace`, `Ingress`, `CRD`, domain apps (e.g `Deployment`+`service`)...
 - Plans what to delete or deploy based on two manifest states (old and new).
 - Garbage collection resources.
 - Load states from different sources (fs, git...).
 - Plans at Kubernetes resource level (not file/manifest level, not app/release level)
 - Different execution modes: Diff, Dry run...
 - Gitops ready (split commands, understands git repositories).
-- Use full syncs or partial syncs based on git diffs.
+- Use full syncs or partial syncs based on resource changes/diffs.
 - Deploy priorities.
 - Multiple filtering options (file paths, resource namespace, types...).
 - Uses Kubernetes >=v1.18 and server-side apply.
@@ -254,7 +254,7 @@ Having our manifest in a git repository in `./manifests` and being our default b
 ```bash
 kahoy apply \
     --dry-run \
-    --git-diff-filter \
+    --include-changes \
     --fs-new-manifests-path "./manifests"
 ```
 
@@ -278,7 +278,7 @@ So... in Kahoy:
 
 ```bash
 kahoy apply \
-    --git-diff-filter \
+    --include-changes \
     --git-before-commit-sha "${GIT_BEFORE_COMMIT_SHA}" \
     --fs-new-manifests-path "./manifests"
 ```
@@ -447,7 +447,9 @@ You can invoke Kahoy `N` times, one per environment.
 
 ### Partial and full syncs?
 
-Yes, partial syncs will apply only the changes from one git revision to another (`git diff`). full syncs apply all the repository.
+Partial syncs filter the resources that will apply based on the changes from one state to another (checks diffs between kubernetes resources in both states). Use `--include-changes` for partial syncs.
+
+Full syncs apply all the resources.
 
 Check this [Github actions example][github-actions-example] for more info.
 
@@ -463,8 +465,6 @@ This gives us the opportunity to track changes on our resources, applying a reli
 
 That's why Kahoy understands git, knows how to get two revisions, and compares the manifests that changed in those revisions, plan them and apply.
 
-Also having the ability to apply only the changes of a `git diff`, gives us a way of scaling better, more visibility and easy to integrate
-
 ### When to use paths mode?
 
 Kahoy understands git and most of the time you will not need it if you are using a repository. However, if you want to make everything yourself, using `paths` mode gives you full control. e.g:
@@ -473,9 +473,9 @@ Kahoy understands git and most of the time you will not need it if you are using
   - `new` manifests is the main repository
   - `old` manifests is a copy of `new` (`cp -r`) and checkout to a previous revision.
 - Use `--mode=paths` to pass those manifest paths (`--fs-old-manifests-path`, `--fs-new-manifests-path`) to the two repo paths in different states.
-- If you want to only apply on changes, use git diff to make N arguments with the option `--fs-include`.
+- If you want to only apply on changes, use `--include-changes`.
 
-Check an example [script][bash-git-example] that prepares a git diff file and the two manifests paths with the different revisions.
+Check an example [script][bash-git-example] that prepares two manifests paths with the different revisions.
 
 ### Env vars as options
 

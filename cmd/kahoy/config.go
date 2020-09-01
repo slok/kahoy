@@ -49,9 +49,9 @@ type CmdConfig struct {
 		ExcludeKubeTypeResources []string
 		GitBeforeCommit          string
 		GitDefaultBranch         string
-		GitDiffFilter            bool
 		Mode                     string
 		DryRun                   bool
+		IncludeChanges           bool
 	}
 }
 
@@ -72,19 +72,22 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 
 	// Apply command.
 	apply := app.Command(CmdArgApply, "Will take all the manifests in the directory and apply to a Kubernetes cluster.")
-	apply.Flag("kube-config", "kubernetes configuration configuration path.").Envar("KUBECONFIG").Default(kubeHome).StringVar(&c.Apply.KubeConfig)
-	apply.Flag("kube-context", "kubernetes configuration context.").StringVar(&c.Apply.KubeContext)
-	apply.Flag("diff", "diff instead of applying changes.").BoolVar(&c.Apply.DiffMode)
-	apply.Flag("dry-run", "execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
-	apply.Flag("mode", "selects how apply will select the state, load manifests... git needs to be executed from a git repository.").Default(ApplyModeGit).EnumVar(&c.Apply.Mode, ApplyModePaths, ApplyModeGit)
-	apply.Flag("fs-old-manifests-path", "kubernetes current manifests path.").Short('o').StringVar(&c.Apply.ManifestsPathOld)
-	apply.Flag("fs-new-manifests-path", "kubernetes expected manifests path.").Short('n').Required().StringVar(&c.Apply.ManifestsPathNew)
-	apply.Flag("fs-exclude", "regex to ignore manifest files and dirs. Can be repeated.").Short('e').StringsVar(&c.Apply.ExcludeManifests)
-	apply.Flag("fs-include", "regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").Short('i').StringsVar(&c.Apply.IncludeManifests)
-	apply.Flag("git-diff-filter", "excludes everything except the files changed in before-commit and HEAD git diff.").Short('f').BoolVar(&c.Apply.GitDiffFilter)
-	apply.Flag("git-before-commit-sha", "the git hash used as the old state to get the apply/delete plan, if not passed, it will search using merge-base common ancestor of current HEAD and default branch.").Short('c').StringVar(&c.Apply.GitBeforeCommit)
-	apply.Flag("git-default-branch", "git repository default branch. Used to search common parent (default-branch and HEAD) when 'before-commit' not provided. Only supports local branches (no remote branches, tags, hashes...).").Default("master").StringVar(&c.Apply.GitDefaultBranch)
-	apply.Flag("kube-exclude-type", "regex to ignore Kubernetes resources by api version and type (apps/v1/Deployment, v1/Pod...). Can be repeated.").Short('a').StringsVar(&c.Apply.ExcludeKubeTypeResources)
+	apply.Flag("kube-config", "Kubernetes configuration configuration path.").Envar("KUBECONFIG").Default(kubeHome).StringVar(&c.Apply.KubeConfig)
+	apply.Flag("kube-context", "Kubernetes configuration context.").StringVar(&c.Apply.KubeContext)
+	apply.Flag("diff", "Diff instead of applying changes.").BoolVar(&c.Apply.DiffMode)
+	apply.Flag("dry-run", "Execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
+	apply.Flag("mode", "Selects how apply will select the state, load manifests... git needs to be executed from a git repository.").Default(ApplyModeGit).EnumVar(&c.Apply.Mode, ApplyModePaths, ApplyModeGit)
+	apply.Flag("fs-old-manifests-path", "Kubernetes current manifests path.").Short('o').StringVar(&c.Apply.ManifestsPathOld)
+	apply.Flag("fs-new-manifests-path", "Kubernetes expected manifests path.").Short('n').Required().StringVar(&c.Apply.ManifestsPathNew)
+	apply.Flag("fs-exclude", "Regex to ignore manifest files and dirs. Can be repeated.").Short('e').StringsVar(&c.Apply.ExcludeManifests)
+	apply.Flag("fs-include", "Regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").Short('i').StringsVar(&c.Apply.IncludeManifests)
+	apply.Flag("git-before-commit-sha", "The git hash used as the old state to get the apply/delete plan, if not passed, it will search using merge-base common ancestor of current HEAD and default branch.").Short('c').StringVar(&c.Apply.GitBeforeCommit)
+	apply.Flag("git-default-branch", "Git repository default branch. Used to search common parent (default-branch and HEAD) when 'before-commit' not provided. Only supports local branches (no remote branches, tags, hashes...).").Default("master").StringVar(&c.Apply.GitDefaultBranch)
+	apply.Flag("kube-exclude-type", "Regex to ignore Kubernetes resources by api version and type (apps/v1/Deployment, v1/Pod...). Can be repeated.").Short('a').StringsVar(&c.Apply.ExcludeKubeTypeResources)
+	apply.Flag("include-changes", "Excludes all the resources without changes (old vs new states).").Short('f').BoolVar(&c.Apply.IncludeChanges)
+
+	// Deprecated flags.
+	apply.Flag("git-diff-filter", "DEPRECATED, use --include-changes.").Hidden().BoolVar(&c.Apply.IncludeChanges)
 
 	// Parse the commandline.
 	cmd, err := app.Parse(args)
