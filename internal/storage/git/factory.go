@@ -3,7 +3,6 @@ package git
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
@@ -42,10 +41,6 @@ type RepositoriesConfig struct {
 	// This branch will be the one used against HEAD to get the common parent commit  by using merge-base.
 	// Only local branches are support, other refs are not supported (remote branch, tag, hash...)
 	GitDefaultBranch string
-	// GitDiffIncludeFilter will filter everything except the files modified (edit, create, delete)
-	// between the two Git repository states, this is, before-commit and HEAD.
-	// This could be translated as: `git diff --name-only before-commit HEAD`.
-	GitDiffIncludeFilter bool
 
 	// Don't use these, used for testing purposes. Normally `nil` because are created correctly by the factory.
 	// Go-git loaded repositories, if `nil` it will clone them into memory from the current disk path (`.`).
@@ -138,15 +133,6 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 	newRef, err := newGitRepo.Head()
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if config.GitDiffIncludeFilter {
-		config.Logger.Infof("using git diff include filter")
-		includes, err := includeFiltersFromGitDiff(newGitRepo, oldRef.Hash(), newRef.Hash())
-		if err != nil {
-			return nil, nil, fmt.Errorf("could not get git diff: %w", err)
-		}
-		config.IncludeRegex = append(config.IncludeRegex, includes...)
 	}
 
 	// Validations to help the user in case of misusage.
@@ -286,47 +272,4 @@ func getBeforeCommit(newRepo GoGitRepoClient, branch string) (*plumbing.Hash, er
 	cHash := commit[0].Hash
 
 	return &cHash, nil
-}
-
-func includeFiltersFromGitDiff(newRepo GoGitRepoClient, old, new plumbing.Hash) ([]string, error) {
-	// Get commits from refs.
-	oldCommit, err := newRepo.CommitObject(old)
-	if err != nil {
-		return nil, err
-	}
-	newCommit, err := newRepo.CommitObject(new)
-	if err != nil {
-		return nil, err
-	}
-	// Get patch.
-	patch, err := newRepo.Patch(oldCommit, newCommit)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get all file paths from the changes.
-	filePaths := map[string]struct{}{}
-	for _, fp := range patch.FilePatches() {
-		from, to := fp.Files()
-		if from != nil {
-			filePaths[from.Path()] = struct{}{}
-		}
-
-		if to != nil {
-			filePaths[to.Path()] = struct{}{}
-		}
-	}
-
-	// Although is likely that raw paths will filter correctly, we will
-	// convert them to correct regexes to increase filtering reliability.
-	res := make([]string, 0, len(filePaths))
-	for path := range filePaths {
-		if path == "" {
-			continue
-		}
-		path = strings.ReplaceAll(path, "/", `\/`)
-		res = append(res, fmt.Sprintf(`.*\/%s$`, path))
-	}
-
-	return res, nil
 }

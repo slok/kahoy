@@ -13,9 +13,9 @@ import (
 	"github.com/slok/kahoy/internal/resource/process"
 )
 
-type tm map[string]interface{}
-
 func newResource(kAPIVersion, kType, ns, name string) model.Resource {
+	type tm = map[string]interface{}
+
 	return model.Resource{
 		K8sObject: &unstructured.Unstructured{
 			Object: tm{
