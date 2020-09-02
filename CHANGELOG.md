@@ -2,14 +2,18 @@
 
 ## [unreleased]
 
+Breaking: `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-include-annotation` is `-a` short flag.
+
 ### Added
 
 - Optional filter apply/delete plan based on K8s resources that had changes from old to new state using `--include-changes` flag.
-- Optional filter for resources using Kubernetes stantand label selectors using `--kube-include-label` flag.
+- Optional label based filter for resources using Kubernetes standard label selectors using `--kube-include-label` flag.
+- Optional annotation filter for resources using Kubernetes standard label selectors using `--kube-include-annotation` flag.
 
 ### Changed
 
 - Deprecate `--git-diff-filter` flag in favor of `--include-changes`.
+- `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-include-annotation` is `-a` short flag.
 
 ### Removed
 

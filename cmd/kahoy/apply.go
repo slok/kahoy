@@ -98,20 +98,10 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	// Process planned resources.
-	exclKubeTypeProc, err := resourceprocess.NewExcludeKubeTypeProcessor(cmdConfig.Apply.ExcludeKubeTypeResources, logger)
+	resProc, err := newResourceProcessor(cmdConfig, logger)
 	if err != nil {
-		return fmt.Errorf("could not create Kubernetes resorce type exclude processor: %w", err)
+		return err
 	}
-
-	includeLabelProc, err := resourceprocess.NewKubeSelectorProcessor(cmdConfig.Apply.KubeLabelSelector, logger)
-	if err != nil {
-		return fmt.Errorf("could not create Kubernetes label selector processor: %w", err)
-	}
-
-	resProc := resourceprocess.NewResourceProcessorChain(
-		exclKubeTypeProc,
-		includeLabelProc,
-	)
 
 	resQBefore := len(applyRes)
 	applyRes, err = resProc.Process(ctx, applyRes)
@@ -199,4 +189,30 @@ func splitPlan(statePlan []plan.State) (apply, delete []model.Resource, err erro
 	}
 
 	return applyRes, deleteRes, nil
+}
+
+// newResourceProcessor will create the resource processor using a chain of multiple resource processors.
+func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceprocess.ResourceProcessor, error) {
+	exclKubeTypeProc, err := resourceprocess.NewExcludeKubeTypeProcessor(cmdConfig.Apply.ExcludeKubeTypeResources, logger)
+	if err != nil {
+		return nil, fmt.Errorf("could not create Kubernetes resorce type exclude processor: %w", err)
+	}
+
+	includeLabelProc, err := resourceprocess.NewKubeLabelSelectorProcessor(cmdConfig.Apply.KubeLabelSelector, logger)
+	if err != nil {
+		return nil, fmt.Errorf("could not create Kubernetes label selector processor: %w", err)
+	}
+
+	includeAnnotationProc, err := resourceprocess.NewKubeAnnotationSelectorProcessor(cmdConfig.Apply.KubeAnnotationSelector, logger)
+	if err != nil {
+		return nil, fmt.Errorf("could not create Kubernetes annotation selector processor: %w", err)
+	}
+
+	resProc := resourceprocess.NewResourceProcessorChain(
+		exclKubeTypeProc,
+		includeLabelProc,
+		includeAnnotationProc,
+	)
+
+	return resProc, nil
 }

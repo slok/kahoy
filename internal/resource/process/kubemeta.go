@@ -64,11 +64,11 @@ func NewExcludeKubeTypeProcessor(kubeTypeRegex []string, logger log.Logger) (Res
 	}), nil
 }
 
-// NewKubeSelectorProcessor returns a new Resource processor that will exclude (remove)
+// NewKubeLabelSelectorProcessor returns a new Resource processor that will exclude (remove)
 // from the received resources, the ones that don't match with the received Kubernetes
 // label selector.
-func NewKubeSelectorProcessor(kubeSelector string, logger log.Logger) (ResourceProcessor, error) {
-	logger = logger.WithValues(log.Kv{"app-svc": "process.KubeSelectorProcessor"})
+func NewKubeLabelSelectorProcessor(kubeSelector string, logger log.Logger) (ResourceProcessor, error) {
+	logger = logger.WithValues(log.Kv{"app-svc": "process.KubeLabelSelectorProcessor"})
 
 	// Create label selectors.
 	selectors, err := labels.ParseToRequirements(kubeSelector)
@@ -82,6 +82,36 @@ func NewKubeSelectorProcessor(kubeSelector string, logger log.Logger) (ResourceP
 		for _, r := range resources {
 			resLabels := r.K8sObject.GetLabels()
 			if !matchSelector(selectors, resLabels) {
+				resourceLogger(logger, r).Debugf("resource ignored")
+				continue
+			}
+			newRes = append(newRes, r)
+		}
+
+		return newRes, nil
+	}), nil
+}
+
+// NewKubeAnnotationSelectorProcessor returns a new Resource processor that will exclude (remove)
+// from the received resources, the ones that don't match with the received Kubernetes
+// annotation selector.
+//
+// Works like KubeLabelSelectorProcessor but for annotations insteado of labels.
+func NewKubeAnnotationSelectorProcessor(kubeSelector string, logger log.Logger) (ResourceProcessor, error) {
+	logger = logger.WithValues(log.Kv{"app-svc": "process.KubeAnnotationSelectorProcessor"})
+
+	// Create label selectors.
+	selectors, err := labels.ParseToRequirements(kubeSelector)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse Kubernetes annotation selector %w", err)
+	}
+
+	return ResourceProcessorFunc(func(ctx context.Context, resources []model.Resource) ([]model.Resource, error) {
+		newRes := []model.Resource{}
+
+		for _, r := range resources {
+			resAnnotations := r.K8sObject.GetAnnotations()
+			if !matchSelector(selectors, resAnnotations) {
 				resourceLogger(logger, r).Debugf("resource ignored")
 				continue
 			}

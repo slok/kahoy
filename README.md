@@ -516,7 +516,8 @@ At file level you have `--fs-include` and `--fs-exclude`, these exclude or inclu
 At Kubernetes resource level you have others:
 
 - `--kube-exclude-type`: Exclude based on Kubernetes type regex (e.g: `apps/*/Deployment`, `v1/Pod`...).
-- `--kube-include-label`: Kubenretes style selector that will select only the resources that match the label selectos (e.g: `app=myapp,component!=database`)
+- `--kube-include-label`: Kubernetes style selector that will select only the resources that match the label selector (e.g: `app=myapp,component!=database,env`)
+- `--kube-include-annotation`: Kubernetes style selector that will select only the resources that match the annotation selector (e.g: `app=myapp,component!=database`)
 
 ### Github actions integration
 

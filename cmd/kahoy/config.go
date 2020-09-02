@@ -48,6 +48,7 @@ type CmdConfig struct {
 		IncludeManifests         []string
 		ExcludeKubeTypeResources []string
 		KubeLabelSelector        string
+		KubeAnnotationSelector   string
 		GitBeforeCommit          string
 		GitDefaultBranch         string
 		Mode                     string
@@ -84,8 +85,9 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("fs-include", "Regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").Short('i').StringsVar(&c.Apply.IncludeManifests)
 	apply.Flag("git-before-commit-sha", "The git hash used as the old state to get the apply/delete plan, if not passed, it will search using merge-base common ancestor of current HEAD and default branch.").Short('c').StringVar(&c.Apply.GitBeforeCommit)
 	apply.Flag("git-default-branch", "Git repository default branch. Used to search common parent (default-branch and HEAD) when 'before-commit' not provided. Only supports local branches (no remote branches, tags, hashes...).").Default("master").StringVar(&c.Apply.GitDefaultBranch)
-	apply.Flag("kube-exclude-type", "Regex to ignore Kubernetes resources by api version and type (apps/v1/Deployment, v1/Pod...). Can be repeated.").Short('a').StringsVar(&c.Apply.ExcludeKubeTypeResources)
+	apply.Flag("kube-exclude-type", "Regex to ignore Kubernetes resources by api version and type (apps/v1/Deployment, v1/Pod...). Can be repeated.").Short('t').StringsVar(&c.Apply.ExcludeKubeTypeResources)
 	apply.Flag("kube-include-label", "Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)").Short('l').StringVar(&c.Apply.KubeLabelSelector)
+	apply.Flag("kube-include-annotation", "Selector (annotation query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)").Short('a').StringVar(&c.Apply.KubeAnnotationSelector)
 	apply.Flag("include-changes", "Excludes all the resources without changes (old vs new states).").Short('f').BoolVar(&c.Apply.IncludeChanges)
 
 	// Deprecated flags.

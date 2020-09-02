@@ -13,37 +13,41 @@ import (
 	"github.com/slok/kahoy/internal/resource/process"
 )
 
-type tm = map[string]interface{}
-
 func newResource(kAPIVersion, kType, ns, name string) model.Resource {
-	return model.Resource{
-		K8sObject: &unstructured.Unstructured{
-			Object: tm{
-				"apiVersion": kAPIVersion,
-				"kind":       kType,
-				"metadata": tm{
-					"name":      name,
-					"namespace": ns,
-				},
-			},
-		},
-	}
+	return newCustomResource(kAPIVersion, kType, ns, name, nil, nil)
 }
 
 func newLabeledResource(name string, labels map[string]string) model.Resource {
+	return newCustomResource("v1", "Pod", "testns", name, labels, nil)
+}
+
+func newAnnotatedResource(name string, annotations map[string]string) model.Resource {
+	return newCustomResource("v1", "Pod", "testns", name, nil, annotations)
+}
+
+func newCustomResource(kAPIVersion, kType, ns, name string, labels, annotations map[string]string) model.Resource {
+	type tm = map[string]interface{}
+
+	objAnnotations := tm{}
+	for k, v := range annotations {
+		objAnnotations[k] = v
+	}
 	objLabels := tm{}
 	for k, v := range labels {
 		objLabels[k] = v
 	}
 	return model.Resource{
-		ID: name,
+		ID:   name,
+		Name: name,
 		K8sObject: &unstructured.Unstructured{
 			Object: tm{
-				"apiVersion": "v1",
-				"kind":       "Pod",
+				"apiVersion": kAPIVersion,
+				"kind":       kType,
 				"metadata": tm{
-					"name":   name,
-					"labels": objLabels,
+					"name":        name,
+					"namespace":   ns,
+					"labels":      objLabels,
+					"annotations": objAnnotations,
 				},
 			},
 		},
@@ -149,7 +153,7 @@ func TestExcludeKubeTypeProcessor(t *testing.T) {
 	}
 }
 
-func TestKubeSelectorProcessor(t *testing.T) {
+func TestKubeLabelSelectorProcessor(t *testing.T) {
 	tests := map[string]struct {
 		selector     string
 		resources    []model.Resource
@@ -191,18 +195,19 @@ func TestKubeSelectorProcessor(t *testing.T) {
 		},
 
 		"Multiple selectors should filter the correctly.": {
-			selector: "k1=v1,k2=v2,k3!=v3",
+			selector: "k1=v1,k2 in (v21,v22),k3!=v3",
 			resources: []model.Resource{
 				newLabeledResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
 				newLabeledResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
-				newLabeledResource("r2", map[string]string{"k1": "v1", "k2": "v2", "k4": "v4"}),
+				newLabeledResource("r2", map[string]string{"k1": "v1", "k2": "v21", "k4": "v4"}),
 				newLabeledResource("r3", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3", "k4": "v4"}),
 				newLabeledResource("r4", map[string]string{"k1": "v1", "k4": "v4"}),
-				newLabeledResource("r5", map[string]string{"k1": "v1", "k2": "v2", "k5": "v5"}),
+				newLabeledResource("r5", map[string]string{"k1": "v1", "k2": "v22", "k5": "v5"}),
+				newLabeledResource("r6", map[string]string{"k1": "v1", "k2": "v23", "k5": "v5"}),
 			},
 			expResources: []model.Resource{
-				newLabeledResource("r2", map[string]string{"k1": "v1", "k2": "v2", "k4": "v4"}),
-				newLabeledResource("r5", map[string]string{"k1": "v1", "k2": "v2", "k5": "v5"}),
+				newLabeledResource("r2", map[string]string{"k1": "v1", "k2": "v21", "k4": "v4"}),
+				newLabeledResource("r5", map[string]string{"k1": "v1", "k2": "v22", "k5": "v5"}),
 			},
 		},
 	}
@@ -212,7 +217,84 @@ func TestKubeSelectorProcessor(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
 
-			proc, err := process.NewKubeSelectorProcessor(test.selector, log.Noop)
+			proc, err := process.NewKubeLabelSelectorProcessor(test.selector, log.Noop)
+			require.NoError(err)
+			gotResources, err := proc.Process(context.TODO(), test.resources)
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expResources, gotResources)
+			}
+		})
+	}
+}
+
+func TestKubeAnnotationSelectorProcessor(t *testing.T) {
+	tests := map[string]struct {
+		selector     string
+		resources    []model.Resource
+		expResources []model.Resource
+		expErr       bool
+	}{
+		"No selector should not filter anything.": {
+			selector: "",
+			resources: []model.Resource{
+				newAnnotatedResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newAnnotatedResource("r1", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+			},
+			expResources: []model.Resource{
+				newAnnotatedResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newAnnotatedResource("r1", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+			},
+		},
+
+		"Equality selector should filter the ones that don't have that annotation.": {
+			selector: "k1=v1",
+			resources: []model.Resource{
+				newAnnotatedResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newAnnotatedResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
+			},
+			expResources: []model.Resource{
+				newAnnotatedResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+			},
+		},
+
+		"Not equality selector should filter the ones that have that annotation.": {
+			selector: "k1!=v1",
+			resources: []model.Resource{
+				newAnnotatedResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newAnnotatedResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
+			},
+			expResources: []model.Resource{
+				newAnnotatedResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
+			},
+		},
+
+		"Multiple selectors should filter the correctly.": {
+			selector: "k1=v1,k2 in (v21,v22),k3!=v3",
+			resources: []model.Resource{
+				newAnnotatedResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newAnnotatedResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
+				newAnnotatedResource("r2", map[string]string{"k1": "v1", "k2": "v21", "k4": "v4"}),
+				newAnnotatedResource("r3", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3", "k4": "v4"}),
+				newAnnotatedResource("r4", map[string]string{"k1": "v1", "k4": "v4"}),
+				newAnnotatedResource("r5", map[string]string{"k1": "v1", "k2": "v22", "k5": "v5"}),
+				newAnnotatedResource("r6", map[string]string{"k1": "v1", "k2": "v23", "k5": "v5"}),
+			},
+			expResources: []model.Resource{
+				newAnnotatedResource("r2", map[string]string{"k1": "v1", "k2": "v21", "k4": "v4"}),
+				newAnnotatedResource("r5", map[string]string{"k1": "v1", "k2": "v22", "k5": "v5"}),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			proc, err := process.NewKubeAnnotationSelectorProcessor(test.selector, log.Noop)
 			require.NoError(err)
 			gotResources, err := proc.Process(context.TODO(), test.resources)
 
