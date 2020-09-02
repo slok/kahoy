@@ -3,7 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+<<<<<<< HEAD
 	"os"
+=======
+	"io"
+>>>>>>> e05efb6... Accept suggestion
 	"strings"
 	"time"
 
@@ -218,7 +222,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	// Ask for confirmation
 	// TODO(jesus.vazquez): Skip when TBD paremeter --yes is set
 	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode {
-		proceed, err := askYesNo()
+		proceed, err := askYesNo(globalConfig.Stdin)
 		if err != nil {
 			return fmt.Errorf("could not read confirmation: %w", err)
 		}
@@ -297,11 +301,11 @@ func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceproce
 
 // askYesNo prompts the user with a dialog to ask whether he wants to proceed
 // or not
-func askYesNo() (bool, error) {
+func askYesNo(reader io.Reader) (bool, error) {
 	var s string
 
 	fmt.Printf("Do you want to proceed? (y/N): ")
-	_, err := fmt.Scan(&s)
+	_, err := fmt.Fscan(reader, &s)
 	if err != nil {
 		return false, err
 	}
