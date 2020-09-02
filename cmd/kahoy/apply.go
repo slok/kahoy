@@ -102,13 +102,26 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	if err != nil {
 		return fmt.Errorf("could not create Kubernetes resorce type exclude processor: %w", err)
 	}
-	resProc := resourceprocess.NewResourceProcessorChain(exclKubeTypeProc)
 
+	includeLabelProc, err := resourceprocess.NewKubeSelectorProcessor(cmdConfig.Apply.KubeLabelSelector, logger)
+	if err != nil {
+		return fmt.Errorf("could not create Kubernetes label selector processor: %w", err)
+	}
+
+	resProc := resourceprocess.NewResourceProcessorChain(
+		exclKubeTypeProc,
+		includeLabelProc,
+	)
+
+	resQBefore := len(applyRes)
 	applyRes, err = resProc.Process(ctx, applyRes)
 	if err != nil {
 		return fmt.Errorf("error while processing apply state resources: %w", err)
 	}
+	resQAfter := len(applyRes)
+	logger.Infof("apply resources before filter %d, after %d", resQBefore, resQAfter)
 
+	resQBefore = len(deleteRes)
 	deleteRes, err = resProc.Process(ctx, deleteRes)
 	if err != nil {
 		return fmt.Errorf("error while processing delete state resources: %w", err)
@@ -118,6 +131,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		logger.Infof("no resources to apply/delete, exiting...")
 		return nil
 	}
+	resQAfter = len(deleteRes)
+	logger.Infof("delete resources before filter %d, after %d", resQBefore, resQAfter)
 
 	// Execute them with the correct manager.
 	var manager resourcemanage.ResourceManager = resourcemanage.NewNoopManager(logger)
