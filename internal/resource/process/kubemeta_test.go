@@ -13,9 +13,9 @@ import (
 	"github.com/slok/kahoy/internal/resource/process"
 )
 
-func newResource(kAPIVersion, kType, ns, name string) model.Resource {
-	type tm = map[string]interface{}
+type tm = map[string]interface{}
 
+func newResource(kAPIVersion, kType, ns, name string) model.Resource {
 	return model.Resource{
 		K8sObject: &unstructured.Unstructured{
 			Object: tm{
@@ -30,7 +30,27 @@ func newResource(kAPIVersion, kType, ns, name string) model.Resource {
 	}
 }
 
-func TestExcludeKubeType(t *testing.T) {
+func newLabeledResource(name string, labels map[string]string) model.Resource {
+	objLabels := tm{}
+	for k, v := range labels {
+		objLabels[k] = v
+	}
+	return model.Resource{
+		ID: name,
+		K8sObject: &unstructured.Unstructured{
+			Object: tm{
+				"apiVersion": "v1",
+				"kind":       "Pod",
+				"metadata": tm{
+					"name":   name,
+					"labels": objLabels,
+				},
+			},
+		},
+	}
+}
+
+func TestExcludeKubeTypeProcessor(t *testing.T) {
 	tests := map[string]struct {
 		regexes      []string
 		resources    []model.Resource
@@ -117,6 +137,82 @@ func TestExcludeKubeType(t *testing.T) {
 			require := require.New(t)
 
 			proc, err := process.NewExcludeKubeTypeProcessor(test.regexes, log.Noop)
+			require.NoError(err)
+			gotResources, err := proc.Process(context.TODO(), test.resources)
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expResources, gotResources)
+			}
+		})
+	}
+}
+
+func TestKubeSelectorProcessor(t *testing.T) {
+	tests := map[string]struct {
+		selector     string
+		resources    []model.Resource
+		expResources []model.Resource
+		expErr       bool
+	}{
+		"No selector should not filter anything.": {
+			selector: "",
+			resources: []model.Resource{
+				newLabeledResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newLabeledResource("r1", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+			},
+			expResources: []model.Resource{
+				newLabeledResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newLabeledResource("r1", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+			},
+		},
+
+		"Equality selector should filter the ones that don't have that label.": {
+			selector: "k1=v1",
+			resources: []model.Resource{
+				newLabeledResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newLabeledResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
+			},
+			expResources: []model.Resource{
+				newLabeledResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+			},
+		},
+
+		"Not equality selector should filter the ones that have that label.": {
+			selector: "k1!=v1",
+			resources: []model.Resource{
+				newLabeledResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newLabeledResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
+			},
+			expResources: []model.Resource{
+				newLabeledResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
+			},
+		},
+
+		"Multiple selectors should filter the correctly.": {
+			selector: "k1=v1,k2=v2,k3!=v3",
+			resources: []model.Resource{
+				newLabeledResource("r0", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3"}),
+				newLabeledResource("r1", map[string]string{"k2": "v2", "k3": "v3"}),
+				newLabeledResource("r2", map[string]string{"k1": "v1", "k2": "v2", "k4": "v4"}),
+				newLabeledResource("r3", map[string]string{"k1": "v1", "k2": "v2", "k3": "v3", "k4": "v4"}),
+				newLabeledResource("r4", map[string]string{"k1": "v1", "k4": "v4"}),
+				newLabeledResource("r5", map[string]string{"k1": "v1", "k2": "v2", "k5": "v5"}),
+			},
+			expResources: []model.Resource{
+				newLabeledResource("r2", map[string]string{"k1": "v1", "k2": "v2", "k4": "v4"}),
+				newLabeledResource("r5", map[string]string{"k1": "v1", "k2": "v2", "k5": "v5"}),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			proc, err := process.NewKubeSelectorProcessor(test.selector, log.Noop)
 			require.NoError(err)
 			gotResources, err := proc.Process(context.TODO(), test.resources)
 

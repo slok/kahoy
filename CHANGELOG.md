@@ -2,10 +2,18 @@
 
 ## [unreleased]
 
-- Remove Git filtering in favor of generic filtering based on Kubernetes resource diff.
-- Add filtering based on changes at Kubernetes resource level.
+### Added
+
+- Optional filter apply/delete plan based on K8s resources that had changes from old to new state using `--include-changes` flag.
+- Optional filter for resources using Kubernetes stantand label selectors using `--kube-include-label` flag.
+
+### Changed
+
 - Deprecate `--git-diff-filter` flag in favor of `--include-changes`.
-- Add `--include-changes` flag.
+
+### Removed
+
+- Git filtering in favor of generic filtering based on Kubernetes resource diff.
 
 ## [v1.0.0] - 2020-08-31
 
