@@ -9,6 +9,7 @@ Breaking: `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-in
 - Optional filter apply/delete plan based on K8s resources that had changes from old to new state using `--include-changes` flag.
 - Optional label based filter for resources using Kubernetes standard label selectors using `--kube-include-label` flag.
 - Optional annotation filter for resources using Kubernetes standard label selectors using `--kube-include-annotation` flag.
+- Load `metav1.List` YAML resources as individual resources.
 
 ### Changed
 

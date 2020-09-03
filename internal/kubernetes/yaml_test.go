@@ -2,6 +2,7 @@ package kubernetes_test
 
 import (
 	"context"
+	"sort"
 	"testing"
 
 	"github.com/slok/kahoy/internal/kubernetes"
@@ -83,7 +84,7 @@ data:
 			},
 		},
 
-		"Deconding multiple object should return the decoded object.": {
+		"Deconding multiple object should return the decoded objects.": {
 			rawObjects: `---
 apiVersion: v1
 kind: ConfigMap
@@ -161,6 +162,89 @@ spec:
 				},
 			},
 		},
+
+		"Deconding multiple object in a list object should return the decoded objects.": {
+			rawObjects: `
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: test-name
+    namespace: test-ns
+    labels:
+      l1: v1
+      l2: v2
+  data:
+    k1: v1
+    k2: v2
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: test2-name
+    namespace: test2-ns
+    labels:
+      l21: v21
+      l22: v22
+  spec:
+    selector:
+      l21: v21
+    type: ClusterIP
+    ports:
+      - name: http
+        port: 8080
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+`,
+			expObjs: []model.K8sObject{
+				&unstructured.Unstructured{
+					Object: tm{
+						"apiVersion": "v1",
+						"kind":       "ConfigMap",
+						"metadata": tm{
+							"name":      "test-name",
+							"namespace": "test-ns",
+							"labels": tm{
+								"l1": "v1",
+								"l2": "v2",
+							},
+						},
+						"data": tm{
+							"k1": "v1",
+							"k2": "v2",
+						},
+					},
+				},
+				&unstructured.Unstructured{
+					Object: tm{
+						"apiVersion": "v1",
+						"kind":       "Service",
+						"metadata": tm{
+							"name":      "test2-name",
+							"namespace": "test2-ns",
+							"labels": tm{
+								"l21": "v21",
+								"l22": "v22",
+							},
+						},
+						"spec": tm{
+							"selector": tm{
+								"l21": "v21",
+							},
+							"type": "ClusterIP",
+							"ports": ts{
+								tm{
+									"name": "http",
+									"port": int64(8080),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, test := range tests {
@@ -173,6 +257,10 @@ spec:
 			if test.expErr {
 				assert.Error(err)
 			} else if assert.NoError(err) {
+				// Sort for reliable comparison.
+				sort.SliceStable(test.expObjs, func(i, j int) bool { return test.expObjs[i].GetName() < test.expObjs[j].GetName() })
+				sort.SliceStable(gotObjs, func(i, j int) bool { return gotObjs[i].GetName() < gotObjs[j].GetName() })
+
 				assert.Equal(test.expObjs, gotObjs)
 			}
 		})
