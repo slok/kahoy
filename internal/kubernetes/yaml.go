@@ -67,7 +67,20 @@ func (y YAMLObjectSerializer) DecodeObjects(ctx context.Context, raw []byte) ([]
 		if err != nil {
 			return nil, fmt.Errorf("could not decode kubernetes object %w", err)
 		}
-		res = append(res, obj.(*unstructured.Unstructured))
+
+		switch objt := obj.(type) {
+		case *unstructured.Unstructured:
+			res = append(res, objt)
+		case *unstructured.UnstructuredList:
+			// If a metav1.List type object, then get all the items individually
+			// and add them to the resource list.
+			for _, kobj := range objt.Items {
+				kobj := kobj
+				res = append(res, &kobj)
+			}
+		default:
+			return nil, fmt.Errorf("decoded object is of an unknown type")
+		}
 	}
 
 	return res, nil
