@@ -134,6 +134,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
 			KubeContext: cmdConfig.Apply.KubeContext,
 			YAMLEncoder: kubernetesSerializer,
+			YAMLDecoder: kubernetesSerializer,
 			Logger:      logger,
 		})
 		if err != nil {

@@ -30,3 +30,10 @@ type K8sObjectEncoder interface {
 }
 
 //go:generate mockery --case underscore --output kubectlmock --outpkg kubectlmock --name K8sObjectEncoder
+
+// K8sObjectDecoder knows how to decode raw YAML Kubernetes into models.
+type K8sObjectDecoder interface {
+	DecodeObjects(ctx context.Context, raw []byte) ([]model.K8sObject, error)
+}
+
+//go:generate mockery --case underscore --output kubectlmock --outpkg kubectlmock --name K8sObjectDecoder
