@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-e1
+  namespace: test-kahoy
+  labels:
+    app: app-e1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-e1
+  template:
+    metadata:
+      labels:
+        app: app-e1
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP

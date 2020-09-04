@@ -1,0 +1,15 @@
+version: v1
+
+# Groups configuration.
+groups:
+  - id: ns
+    priority: 100
+
+  - id: root
+    priority: 200
+
+  - id: group-a/group-c/group-d
+    priority: 200
+
+  - id: group-b/group-e
+    priority: 550
