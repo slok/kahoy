@@ -64,7 +64,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	kubeHome := filepath.Join(homedir.HomeDir(), ".kube", "config")
 
 	c := CmdConfig{}
-	app := kingpin.New("kahoy", "A simple Kubernetes deployer tool for raw manifests")
+	app := kingpin.New("kahoy", "A simple Kubernetes deployment tool for raw manifests")
 	app.Version(Version)
 	app.DefaultEnvars()
 
