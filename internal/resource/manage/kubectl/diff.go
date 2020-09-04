@@ -45,6 +45,7 @@ type DiffManagerConfig struct {
 	KubeFieldManager          string
 	DisableKubeForceConflicts bool
 	YAMLEncoder               K8sObjectEncoder
+	YAMLDecoder               K8sObjectDecoder
 	FSManager                 FSManager
 	CmdRunner                 CmdRunner
 	Out                       io.Writer
@@ -80,6 +81,10 @@ func (c *DiffManagerConfig) defaults() error {
 		return fmt.Errorf("yaml encoder is required")
 	}
 
+	if c.YAMLDecoder == nil {
+		return fmt.Errorf("yaml decoder is required")
+	}
+
 	if c.FSManager == nil {
 		c.FSManager = stdFSManager{}
 	}
@@ -90,13 +95,15 @@ func (c *DiffManagerConfig) defaults() error {
 type diffManager struct {
 	kubectlCmd  string
 	yamlEncoder K8sObjectEncoder
+	yamlDecoder K8sObjectDecoder
 	cmdRunner   CmdRunner
 	fsManager   FSManager
 	out         io.Writer
 	errOut      io.Writer
 	logger      log.Logger
 
-	applyArgs []string
+	applyArgs  []string
+	deleteArgs []string
 }
 
 // NewDiffManager returns a resource Manager based on Kubctl that will
@@ -117,15 +124,26 @@ func NewDiffManager(config DiffManagerConfig) (manage.ResourceManager, error) {
 		withStdIn(),
 	})
 
+	deleteArgs := newKubectlCmdArgs([]kubectlCmdOption{
+		withGetCmd(),
+		withContext(config.KubeContext),
+		withConfig(config.KubeConfig),
+		withIgnoreNotFound(true),
+		withYAMLOutput(),
+		withStdIn(),
+	})
+
 	return diffManager{
 		kubectlCmd:  config.KubectlCmd,
 		yamlEncoder: config.YAMLEncoder,
+		yamlDecoder: config.YAMLDecoder,
 		cmdRunner:   config.CmdRunner,
 		fsManager:   config.FSManager,
 		out:         config.Out,
 		errOut:      config.ErrOut,
 		logger:      config.Logger,
 		applyArgs:   applyArgs,
+		deleteArgs:  deleteArgs,
 	}, nil
 }
 
@@ -147,7 +165,10 @@ func (d diffManager) Apply(ctx context.Context, resources []model.Resource) erro
 
 	// Create command.
 	in := bytes.NewReader(yamlData)
-	cmd := d.newKubctlCmd(ctx, d.applyArgs, in)
+	cmd := exec.CommandContext(ctx, d.kubectlCmd, d.applyArgs...)
+	cmd.Stdin = in
+	cmd.Stdout = d.out
+	cmd.Stderr = d.errOut
 
 	// Execute command.
 	err = d.cmdRunner.Run(cmd)
@@ -165,11 +186,28 @@ func (d diffManager) Apply(ctx context.Context, resources []model.Resource) erro
 	return nil
 }
 
-// TODO(slok): At this moment we are making client-side diff with the stored state instead the server one.
-// 			   Implement server-side diff, get the resource and check what needs to be removed.
+// Delete will get the diff for the deleted sources.
+// We can't do the diff for things that will be deleted usin Kubectl, also we can't be sure of
+// the resources that are on the server, maybe some of them don't exist neither on the server.
+// To solve this, we ask the server for the current content of the resources that we want to delete,
+// decode them to resources to validate individual resources and then get a diff against /dev/null
+// for each object.
+// With this solution, we get a real diff of that fields will be removed from the server.
+// If anytime Kubectl handles deletion with diff, we should use that and remove all this logic.
 func (d diffManager) Delete(ctx context.Context, resources []model.Resource) error {
 	if len(resources) == 0 {
 		return nil
+	}
+
+	// To get a real delete diff, we get the latest state that we have on the server
+	// for the resources that we want to delete (changes, already deleted...).
+	objs := make([]model.K8sObject, 0, len(resources))
+	for _, r := range resources {
+		objs = append(objs, r.K8sObject)
+	}
+	updatedObjs, err := d.getResourcesFromAPIServer(ctx, objs)
+	if err != nil {
+		return fmt.Errorf("could not get resources latest state from the apiserver: %w", err)
 	}
 
 	// Create a temporal directory.
@@ -185,16 +223,16 @@ func (d diffManager) Delete(ctx context.Context, resources []model.Resource) err
 	}()
 
 	// We are creating a diff for each resource.
-	for _, r := range resources {
+	for _, r := range updatedObjs {
 		// Encode object.
-		yamlData, err := d.yamlEncoder.EncodeObjects(ctx, []model.K8sObject{r.K8sObject})
+		yamlData, err := d.yamlEncoder.EncodeObjects(ctx, []model.K8sObject{r})
 		if err != nil {
 			return fmt.Errorf("could not encode objects to diff: %w", err)
 		}
 
 		// Store our YAML in a file.
-		gvk := r.K8sObject.GetObjectKind().GroupVersionKind()
-		fileName := strings.Join([]string{gvk.Group, gvk.Version, gvk.Kind, r.K8sObject.GetNamespace(), r.K8sObject.GetName()}, ".")
+		gvk := r.GetObjectKind().GroupVersionKind()
+		fileName := strings.Join([]string{gvk.Group, gvk.Version, gvk.Kind, r.GetNamespace(), r.GetName()}, ".")
 		filePath := path.Join(dirPath, fileName)
 		err = d.fsManager.WriteFile(filePath, yamlData, 0644)
 		if err != nil {
@@ -225,10 +263,37 @@ func (d diffManager) newDiffCmd(ctx context.Context, fileA string, in io.Reader)
 	return cmd
 }
 
-func (d diffManager) newKubctlCmd(ctx context.Context, args []string, in io.Reader) *exec.Cmd {
-	cmd := exec.CommandContext(ctx, d.kubectlCmd, args...)
+// getResourcesFromAPIServer returns the latest state from apiserver of the received resources.
+// Tries getting the latest information of the received resources by asking them to the server
+// using kubectl, and decoding again into domain k8s objects.
+// Existing resources will be returned with the fields data up to date (server data).
+// If any of the resources is not on the server it will not be returned.
+func (d diffManager) getResourcesFromAPIServer(ctx context.Context, objs []model.K8sObject) ([]model.K8sObject, error) {
+	// Encode objects.
+	yamlData, err := d.yamlEncoder.EncodeObjects(ctx, objs)
+	if err != nil {
+		return nil, fmt.Errorf("could not encode objects to diff: %w", err)
+	}
+
+	// Create command.
+	var out bytes.Buffer
+	in := bytes.NewReader(yamlData)
+	cmd := exec.CommandContext(ctx, d.kubectlCmd, d.deleteArgs...)
 	cmd.Stdin = in
-	cmd.Stdout = d.out
+	cmd.Stdout = &out
 	cmd.Stderr = d.errOut
-	return cmd
+
+	// Execute command.
+	err = d.cmdRunner.Run(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("error while running delete diff command: %w", err)
+	}
+
+	// Decode into model.
+	k8sResources, err := d.yamlDecoder.DecodeObjects(ctx, out.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("could not decode server obtained Kubernetes objects for deletion: %w", err)
+	}
+
+	return k8sResources, nil
 }

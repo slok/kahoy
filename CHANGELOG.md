@@ -15,6 +15,7 @@ Breaking: `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-in
 
 - Deprecate `--git-diff-filter` flag in favor of `--include-changes`.
 - `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-include-annotation` is `-a` short flag.
+- On Diff, deleted resources now show the real fields and resource the server will delete (before we didn't check the server state).
 
 ### Removed
 

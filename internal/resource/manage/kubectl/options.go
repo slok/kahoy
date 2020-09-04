@@ -21,6 +21,12 @@ func withApplyCmd() kubectlCmdOption {
 	}
 }
 
+func withGetCmd() kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, "get")
+	}
+}
+
 func withDeleteCmd() kubectlCmdOption {
 	return func(args []string) []string {
 		return append(args, "delete")
@@ -78,8 +84,14 @@ func withIgnoreNotFound(ignoreNotFound bool) kubectlCmdOption {
 	}
 }
 
+func withYAMLOutput() kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, "--output", "yaml")
+	}
+}
+
 func withStdIn() kubectlCmdOption {
 	return func(args []string) []string {
-		return append(args, "-f", "-")
+		return append(args, "--filename", "-")
 	}
 }
