@@ -28,6 +28,7 @@ Maintain Kubernetes resources in sync easily.
 - [:bulb: Use cases](#bulb-use-cases)
 - [:question: F.A.Q](#question-faq)
 - [:tophat: Alternatives](#tophat-alternatives)
+- [:octocat: Contributing](#octocat-contributing)
 
 ## :tada: Introduction
 
@@ -53,6 +54,8 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 - Multiple filtering options (file paths, resource namespace, types...).
 - Uses Kubernetes >=v1.18 and server-side apply.
 - Push mode (triggered from CI), not pull (controller).
+- Use Kubectl under the hood.
+- Safe deletion of resources (doesn't use `prune` method to delete K8s resources).
 
 ## :shipit: Install
 
@@ -394,6 +397,7 @@ Check this [Kustomize example][kustomize-example].
 - [Non resource YAMLs](#non-resource-yamls)
 - [Ignore a resource](#ignore-a-resource)
 - [Why so many filtering options?](#why-so-many-filtering-options)
+- [Why don't use kubectl `prune` to delete resources?](#why-dont-use-kubectl-prune-to-delete-resources)
 - [Github actions integration](#github-actions-integration)
 - [Configuration file](#configuration-file)
 
@@ -458,6 +462,10 @@ Check this [Github actions example][github-actions-example] for more info.
 ### How is Garbage collection handled?
 
 Kahoy takes manifests in 2 states, an `old` state, and a `new` state. It compares both and checks what's missing in the `new` one comparing the `old` one. Those are the resources that will be deleted (garbage collected).
+
+The deletion is made in a resource manner using `Kubectl delete`, this is safe because Kahoy selects what wants to delete so, it already knows what is going to be delete on the server.
+
+Other methods like `prune` are not safe, and that's why Kahoy doesn't use them.
 
 ### Why git?
 
@@ -542,6 +550,17 @@ All these filtering options give users a way of solving lots of use cases, for e
 - Integrate Kahoy gradually including manifests (`--fs-include monitoring/grafana --fs-include monitoring/prometheus`)
 - ...
 
+### Why don't use kubectl `prune` to delete resources?
+
+TL;DR: Is unpredictable, then risky.
+
+- [Official documentation][kubectl-delete-docs] discourages `--prune`.
+- [Official documentation][kubectl-delete-docs] encourages `delete -f`.
+- You never know what will be deleted exactly beforehand.
+- Can delete resources that we didn't even know they exists (because the selector matches).
+- Can have a big blast radius when an error is made in the `prune` execution.
+- Some controllers/operators create resources and set the labels with the ones from the original resource, this would make prune delete the controller object on each `apply` with `prune`.
+
 ### Github actions integration
 
 Check this [Github actions example][github-actions-example] for more info.
@@ -569,6 +588,10 @@ Kahoy born because available alternatives are too complex, Kubernetes is a compl
 - [Flux]: Controller-based flow, very powerful but complex. If you want a more `pull` than `push` approach, maybe you want this.
 - [Kubectl]: Official tool. Is what kahoy uses under the hood, very powerful tool, lots of options, although to make it work correctly with a group of manifests/repository... you will need scripting or something like Kahoy. _We could say that Kahoy is a small layer on top of Kubectl_.
 
+## :octocat: Contributing
+
+Check [CONTRIBUTING.md](CONTRIBUTING.md) file.
+
 [ci-image]: https://github.com/slok/kahoy/workflows/CI/badge.svg
 [ci-url]: https://github.com/slok/kahoy/actions
 [goreport-image]: https://goreportcard.com/badge/github.com/slok/kahoy
@@ -584,3 +607,4 @@ Kahoy born because available alternatives are too complex, Kubernetes is a compl
 [github-actions-example]: https://github.com/slok/kahoy-github-actions-example
 [bash-git-example]: https://gist.github.com/slok/3f37c2a0dd823d5b66db869a468109ce
 [kustomize-example]: https://github.com/slok/kahoy-kustomize-example
+[kubectl-delete-docs]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/#how-to-delete-objects

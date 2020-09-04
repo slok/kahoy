@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-d1
+  namespace: test-kahoy
+  labels:
+    app: app-d1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-d1
+  template:
+    metadata:
+      labels:
+        app: app-d1
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-d2
+  namespace: test-kahoy
+  labels:
+    app: app-d2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-d2
+  template:
+    metadata:
+      labels:
+        app: app-d2
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-d3
+  namespace: test-kahoy
+  labels:
+    app: app-d3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-d3
+      changed: true
+  template:
+    metadata:
+      labels:
+        app: app-d3
+        changed: true
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
