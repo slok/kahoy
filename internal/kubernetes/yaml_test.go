@@ -38,11 +38,23 @@ func TestYAMLObjectSerializerDecodeObjects(t *testing.T) {
 		"Empty objects on file should return no objects.": {
 			rawObjects: `---
 
---- 
+---
 ---
 
 ---
 
+
+---`,
+			expObjs: []model.K8sObject{},
+		},
+		"YAML comments should be treated as  empty yaml files.": {
+			rawObjects: `# some comments
+---
+# other comment
+---
+# multiline
+# comment
+---
 
 ---`,
 			expObjs: []model.K8sObject{},
