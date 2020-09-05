@@ -43,15 +43,19 @@ func NewYAMLObjectSerializer(logger log.Logger) YAMLObjectSerializer {
 	}
 }
 
-var splitMarkRe = regexp.MustCompile("(?m)^---")
+var (
+	splitMarkRe  = regexp.MustCompile("(?m)^---")
+	rmCommentsRe = regexp.MustCompile("(?m)^#.*$")
+)
 
 const emptyChars = "\n\t\r "
 
 // DecodeObjects decodes YAML data into objects, supports multiple objects on the same
 // YAML raw data.
 func (y YAMLObjectSerializer) DecodeObjects(ctx context.Context, raw []byte) ([]model.K8sObject, error) {
-	// Santize and split (YAML can declar multiple files in the same file using `---`).
+	// Santize and split (YAML can declare multiple files in the same file using `---`).
 	raw = bytes.Trim(raw, emptyChars)
+	raw = rmCommentsRe.ReplaceAll(raw, []byte(""))
 	rawSplit := splitMarkRe.Split(string(raw), -1)
 
 	// Decode all objects in the raw.
