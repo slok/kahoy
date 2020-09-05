@@ -3,6 +3,7 @@ package configuration_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -37,11 +38,16 @@ version: v1
 groups:
   - id: "prometheus/crd"
     priority: 50
+    wait:
+      duration: 15s
 `,
 			expConfig: model.AppConfig{
 				Groups: map[string]model.GroupConfig{
 					"prometheus/crd": {
 						Priority: intVal(50),
+						WaitConfig: &model.GroupWaitConfig{
+							Duration: 15 * time.Second,
+						},
 					},
 				},
 			},
@@ -53,6 +59,35 @@ version: v1
 groups:
   - id: ""
     priority: 50
+`,
+			expErr: true,
+		},
+
+		"A group without waiting options should be nil.": {
+			data: `
+version: v1
+groups:
+  - id: "test"
+    priority: 50
+`,
+			expConfig: model.AppConfig{
+				Groups: map[string]model.GroupConfig{
+					"test": {
+						Priority:   intVal(50),
+						WaitConfig: nil,
+					},
+				},
+			},
+		},
+
+		"Invalid wait duration should fail.": {
+			data: `
+version: v1
+groups:
+  - id: "test"
+    priority: 50
+    wait:
+      duration: 15
 `,
 			expErr: true,
 		},

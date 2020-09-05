@@ -46,7 +46,7 @@ func NewRepositories(config RepositoriesConfig) (oldRepo, newRepo *Repository, e
 		}),
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("could not create new fs %q repository storage: %w", config.OldPath, err)
+		return nil, nil, fmt.Errorf("could not create new fs %q repository storage: %w", config.NewPath, err)
 	}
 
 	return oldRepo, newRepo, nil

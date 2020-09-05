@@ -1,6 +1,9 @@
 package model
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // AppConfig is the configuration of the app.
 type AppConfig struct {
@@ -10,7 +13,13 @@ type AppConfig struct {
 
 // GroupConfig is the group configuration.
 type GroupConfig struct {
-	Priority *int
+	Priority   *int
+	WaitConfig *GroupWaitConfig
+}
+
+// GroupWaitConfig has a group wait options.
+type GroupWaitConfig struct {
+	Duration time.Duration
 }
 
 // Validate will validate the app configuration.

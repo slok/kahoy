@@ -11,6 +11,7 @@ import (
 	resourcemanage "github.com/slok/kahoy/internal/resource/manage"
 	managebatch "github.com/slok/kahoy/internal/resource/manage/batch"
 	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
+	managewait "github.com/slok/kahoy/internal/resource/manage/wait"
 	resourceprocess "github.com/slok/kahoy/internal/resource/process"
 	"github.com/slok/kahoy/internal/storage"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
@@ -150,9 +151,20 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		if err != nil {
 			return fmt.Errorf("could not create resource manager: %w", err)
 		}
+
+		// Wrap the executor manger with wait manager. This is wrapped here because
+		// wait manager should only wait on real executions.
+		manager, err = managewait.NewManager(managewait.ManagerConfig{
+			Manager:         manager,
+			GroupRepository: newGroupRepo,
+			Logger:          logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create wait resource manager: %w", err)
+		}
 	}
 
-	// Wrap manager with batch managers.
+	// Wrap manager with batch manager. This should wrap the executors managers
 	manager, err = managebatch.NewPriorityManager(managebatch.PriorityManagerConfig{
 		Manager:         manager,
 		Logger:          logger,

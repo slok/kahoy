@@ -21,14 +21,14 @@ This is a rough outline of how to prepare a contribution:
 - Fork the repository.
 - Create a topic branch from where you want to base your work (usually branched from master).
 - Make commits of logical units.
-- Make sure your commit messages are in the proper format (see below).
+- Make sure your commit messages are clear and self-explanatory.
 - Push your changes to a topic branch in your fork of the repository.
 - If you changed code, add automated tests to cover your changes.
 - Submit a pull request from your fork to the original repository.
 
 ## Automated checks
 
-You can check your code satisfies some standards by checking using:
+You can check your code satisfies some standards by using:
 
 ```bash
 make check

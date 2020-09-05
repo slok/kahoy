@@ -10,6 +10,7 @@ Breaking: `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-in
 - Optional label based filter for resources using Kubernetes standard label selectors using `--kube-include-label` flag.
 - Optional annotation filter for resources using Kubernetes standard label selectors using `--kube-include-annotation` flag.
 - Load `metav1.List` YAML resources as individual resources.
+- Allow groups waiting specific time after apply.
 
 ### Changed
 
