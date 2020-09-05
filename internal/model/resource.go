@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,20 +43,33 @@ type Group struct {
 	ID       string
 	Path     string
 	Priority int
+	Wait     GroupWait
+}
+
+// GroupWait options.
+type GroupWait struct {
+	Duration time.Duration
 }
 
 // NewGroup returns a new group using app group configuration.
 func NewGroup(id, path string, config GroupConfig) Group {
 	const defaultPriority = 1000
 
-	priority := defaultPriority
-	if config.Priority != nil {
-		priority = *config.Priority
+	g := Group{
+		ID:   id,
+		Path: path,
 	}
 
-	return Group{
-		ID:       id,
-		Path:     path,
-		Priority: priority,
+	// Set priority.
+	g.Priority = defaultPriority
+	if config.Priority != nil {
+		g.Priority = *config.Priority
 	}
+
+	// Set wait options.
+	if config.WaitConfig != nil {
+		g.Wait.Duration = config.WaitConfig.Duration
+	}
+
+	return g
 }

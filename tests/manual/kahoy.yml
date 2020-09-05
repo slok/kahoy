@@ -4,12 +4,18 @@ version: v1
 groups:
   - id: ns
     priority: 100
+    wait:
+      duration: 10s
 
   - id: root
     priority: 200
+    wait:
+      duration: 2s
 
   - id: group-a/group-c/group-d
     priority: 200
+    wait:
+      duration: 5s
 
   - id: group-b/group-e
     priority: 550

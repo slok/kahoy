@@ -3,6 +3,7 @@ package configuration
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/ghodss/yaml"
 
@@ -15,6 +16,9 @@ type jsonV1 struct {
 	Groups []struct {
 		ID       string `json:"id"`
 		Priority *int   `json:"priority,omitempty"`
+		Wait     struct {
+			Duration string `json:"duration,omitempty"`
+		} `json:"wait"`
 	} `json:"groups"`
 }
 
@@ -26,8 +30,20 @@ func (j jsonV1) toModel() (*model.AppConfig, error) {
 			return nil, fmt.Errorf("group id empty")
 		}
 
+		var gwc *model.GroupWaitConfig
+		if g.Wait.Duration != "" {
+			duration, err := time.ParseDuration(g.Wait.Duration)
+			if err != nil {
+				return nil, fmt.Errorf("group %q can't parse waiting duration: %w", g.ID, err)
+			}
+			gwc = &model.GroupWaitConfig{
+				Duration: duration,
+			}
+		}
+
 		groups[g.ID] = model.GroupConfig{
-			Priority: g.Priority,
+			Priority:   g.Priority,
+			WaitConfig: gwc,
 		}
 	}
 
