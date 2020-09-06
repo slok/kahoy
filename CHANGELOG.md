@@ -2,7 +2,9 @@
 
 ## [unreleased]
 
-Breaking: `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-include-annotation` is `-a` short flag.
+### Breaking
+
+- `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-include-annotation` is `-a` short flag.
 
 ### Added
 
@@ -19,6 +21,9 @@ Breaking: `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-in
 - On Diff, deleted resources now show the real fields and resource the server will delete (before we didn't check the server state).
 - Fix YAML failing on load when YAML file was multiresource and had files only with comments.
 - Fix using current directory as the manifests path, loads all resources as root group.
+- Capture correctly OS sigansl and stop safely command execution.
+- Batch executions stop in the different batch executions if context is cancelled.
+- Group wait now stops if the context is cancelled.
 
 ### Removed
 

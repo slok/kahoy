@@ -6,7 +6,10 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/oklog/run"
 	"github.com/sirupsen/logrus"
 
 	"github.com/slok/kahoy/internal/configuration"
@@ -90,22 +93,55 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 		Stderr:    stderr,
 	}
 
-	// Mapping for each command func and select the correct one.
-	commands := map[string]func(ctx context.Context, config CmdConfig, globalConfig GlobalConfig) error{
-		CmdArgApply: RunApply,
-	}
-	cmd, ok := commands[config.Command]
-	if !ok {
-		return fmt.Errorf("command %q is not valid", config.Command)
+	// Prepare our run entrypoints.
+	var g run.Group
+
+	// Cmd run.
+	{
+		// Mapping for each command func and select the correct one.
+		commands := map[string]func(ctx context.Context, config CmdConfig, globalConfig GlobalConfig) error{
+			CmdArgApply: RunApply,
+		}
+		cmd, ok := commands[config.Command]
+		if !ok {
+			return fmt.Errorf("command %q is not valid", config.Command)
+		}
+
+		ctx, cancel := context.WithCancel(ctx)
+		g.Add(
+			func() error {
+				return cmd(ctx, *config, gConfig)
+			},
+			func(_ error) {
+				logger.Infof("stopping cmd execution")
+				cancel()
+			},
+		)
 	}
 
-	// Run the command.
-	err = cmd(ctx, *config, gConfig)
-	if err != nil {
-		return err
+	// OS signals.
+	{
+		sigC := make(chan os.Signal, 1)
+		exitC := make(chan struct{})
+		signal.Notify(sigC, syscall.SIGTERM, syscall.SIGINT)
+
+		g.Add(
+			func() error {
+				select {
+				case s := <-sigC:
+					logger.Infof("signal %q received", s)
+					return nil
+				case <-exitC:
+					return nil
+				}
+			},
+			func(_ error) {
+				close(exitC)
+			},
+		)
 	}
 
-	return nil
+	return g.Run()
 }
 
 func main() {
