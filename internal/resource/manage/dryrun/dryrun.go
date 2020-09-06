@@ -1,4 +1,4 @@
-package manage
+package dryrun
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/slok/kahoy/internal/model"
+	"github.com/slok/kahoy/internal/resource/manage"
 )
 
 // pfunc is a helper alias to be less vebose on func declarations.
@@ -26,9 +27,9 @@ type dryRunManager struct {
 	blueSprintf       pfunc
 }
 
-// NewDryRunManager returns a resource manager that dry runs the changes
+// NewManager returns a resource manager that dry runs the changes
 // without the need of an apiserver.
-func NewDryRunManager(disableColor bool, out io.Writer) ResourceManager {
+func NewManager(disableColor bool, out io.Writer) manage.ResourceManager {
 	if out == nil {
 		out = os.Stdout
 	}
