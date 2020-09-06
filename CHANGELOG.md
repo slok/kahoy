@@ -24,6 +24,7 @@
 - Capture correctly OS sigansl and stop safely command execution.
 - Batch executions stop in the different batch executions if context is cancelled.
 - Group wait now stops if the context is cancelled.
+- On dry-run, groups are printed in order
 
 ### Removed
 

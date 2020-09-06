@@ -84,10 +84,18 @@ func (d dryRunManager) printTree(title string, resources []model.Resource, print
 	for _, res := range resources {
 		resByGroup[res.GroupID] = append(resByGroup[res.GroupID], res)
 	}
+	// Sort groups so we print in order.
+	orderedGroups := make([]string, 0, len(resByGroup))
+	for groupID := range resByGroup {
+		orderedGroups = append(orderedGroups, groupID)
+	}
+	sort.Slice(orderedGroups, func(i, j int) bool { return orderedGroups[i] < orderedGroups[j] })
 
 	c := 0
 	d.printf("\n⯈ %s %s\n", d.whiteBoldSprintf(title), d.blueSprintf("(%d resources)", len(resources)))
-	for groupID, ress := range resByGroup {
+	for _, groupID := range orderedGroups {
+		ress := resByGroup[groupID] // We got the these group IDs from this map, should exist.
+
 		// Print groups.
 		joinSymbol := `├── `
 		groupSymbol := `│`
