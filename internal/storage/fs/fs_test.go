@@ -224,7 +224,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 				Path:      "/tmp/test",
 			},
 			mock: func(mfsm *fsmock.FileSystemManager, mkd *fsmock.K8sObjectDecoder) {
-				// Mock 2 files.
+				// Mock files.
 				f1Path := "/tmp/test/group1/test-1.yaml"
 				f1 := testInfoFile{name: "test-1.yaml", isDir: false}
 				mfsm.On("Abs", "/tmp/test/group1/test-1.yaml").Once().Return("/tmp/test/group1/test-1.yaml", nil)

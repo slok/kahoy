@@ -171,15 +171,19 @@ func NewRepository(config RepositoryConfig) (*Repository, error) {
 // loadFS will load all the resource and groups from the root FS path.
 // the loaded resources will be loaded into a memory repository.
 func (r *Repository) loadFS(rootPath string) error {
+	// Create a regex that will strip the group IDs from the path by extracting the manifests root path
+	// from the paths (scapes the common path characters like `.` or `/` for the regex).
+	scapedRootPath := strings.ReplaceAll(rootPath, ".", `\.`)
+	scapedRootPath = strings.ReplaceAll(scapedRootPath, "/", `\/`)
+	groupIDRegexReplace, err := regexp.Compile(fmt.Sprintf(`%s\/?`, scapedRootPath))
+	if err != nil {
+		return fmt.Errorf("could not compile groupID regex: %w", err)
+	}
+
 	// Walk doesn't apply concurrency, its safe to mutate these variables in
 	// this context from the walkFn context.
 	groups := map[string]model.Group{}
 	resources := map[string]model.Resource{}
-	// Used to strip the initial part of the path to get the group ID.
-	groupIDRegexReplace, err := regexp.Compile(fmt.Sprintf(`%s\/?`, rootPath))
-	if err != nil {
-		return fmt.Errorf("could not compile groupID regex: %w", err)
-	}
 
 	err = r.fsManager.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		logger := r.logger.WithValues(log.Kv{"path": path})
