@@ -38,7 +38,17 @@ func (b batchManager) Apply(ctx context.Context, resources []model.Resource) err
 
 	totalBatches := len(batches)
 	for i, batch := range batches {
-		b.logger.WithValues(log.Kv(batch.Metadata)).Infof("applying batch %d of %d", i+1, totalBatches)
+		logger := b.logger.WithValues(log.Kv(batch.Metadata))
+
+		// Check if we are done before continuing.
+		select {
+		case <-ctx.Done():
+			logger.Infof("context cancelled, stopped batch executions")
+			return nil
+		default:
+		}
+
+		logger.Infof("applying batch %d of %d", i+1, totalBatches)
 		err := b.manager.Apply(ctx, batch.Resources)
 		if err != nil {
 			return fmt.Errorf("could not apply batch correctly: %w", err)

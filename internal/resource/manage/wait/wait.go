@@ -25,8 +25,10 @@ const stdTM = stdTimeManager(0)
 var _ TimeManager = stdTM
 
 func (stdTimeManager) Sleep(ctx context.Context, d time.Duration) {
-	// TODO(slok): Check context and cancel execution if required.
-	time.Sleep(d)
+	select {
+	case <-ctx.Done():
+	case <-time.After(d):
+	}
 }
 
 // ManagerConfig is the configuration of the Wait manager.
