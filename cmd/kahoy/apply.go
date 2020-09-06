@@ -10,6 +10,7 @@ import (
 	"github.com/slok/kahoy/internal/plan"
 	resourcemanage "github.com/slok/kahoy/internal/resource/manage"
 	managebatch "github.com/slok/kahoy/internal/resource/manage/batch"
+	managedryrun "github.com/slok/kahoy/internal/resource/manage/dryrun"
 	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
 	managewait "github.com/slok/kahoy/internal/resource/manage/wait"
 	resourceprocess "github.com/slok/kahoy/internal/resource/process"
@@ -129,7 +130,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	var manager resourcemanage.ResourceManager = resourcemanage.NewNoopManager(logger)
 	switch {
 	case cmdConfig.Apply.DryRun:
-		manager = resourcemanage.NewDryRunManager(cmdConfig.Global.NoColor, nil)
+		manager = managedryrun.NewManager(cmdConfig.Global.NoColor, nil)
 	case cmdConfig.Apply.DiffMode:
 		manager, err = managekubectl.NewDiffManager(managekubectl.DiffManagerConfig{
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
