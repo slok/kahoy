@@ -113,7 +113,7 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 				return cmd(ctx, *config, gConfig)
 			},
 			func(_ error) {
-				logger.Infof("stopping cmd execution")
+				logger.Debugf("stopping cmd execution")
 				cancel()
 			},
 		)
