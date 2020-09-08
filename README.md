@@ -361,24 +361,14 @@ Kahoy knows how to manage priorities. By default it will batch all the manifests
 you would have `kahoy.yml` on your repo root (or any other path and use `--config-file`), with the group options:
 
 ```yaml
-# Version of the configuration format.
 version: v1
 
-# Groups configuration.
 groups:
-  # Represented by the group ID
   - id: crd
-    # Priority of the group (by default is 1000). Applied in asc order.
     priority: 200
-    # Wait options.
-    wait:
-      # The time will wait after being applied (Ts, Tm, Th format).
-      duration: 5s
 
   - id: ns
     priority: 100
-    wait:
-      duration: 10s
 
   - id: system/roles
     priority: 300
@@ -540,7 +530,7 @@ At Kubernetes resource level you have others:
 
 - `--kube-exclude-type`: Exclude based on Kubernetes type regex (e.g: `apps/*/Deployment`, `v1/Pod`...).
 - `--kube-include-label`: Kubernetes style selector that will select only the resources that match the label selector (e.g: `app=myapp,component!=database,env`)
-- `--kube-include-annotation`: Kubernetes style selector that will select only the resources that match the annotation selector (e.g: `app=myapp,component!=database`)
+- `--kube-include-annotation`: Kubernetes style selector that will select only the resources that match the annotation selector (e.g: `app=myapp,component!=database,!non-wanted-key`)
 
 ### Why so many filtering options?
 
@@ -581,12 +571,37 @@ Check this [Github actions example][github-actions-example] for more info.
 Kahoy accepts a configuration file (by default `./kahoy.yml`) to set options, at this moment these are the options:
 
 ```yaml
+# Version of the configuration format.
 version: v1
+
+# File system configuration.
+fs:
+  # Exclude regex for file paths (same as `--fs-exclude`, can be used both).
+  exclude:
+    - prometheus/secrets
+    - secret*
+  # Include regex for file paths (same as `--fs-include`, can be used both).
+  include:
+    - apps/
 
 # List of groups configuration.
 groups:
-  - id: crd # Identifies by group ID.
-    priority: 200 # Adds apply priority to all the resources in a group (by default `1000`).
+  # Represented by the group ID
+  - id: crd
+    # Priority of the group (by default is 1000). Applied in asc order.
+    priority: 200
+    # Wait options.
+    wait:
+      # The time will wait after being applied (Ts, Tm, Th format).
+      duration: 5s
+
+  - id: ns
+    priority: 100
+    wait:
+      duration: 10s
+
+  - id: system/roles
+    priority: 300
 ```
 
 ## :tophat: Alternatives

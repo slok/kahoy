@@ -30,6 +30,10 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	// Create YAML serializer.
 	kubernetesSerializer := kubernetes.NewYAMLObjectSerializer(logger)
 
+	// Aggregate options (cmd flags + kahoy config files).
+	fsExclude := append(cmdConfig.Apply.ExcludeManifests, globalConfig.AppConfig.Fs.Exclude...)
+	fsInclude := append(cmdConfig.Apply.IncludeManifests, globalConfig.AppConfig.Fs.Include...)
+
 	var (
 		oldResourceRepo, newResourceRepo storage.ResourceRepository
 		newGroupRepo                     storage.GroupRepository
@@ -37,8 +41,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	switch cmdConfig.Apply.Mode {
 	case ApplyModeGit:
 		oldRepo, newRepo, err := storagegit.NewRepositories(storagegit.RepositoriesConfig{
-			ExcludeRegex:       cmdConfig.Apply.ExcludeManifests,
-			IncludeRegex:       cmdConfig.Apply.IncludeManifests,
+			ExcludeRegex:       fsExclude,
+			IncludeRegex:       fsInclude,
 			OldRelPath:         cmdConfig.Apply.ManifestsPathOld,
 			NewRelPath:         cmdConfig.Apply.ManifestsPathNew,
 			GitBeforeCommitSHA: cmdConfig.Apply.GitBeforeCommit,
@@ -57,8 +61,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	case ApplyModePaths:
 		oldRepo, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
-			ExcludeRegex:      cmdConfig.Apply.ExcludeManifests,
-			IncludeRegex:      cmdConfig.Apply.IncludeManifests,
+			ExcludeRegex:      fsExclude,
+			IncludeRegex:      fsInclude,
 			OldPath:           cmdConfig.Apply.ManifestsPathOld,
 			NewPath:           cmdConfig.Apply.ManifestsPathNew,
 			KubernetesDecoder: kubernetesSerializer,

@@ -13,6 +13,7 @@
 - Optional annotation filter for resources using Kubernetes standard label selectors using `--kube-include-annotation` flag.
 - Load `metav1.List` YAML resources as individual resources.
 - Allow groups waiting specific time after apply.
+- Add `fs-include` and `fs-exclude` arg options to kahoy app global configuration file as an alternative.
 
 ### Changed
 
