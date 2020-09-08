@@ -16,7 +16,6 @@ func intVal(i int) *int {
 }
 
 func TestYAMLV1(t *testing.T) {
-
 	tests := map[string]struct {
 		data      string
 		expConfig model.AppConfig
@@ -35,6 +34,13 @@ func TestYAMLV1(t *testing.T) {
 		"Correct config file should be loaded correctly.": {
 			data: `
 version: v1
+fs:
+  exclude:
+    - a/test/*
+    - b/*/test
+  include:
+    - c/test/*
+    - /d/
 groups:
   - id: "prometheus/crd"
     priority: 50
@@ -42,6 +48,16 @@ groups:
       duration: 15s
 `,
 			expConfig: model.AppConfig{
+				Fs: model.FsConfig{
+					Exclude: []string{
+						"a/test/*",
+						"b/*/test",
+					},
+					Include: []string{
+						"c/test/*",
+						"/d/",
+					},
+				},
 				Groups: map[string]model.GroupConfig{
 					"prometheus/crd": {
 						Priority: intVal(50),

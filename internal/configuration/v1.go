@@ -12,7 +12,10 @@ import (
 
 type jsonV1 struct {
 	Version string `json:"version"`
-
+	Fs      struct {
+		Exclude []string `json:"exclude"`
+		Include []string `json:"include"`
+	} `json:"fs"`
 	Groups []struct {
 		ID       string `json:"id"`
 		Priority *int   `json:"priority,omitempty"`
@@ -23,6 +26,12 @@ type jsonV1 struct {
 }
 
 func (j jsonV1) toModel() (*model.AppConfig, error) {
+	// Map fs.
+	fs := model.FsConfig{
+		Exclude: j.Fs.Exclude,
+		Include: j.Fs.Include,
+	}
+
 	// Map groups.
 	groups := map[string]model.GroupConfig{}
 	for _, g := range j.Groups {
@@ -48,6 +57,7 @@ func (j jsonV1) toModel() (*model.AppConfig, error) {
 	}
 
 	return &model.AppConfig{
+		Fs:     fs,
 		Groups: groups,
 	}, nil
 }

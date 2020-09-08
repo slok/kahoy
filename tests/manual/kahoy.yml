@@ -1,5 +1,10 @@
 version: v1
 
+# Fs configuration.
+fs:
+  exclude:
+    - wrong.yaml
+
 # Groups configuration.
 groups:
   - id: ns
