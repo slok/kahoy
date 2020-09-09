@@ -1,12 +1,14 @@
 package kubectl
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
@@ -46,9 +48,7 @@ func (c *ManagerConfig) defaults() error {
 	c.Logger = c.Logger.WithValues(log.Kv{"app-svc": "kubectl.Manager"})
 
 	if c.CmdRunner == nil {
-		c.CmdRunner = stdCmdRunner{
-			logger: c.Logger.WithValues(log.Kv{"app-svc": "kubectl.StdCmdRunner"}),
-		}
+		c.CmdRunner = newStdCmdRunner(c.Logger)
 	}
 
 	if c.YAMLEncoder == nil {
@@ -130,6 +130,8 @@ func (m manager) execute(ctx context.Context, resources []model.Resource, cmdArg
 		return nil
 	}
 
+	logger := m.logger.WithValues(log.Kv{"ext-cmd": "kubectl"})
+
 	objs := make([]model.K8sObject, 0, len(resources))
 	for _, r := range resources {
 		objs = append(objs, r.K8sObject)
@@ -142,22 +144,39 @@ func (m manager) execute(ctx context.Context, resources []model.Resource, cmdArg
 	}
 
 	// Create command.
+	var errOut bytes.Buffer
 	in := bytes.NewReader(yamlData)
-	cmd := m.newKubctlCmd(ctx, cmdArgs, in)
-
-	// Execute command.
-	err = m.cmdRunner.Run(cmd)
+	cmd := exec.CommandContext(ctx, m.kubectlCmd, cmdArgs...)
+	cmd.Stdin = in
+	cmd.Stderr = &errOut
+	stdoutStream, err := m.cmdRunner.StdoutPipe(cmd)
 	if err != nil {
-		return fmt.Errorf("error while running command: %w", err)
+		return fmt.Errorf("error while streaming stdout on command: %w", err)
+	}
+
+	// Execute command command in streaming mode with our logger.
+	err = m.cmdRunner.Start(cmd)
+	if err != nil {
+		return fmt.Errorf("error while starting command: %w", err)
+	}
+
+	// Stream out.
+	stream := bufio.NewScanner(stdoutStream)
+	for stream.Scan() {
+		logger.Infof(stream.Text())
+	}
+
+	err = m.cmdRunner.Wait(cmd)
+	if err != nil {
+		stderrData := errOut.String()
+		for _, line := range strings.Split(stderrData, "\n") {
+			if line == "" {
+				continue
+			}
+			logger.Errorf(line)
+		}
+		return fmt.Errorf("error on cmd execution: %s: %w", stderrData, err)
 	}
 
 	return nil
-}
-
-func (m manager) newKubctlCmd(ctx context.Context, args []string, in io.Reader) *exec.Cmd {
-	cmd := exec.CommandContext(ctx, m.kubectlCmd, args...)
-	cmd.Stdin = in
-	cmd.Stdout = m.out
-	cmd.Stderr = m.errOut
-	return cmd
 }

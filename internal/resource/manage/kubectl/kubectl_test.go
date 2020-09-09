@@ -15,6 +15,13 @@ import (
 	"github.com/slok/kahoy/internal/resource/manage/kubectl/kubectlmock"
 )
 
+type nopReaderCloser int
+
+const nopRC = nopReaderCloser(0)
+
+func (nopReaderCloser) Read(p []byte) (n int, err error) { return len(p), err }
+func (nopReaderCloser) Close() error                     { return nil }
+
 func TestManagerApply(t *testing.T) {
 	tests := map[string]struct {
 		config    kubectl.ManagerConfig
@@ -43,7 +50,10 @@ func TestManagerApply(t *testing.T) {
 					[]string{"kubectl", "apply", "--force-conflicts=true", "--server-side=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 
@@ -59,7 +69,9 @@ func TestManagerApply(t *testing.T) {
 			resources: []model.Resource{{Name: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return(nil, nil)
-				mc.On("Run", mock.Anything).Once().Return(errors.New("whatever"))
+				mc.On("StdoutPipe", mock.Anything).Once().Return(nopRC, nil)
+				mc.On("Start", mock.Anything).Once().Return(errors.New("whatever"))
+				mc.On("Wait", mock.Anything).Once().Return(nil)
 			},
 			expErr: true,
 		},
@@ -76,7 +88,9 @@ func TestManagerApply(t *testing.T) {
 					[]string{"whatever", "apply", "--force-conflicts=true", "--server-side=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 
@@ -92,7 +106,9 @@ func TestManagerApply(t *testing.T) {
 					[]string{"kubectl", "apply", "--context", "whatever", "--force-conflicts=true", "--server-side=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 
@@ -108,7 +124,9 @@ func TestManagerApply(t *testing.T) {
 					[]string{"kubectl", "apply", "--kubeconfig", "whatever", "--force-conflicts=true", "--server-side=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 
@@ -124,7 +142,9 @@ func TestManagerApply(t *testing.T) {
 					[]string{"kubectl", "apply", "--force-conflicts=false", "--server-side=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 
@@ -140,7 +160,9 @@ func TestManagerApply(t *testing.T) {
 					[]string{"kubectl", "apply", "--force-conflicts=true", "--field-manager", "whatever", "--server-side=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 	}
@@ -203,7 +225,9 @@ func TestManagerDelete(t *testing.T) {
 					[]string{"kubectl", "delete", "--ignore-not-found=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 
@@ -219,7 +243,9 @@ func TestManagerDelete(t *testing.T) {
 			resources: []model.Resource{{Name: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return(nil, nil)
-				mc.On("Run", mock.Anything).Once().Return(errors.New("whatever"))
+				mc.On("StdoutPipe", mock.Anything).Once().Return(nopRC, nil)
+				mc.On("Start", mock.Anything).Once().Return(errors.New("whatever"))
+				mc.On("Wait", mock.Anything).Once().Return(nil)
 			},
 			expErr: true,
 		},
@@ -236,7 +262,9 @@ func TestManagerDelete(t *testing.T) {
 					[]string{"whatever", "delete", "--ignore-not-found=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 
@@ -252,7 +280,9 @@ func TestManagerDelete(t *testing.T) {
 					[]string{"kubectl", "delete", "--context", "whatever", "--ignore-not-found=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 
@@ -268,7 +298,9 @@ func TestManagerDelete(t *testing.T) {
 					[]string{"kubectl", "delete", "--kubeconfig", "whatever", "--ignore-not-found=true", "--filename", "-"},
 					"test",
 				)
-				mc.On("Run", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("StdoutPipe", mock.MatchedBy(exp)).Once().Return(nopRC, nil)
+				mc.On("Start", mock.MatchedBy(exp)).Once().Return(nil)
+				mc.On("Wait", mock.MatchedBy(exp)).Once().Return(nil)
 			},
 		},
 	}

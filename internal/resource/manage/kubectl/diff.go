@@ -72,9 +72,7 @@ func (c *DiffManagerConfig) defaults() error {
 	c.Logger = c.Logger.WithValues(log.Kv{"app-svc": "kubectl.DiffManager"})
 
 	if c.CmdRunner == nil {
-		c.CmdRunner = stdCmdRunner{
-			logger: c.Logger.WithValues(log.Kv{"app-svc": "kubectl.StdCmdRunner"}),
-		}
+		c.CmdRunner = newStdCmdRunner(c.Logger)
 	}
 
 	if c.YAMLEncoder == nil {
@@ -152,6 +150,8 @@ func (d diffManager) Apply(ctx context.Context, resources []model.Resource) erro
 		return nil
 	}
 
+	logger := d.logger.WithValues(log.Kv{"ext-cmd": "kubectl"})
+
 	objs := make([]model.K8sObject, 0, len(resources))
 	for _, r := range resources {
 		objs = append(objs, r.K8sObject)
@@ -163,12 +163,13 @@ func (d diffManager) Apply(ctx context.Context, resources []model.Resource) erro
 		return fmt.Errorf("could not encode objects to diff: %w", err)
 	}
 
-	// Create command.
+	// Create command. Diff output should go to stdout.
 	in := bytes.NewReader(yamlData)
+	var outErr bytes.Buffer
 	cmd := exec.CommandContext(ctx, d.kubectlCmd, d.applyArgs...)
 	cmd.Stdin = in
 	cmd.Stdout = d.out
-	cmd.Stderr = d.errOut
+	cmd.Stderr = &outErr
 
 	// Execute command.
 	err = d.cmdRunner.Run(cmd)
@@ -180,7 +181,14 @@ func (d diffManager) Apply(ctx context.Context, resources []model.Resource) erro
 			return nil
 		}
 
-		return fmt.Errorf("error while running apply diff command: %w", err)
+		for _, line := range strings.Split(outErr.String(), "\n") {
+			if line == "" {
+				continue
+			}
+			logger.Errorf(line)
+		}
+
+		return fmt.Errorf("error while running apply diff command: %s: %w", outErr.String(), err)
 	}
 
 	return nil
@@ -223,6 +231,7 @@ func (d diffManager) Delete(ctx context.Context, resources []model.Resource) err
 	}()
 
 	// We are creating a diff for each resource.
+	logger := d.logger.WithValues(log.Kv{"ext-cmd": "diff"})
 	for _, r := range updatedObjs {
 		// Encode object.
 		yamlData, err := d.yamlEncoder.EncodeObjects(ctx, []model.K8sObject{r})
@@ -240,27 +249,34 @@ func (d diffManager) Delete(ctx context.Context, resources []model.Resource) err
 		}
 
 		// Create a diff commmand with the 2nd file as empty and execute.
-		cmd := d.newDiffCmd(ctx, filePath, strings.NewReader(""))
+		var errOut bytes.Buffer
+		args := []string{"-u", "-N", filePath, "-"}
+		cmd := exec.CommandContext(ctx, "diff", args...)
+		cmd.Stdin = strings.NewReader("")
+		cmd.Stdout = d.out
+		cmd.Stderr = &errOut
+
 		err = d.cmdRunner.Run(cmd)
 		if err != nil {
 			exitErr, ok := err.(*exec.ExitError)
 			// No error if our error is 1 exit code, just changes on diff.
-			if ok && exitErr.ExitCode() >= 2 {
-				return fmt.Errorf("error while running delete diff command: %w", err)
+			if ok && exitErr.ExitCode() < 2 {
+				continue
 			}
+
+			stderrData := errOut.String()
+			for _, line := range strings.Split(stderrData, "\n") {
+				if line == "" {
+					continue
+				}
+				logger.Errorf(line)
+			}
+
+			return fmt.Errorf("error while running delete diff command: %s: %w", stderrData, err)
 		}
 	}
 
 	return nil
-}
-
-func (d diffManager) newDiffCmd(ctx context.Context, fileA string, in io.Reader) *exec.Cmd {
-	args := []string{"-u", "-N", fileA, "-"}
-	cmd := exec.CommandContext(ctx, "diff", args...)
-	cmd.Stdin = in
-	cmd.Stdout = d.out
-	cmd.Stderr = d.errOut
-	return cmd
 }
 
 // getResourcesFromAPIServer returns the latest state from apiserver of the received resources.
@@ -276,17 +292,23 @@ func (d diffManager) getResourcesFromAPIServer(ctx context.Context, objs []model
 	}
 
 	// Create command.
-	var out bytes.Buffer
+	var out, outErr bytes.Buffer
 	in := bytes.NewReader(yamlData)
 	cmd := exec.CommandContext(ctx, d.kubectlCmd, d.deleteArgs...)
 	cmd.Stdin = in
 	cmd.Stdout = &out
-	cmd.Stderr = d.errOut
+	cmd.Stderr = &outErr
 
 	// Execute command.
 	err = d.cmdRunner.Run(cmd)
 	if err != nil {
-		return nil, fmt.Errorf("error while running delete diff command: %w", err)
+		for _, line := range strings.Split(outErr.String(), "\n") {
+			if line == "" {
+				continue
+			}
+			d.logger.Errorf(line)
+		}
+		return nil, fmt.Errorf("error while running delete diff command: %s: %w", outErr.String(), err)
 	}
 
 	// Decode into model.
