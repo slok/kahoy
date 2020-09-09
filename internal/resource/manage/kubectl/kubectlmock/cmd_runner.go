@@ -3,6 +3,7 @@
 package kubectlmock
 
 import (
+	io "io"
 	exec "os/exec"
 
 	mock "github.com/stretchr/testify/mock"
@@ -13,13 +14,64 @@ type CmdRunner struct {
 	mock.Mock
 }
 
-// Run provides a mock function with given fields: _a0
-func (_m *CmdRunner) Run(_a0 *exec.Cmd) error {
-	ret := _m.Called(_a0)
+// Run provides a mock function with given fields: c
+func (_m *CmdRunner) Run(c *exec.Cmd) error {
+	ret := _m.Called(c)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(*exec.Cmd) error); ok {
-		r0 = rf(_a0)
+		r0 = rf(c)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Start provides a mock function with given fields: c
+func (_m *CmdRunner) Start(c *exec.Cmd) error {
+	ret := _m.Called(c)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*exec.Cmd) error); ok {
+		r0 = rf(c)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StdoutPipe provides a mock function with given fields: c
+func (_m *CmdRunner) StdoutPipe(c *exec.Cmd) (io.ReadCloser, error) {
+	ret := _m.Called(c)
+
+	var r0 io.ReadCloser
+	if rf, ok := ret.Get(0).(func(*exec.Cmd) io.ReadCloser); ok {
+		r0 = rf(c)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(io.ReadCloser)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*exec.Cmd) error); ok {
+		r1 = rf(c)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Wait provides a mock function with given fields: c
+func (_m *CmdRunner) Wait(c *exec.Cmd) error {
+	ret := _m.Called(c)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*exec.Cmd) error); ok {
+		r0 = rf(c)
 	} else {
 		r0 = ret.Error(0)
 	}

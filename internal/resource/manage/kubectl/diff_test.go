@@ -1,6 +1,7 @@
 package kubectl_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -25,6 +26,8 @@ func expCmdMatcher(expArgs []string, expInput string) func(cmd *exec.Cmd) bool {
 		if err != nil {
 			return false
 		}
+		// Write back in case further checks are made.
+		cmd.Stdin = bytes.NewReader(data)
 
 		if string(data) != expInput {
 			return false
