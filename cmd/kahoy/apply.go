@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/slok/kahoy/internal/kubernetes"
 	"github.com/slok/kahoy/internal/log"
@@ -17,11 +19,18 @@ import (
 	"github.com/slok/kahoy/internal/storage"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
 	storagegit "github.com/slok/kahoy/internal/storage/git"
+	storagejson "github.com/slok/kahoy/internal/storage/json"
 )
 
 // RunApply runs the apply command.
 func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfig) error {
+	report, err := model.NewReport()
+	if err != nil {
+		return fmt.Errorf("could not start the app report: %w", err)
+	}
+
 	logger := globalConfig.Logger.WithValues(log.Kv{
+		"id":   report.ID,
 		"cmd":  "apply",
 		"mode": cmdConfig.Apply.Mode,
 	})
@@ -130,11 +139,15 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	resQAfter = len(deleteRes)
 	logger.Infof("delete resources before filter %d, after %d", resQBefore, resQAfter)
 
-	// Execute them with the correct manager.
-	var manager resourcemanage.ResourceManager = resourcemanage.NewNoopManager(logger)
+	// Select the execution logic based on diff, dry-run...
+	var (
+		manager    resourcemanage.ResourceManager = resourcemanage.NewNoopManager(logger)
+		reportRepo storage.ReportRepository       = storage.NewNoopReportRepository(logger)
+	)
 	switch {
 	case cmdConfig.Apply.DryRun:
 		manager = managedryrun.NewManager(cmdConfig.Global.NoColor, nil)
+
 	case cmdConfig.Apply.DiffMode:
 		manager, err = managekubectl.NewDiffManager(managekubectl.DiffManagerConfig{
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
@@ -146,6 +159,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		if err != nil {
 			return fmt.Errorf("could not create diff resource manager: %w", err)
 		}
+
 	default:
 		manager, err = managekubectl.NewManager(managekubectl.ManagerConfig{
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
@@ -167,6 +181,27 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		if err != nil {
 			return fmt.Errorf("could not create wait resource manager: %w", err)
 		}
+
+		// Set up report output.
+		switch cmdConfig.Apply.ReportPath {
+		case "":
+			// NOOP.
+
+		// Write output to stdout.
+		case "-":
+			reportRepo = storagejson.NewReportRepository(globalConfig.Stdout)
+
+		// Anything else write as if it was a path to a file.
+		default:
+			outFile, err := os.Create(cmdConfig.Apply.ReportPath)
+			if err != nil {
+				return fmt.Errorf("could not open file %q for out report: %w", cmdConfig.Apply.ReportPath, err)
+			}
+			logger.Infof("report will be written to %q", cmdConfig.Apply.ReportPath)
+			defer outFile.Close()
+
+			reportRepo = storagejson.NewReportRepository(outFile)
+		}
 	}
 
 	// Wrap manager with batch manager. This should wrap the executors managers
@@ -187,6 +222,15 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	err = manager.Delete(ctx, deleteRes)
 	if err != nil {
 		return fmt.Errorf("could not delete resources correctly: %w", err)
+	}
+
+	// Store report.
+	report.EndedAt = time.Now().UTC()
+	report.AppliedResources = applyRes
+	report.DeletedResources = deleteRes
+	err = reportRepo.StoreReport(ctx, *report)
+	if err != nil {
+		return fmt.Errorf("could not store report: %w", err)
 	}
 
 	return nil

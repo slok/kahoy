@@ -10,6 +10,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.0.0
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/oklog/run v1.1.0
+	github.com/oklog/ulid v1.3.1
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6

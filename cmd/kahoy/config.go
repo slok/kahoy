@@ -54,6 +54,7 @@ type CmdConfig struct {
 		Mode                     string
 		DryRun                   bool
 		IncludeChanges           bool
+		ReportPath               string
 	}
 }
 
@@ -89,6 +90,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("kube-include-label", "Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)").Short('l').StringVar(&c.Apply.KubeLabelSelector)
 	apply.Flag("kube-include-annotation", "Selector (annotation query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)").Short('a').StringVar(&c.Apply.KubeAnnotationSelector)
 	apply.Flag("include-changes", "Excludes all the resources without changes (old vs new states).").Short('f').BoolVar(&c.Apply.IncludeChanges)
+	apply.Flag("report-path", "Path to a file where the report data will be written, use `-` for stdout or nothing to disable").Short('r').StringVar(&c.Apply.ReportPath)
 
 	// Deprecated flags.
 	apply.Flag("git-diff-filter", "DEPRECATED, use --include-changes.").Hidden().BoolVar(&c.Apply.IncludeChanges)

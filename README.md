@@ -56,6 +56,7 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 - Push mode (triggered from CI), not pull (controller).
 - Use Kubectl under the hood.
 - Safe deletion of resources (doesn't use `prune` method to delete K8s resources).
+- Reports of what applies and deletes (useful to combine with other apps, e.g: wait, checks, notifications...).
 
 ## :shipit: Install
 
@@ -401,6 +402,7 @@ Check this [Kustomize example][kustomize-example].
 - [Why don't use kubectl `prune` to delete resources?](#why-dont-use-kubectl-prune-to-delete-resources)
 - [Github actions integration](#github-actions-integration)
 - [Configuration file](#configuration-file)
+- [Report](#report)
 
 ### Can I deploy anything?
 
@@ -604,6 +606,64 @@ groups:
     priority: 300
 ```
 
+### Report
+
+Kahoy can give a report at the end of the execution with the information of the resources that have been deleted and applied.
+
+This is very flexible and powerful because it gives the ability to plug new apps after Kahoy execution e.g:
+
+- Push notifications (TODO(slok): Set example link).
+- Wait for resources be available (TODO(slok): Set example link).
+- Push metrics.
+- Execute sanity checks
+- ...
+
+This approach follows unix philosophy of having N tools, each one doing one thing (e.g `Kahoy | jq | waiter`).
+
+By default it doesn't give the report, use `--report-path` (`-r`) flag, using `-` for stdout (`-r -`), or a path to an output file (e.g `-r /tmp/kahoy-report.json`.
+
+The format is in JSON because this way it can be combined with tools like [jq], example:
+
+```json
+{
+  "version": "v1",
+  "id": "01EHXWW5XNQF3V8WF14Z3GCAZT",
+  "started_at": "2020-09-11T06:15:38Z",
+  "ended_at": "2020-09-11T06:15:54Z",
+  "applied_resources": [
+    {
+      "id": "apps/v1/Deployment/test-kahoy/grafana",
+      "group": "monitoring/grafana",
+      "gvk": "apps/v1/Deployment",
+      "api_version": "apps/v1",
+      "kind": "Deployment",
+      "namespace": "test-kahoy",
+      "name": "grafana"
+    },
+    {
+      "id": "core/v1/Namespace/default/test-kahoy",
+      "group": "ns",
+      "gvk": "/v1/Namespace",
+      "api_version": "v1",
+      "kind": "Namespace",
+      "namespace": "",
+      "name": "test-kahoy"
+    }
+  ],
+  "deleted_resources": [
+    {
+      "id": "rbac.authorization.k8s.io/v1/Role/test-kahoy/prometheus",
+      "group": "monitoring/prometheus",
+      "gvk": "rbac.authorization.k8s.io/v1/Role",
+      "api_version": "rbac.authorization.k8s.io/v1",
+      "kind": "Role",
+      "namespace": "test-kahoy",
+      "name": "prometheus"
+    }
+  ]
+}
+```
+
 ## :tophat: Alternatives
 
 Kahoy born because available alternatives are too complex, Kubernetes is a complex system by itself, adding more complexity in the cases where is not needed, is not a good solution.
@@ -634,3 +694,4 @@ Check [CONTRIBUTING.md](CONTRIBUTING.md) file.
 [bash-git-example]: https://gist.github.com/slok/3f37c2a0dd823d5b66db869a468109ce
 [kustomize-example]: https://github.com/slok/kahoy-kustomize-example
 [kubectl-delete-docs]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/#how-to-delete-objects
+[jq]: https://stedolan.github.io/jq/
