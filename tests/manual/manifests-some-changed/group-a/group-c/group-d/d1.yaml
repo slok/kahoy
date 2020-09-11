@@ -60,12 +60,12 @@ spec:
   selector:
     matchLabels:
       app: app-d3
-      changed: true
   template:
     metadata:
       labels:
         app: app-d3
-        changed: true
+        # Poked to see a change.
+        changed: "true"
     spec:
       containers:
       - name: nginx

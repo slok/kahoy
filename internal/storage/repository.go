@@ -37,3 +37,10 @@ type GroupRepository interface {
 }
 
 //go:generate mockery --case underscore --output storagemock --outpkg storagemock --name GroupRepository
+
+// ReportRepository knows how to store resource status.
+type ReportRepository interface {
+	StoreReport(ctx context.Context, report model.Report) error
+}
+
+//go:generate mockery --case underscore --output storagemock --outpkg storagemock --name ReportRepository

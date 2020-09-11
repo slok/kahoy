@@ -14,6 +14,7 @@
 - Load `metav1.List` YAML resources as individual resources.
 - Allow groups waiting specific time after apply.
 - Add `fs-include` and `fs-exclude` arg options to kahoy app global configuration file as an alternative.
+- JSON report with the resources applied and deleted after the execution.
 
 ### Changed
 
