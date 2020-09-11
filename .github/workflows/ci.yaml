@@ -25,6 +25,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
           file: ./.test_coverage.txt
+          fail_ci_if_error: false
 
   rolling-release-image:
     # Only on master.
