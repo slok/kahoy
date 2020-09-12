@@ -92,6 +92,7 @@ func NewManager(config ManagerConfig) (manage.ResourceManager, error) {
 		withContext(config.KubeContext),
 		withConfig(config.KubeConfig),
 		withIgnoreNotFound(true),
+		withWait(false),
 		withStdIn(),
 	})
 

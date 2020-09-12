@@ -95,3 +95,9 @@ func withStdIn() kubectlCmdOption {
 		return append(args, "--filename", "-")
 	}
 }
+
+func withWait(wait bool) kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, fmt.Sprintf("--wait=%t", wait))
+	}
+}
