@@ -36,8 +36,8 @@ func TestManagerApply(t *testing.T) {
 
 		"Having resources should apply correctly.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
-				{Name: "test2", K8sObject: newK8sObject("test2", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test2", K8sObject: newK8sObject("test2", "ns1")},
 			},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				expK8sResources := []model.K8sObject{
@@ -58,7 +58,7 @@ func TestManagerApply(t *testing.T) {
 		},
 
 		"Having an error while encoding objects should stop the execution and fail.": {
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return(nil, errors.New("whatever"))
 			},
@@ -66,7 +66,7 @@ func TestManagerApply(t *testing.T) {
 		},
 
 		"Having an error while running the cmd should stop the execution and fail.": {
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return(nil, nil)
 				mc.On("StdoutPipe", mock.Anything).Once().Return(nopRC, nil)
@@ -80,7 +80,7 @@ func TestManagerApply(t *testing.T) {
 			config: kubectl.ManagerConfig{
 				KubectlCmd: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -98,7 +98,7 @@ func TestManagerApply(t *testing.T) {
 			config: kubectl.ManagerConfig{
 				KubeContext: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -116,7 +116,7 @@ func TestManagerApply(t *testing.T) {
 			config: kubectl.ManagerConfig{
 				KubeConfig: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -134,7 +134,7 @@ func TestManagerApply(t *testing.T) {
 			config: kubectl.ManagerConfig{
 				DisableKubeForceConflicts: true,
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -152,7 +152,7 @@ func TestManagerApply(t *testing.T) {
 			config: kubectl.ManagerConfig{
 				KubeFieldManager: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -211,8 +211,8 @@ func TestManagerDelete(t *testing.T) {
 
 		"Having resources should delete correctly.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
-				{Name: "test2", K8sObject: newK8sObject("test2", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test2", K8sObject: newK8sObject("test2", "ns1")},
 			},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				expK8sResources := []model.K8sObject{
@@ -232,7 +232,7 @@ func TestManagerDelete(t *testing.T) {
 		},
 
 		"Having an error while encoding objects should stop the execution and fail.": {
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return(nil, errors.New("whatever"))
 			},
@@ -240,7 +240,7 @@ func TestManagerDelete(t *testing.T) {
 		},
 
 		"Having an error while running the cmd should stop the execution and fail.": {
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return(nil, nil)
 				mc.On("StdoutPipe", mock.Anything).Once().Return(nopRC, nil)
@@ -254,7 +254,7 @@ func TestManagerDelete(t *testing.T) {
 			config: kubectl.ManagerConfig{
 				KubectlCmd: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -272,7 +272,7 @@ func TestManagerDelete(t *testing.T) {
 			config: kubectl.ManagerConfig{
 				KubeContext: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -290,7 +290,7 @@ func TestManagerDelete(t *testing.T) {
 			config: kubectl.ManagerConfig{
 				KubeConfig: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 

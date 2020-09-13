@@ -18,7 +18,6 @@ type K8sObject interface {
 type Resource struct {
 	ID           string
 	GroupID      string
-	Name         string
 	ManifestPath string
 	K8sObject    K8sObject
 }
