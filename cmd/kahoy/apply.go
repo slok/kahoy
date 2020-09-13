@@ -3,11 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-<<<<<<< HEAD
-	"os"
-=======
 	"io"
->>>>>>> e05efb6... Accept suggestion
+	"os"
 	"strings"
 	"time"
 
@@ -220,7 +217,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	// Ask for confirmation
-	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode && !cmdConfig.Apply.Yes {
+	// TODO(jesus.vazquez): Skip when TBD paremeter --yes is set
+	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode {
 		proceed, err := askYesNo(globalConfig.Stdin)
 		if err != nil {
 			return fmt.Errorf("could not read confirmation: %w", err)
