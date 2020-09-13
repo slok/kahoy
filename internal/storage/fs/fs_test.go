@@ -110,7 +110,6 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
 					GroupID:      "group1",
 					ManifestPath: "/tmp/test/group1/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
@@ -147,14 +146,12 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
 					GroupID:      "group1",
 					ManifestPath: "/tmp/test/group1/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
 				},
 				{
 					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
-					Name:         "test-name2",
 					GroupID:      "group1",
 					ManifestPath: "/tmp/test/group1/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns2", "test-name2"),
@@ -200,14 +197,12 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
 					GroupID:      "group1",
 					ManifestPath: "/tmp/test/group1/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
 				},
 				{
 					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
-					Name:         "test-name2",
 					GroupID:      "group1",
 					ManifestPath: "/tmp/test/group1/test-2.yaml",
 					K8sObject:    newConfigmap("test-ns2", "test-name2"),
@@ -263,21 +258,18 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
 					GroupID:      "group1",
 					ManifestPath: "/tmp/test/group1/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
 				},
 				{
 					ID:           "core/v1/ConfigMap/test-ns2/test-name2",
-					Name:         "test-name2",
 					GroupID:      "group2",
 					ManifestPath: "/tmp/test/group2/test-2.yaml",
 					K8sObject:    newConfigmap("test-ns2", "test-name2"),
 				},
 				{
 					ID:           "core/v1/ConfigMap/test-ns3/test-name3",
-					Name:         "test-name3",
 					GroupID:      "group2/subgroup3",
 					ManifestPath: "/tmp/test/group2/subgroup3/test-3.yaml",
 					K8sObject:    newConfigmap("test-ns3", "test-name3"),
@@ -313,7 +305,6 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
 					GroupID:      "root",
 					ManifestPath: "/tmp/test/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
@@ -348,7 +339,6 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
 					GroupID:      "whatever",
 					ManifestPath: "/tmp/test/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
@@ -416,7 +406,6 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name3",
-					Name:         "test-name3",
 					GroupID:      "group3",
 					ManifestPath: "/tmp/test/group3/test3.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name3"),
@@ -463,7 +452,6 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
 					GroupID:      "group2",
 					ManifestPath: "/tmp/test/group2/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),
@@ -557,7 +545,6 @@ func TestRepositoryLoadFS(t *testing.T) {
 			expResources: []model.Resource{
 				{
 					ID:           "core/v1/ConfigMap/test-ns/test-name",
-					Name:         "test-name",
 					GroupID:      "group1",
 					ManifestPath: "/tmp/test/group1/test-1.yaml",
 					K8sObject:    newConfigmap("test-ns", "test-name"),

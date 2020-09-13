@@ -73,7 +73,7 @@ func TestDiffManagerApply(t *testing.T) {
 		},
 
 		"Having an error while encoding objects should stop the execution and fail.": {
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return(nil, errors.New("whatever"))
 			},
@@ -81,7 +81,7 @@ func TestDiffManagerApply(t *testing.T) {
 		},
 
 		"Having an error while running the cmd should stop the execution and fail.": {
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return(nil, nil)
 				mc.On("Run", mock.Anything).Once().Return(errors.New("whatever"))
@@ -91,8 +91,8 @@ func TestDiffManagerApply(t *testing.T) {
 
 		"Having resources should apply correctly.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
-				{Name: "test2", K8sObject: newK8sObject("test2", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test2", K8sObject: newK8sObject("test2", "ns1")},
 			},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				expK8sResources := []model.K8sObject{
@@ -113,7 +113,7 @@ func TestDiffManagerApply(t *testing.T) {
 			config: kubectl.DiffManagerConfig{
 				KubectlCmd: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -129,7 +129,7 @@ func TestDiffManagerApply(t *testing.T) {
 			config: kubectl.DiffManagerConfig{
 				KubeContext: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -145,7 +145,7 @@ func TestDiffManagerApply(t *testing.T) {
 			config: kubectl.DiffManagerConfig{
 				KubeConfig: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -161,7 +161,7 @@ func TestDiffManagerApply(t *testing.T) {
 			config: kubectl.DiffManagerConfig{
 				DisableKubeForceConflicts: true,
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -177,7 +177,7 @@ func TestDiffManagerApply(t *testing.T) {
 			config: kubectl.DiffManagerConfig{
 				KubeFieldManager: "whatever",
 			},
-			resources: []model.Resource{{Name: "test1"}},
+			resources: []model.Resource{{ID: "test1"}},
 			mock: func(mk *kubectlmock.K8sObjectEncoder, mc *kubectlmock.CmdRunner) {
 				mk.On("EncodeObjects", mock.Anything, mock.Anything).Once().Return([]byte("test"), nil)
 
@@ -237,7 +237,7 @@ func TestDiffManagerDelete(t *testing.T) {
 
 		"Having an error while encoding objects to get the latest state from the resources in the server, should fail.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
 			},
 			mock: func(mke *kubectlmock.K8sObjectEncoder, mkd *kubectlmock.K8sObjectDecoder, mc *kubectlmock.CmdRunner, mfs *kubectlmock.FSManager) {
 				// Getting server state part.
@@ -248,7 +248,7 @@ func TestDiffManagerDelete(t *testing.T) {
 
 		"Having an error while running kubctl get to get the latest state from the resources in the server, should fail.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
 			},
 			mock: func(mke *kubectlmock.K8sObjectEncoder, mkd *kubectlmock.K8sObjectDecoder, mc *kubectlmock.CmdRunner, mfs *kubectlmock.FSManager) {
 				// Getting server state part.
@@ -260,7 +260,7 @@ func TestDiffManagerDelete(t *testing.T) {
 
 		"Having an error while decodding latest received state from the server, should fail.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
 			},
 			mock: func(mke *kubectlmock.K8sObjectEncoder, mkd *kubectlmock.K8sObjectDecoder, mc *kubectlmock.CmdRunner, mfs *kubectlmock.FSManager) {
 				// Getting server state part.
@@ -273,7 +273,7 @@ func TestDiffManagerDelete(t *testing.T) {
 
 		"Having an error while creating the tmp dir should stop execution and fail.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
 			},
 			mock: func(mke *kubectlmock.K8sObjectEncoder, mkd *kubectlmock.K8sObjectDecoder, mc *kubectlmock.CmdRunner, mfs *kubectlmock.FSManager) {
 				// Getting server state part.
@@ -289,7 +289,7 @@ func TestDiffManagerDelete(t *testing.T) {
 
 		"Having an error while encoding resource should stop execution and fail.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
 			},
 			mock: func(mke *kubectlmock.K8sObjectEncoder, mkd *kubectlmock.K8sObjectDecoder, mc *kubectlmock.CmdRunner, mfs *kubectlmock.FSManager) {
 				// Getting server state part.
@@ -308,7 +308,7 @@ func TestDiffManagerDelete(t *testing.T) {
 
 		"Having an error while storing encoded resource should stop execution and fail.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
 			},
 			mock: func(mke *kubectlmock.K8sObjectEncoder, mkd *kubectlmock.K8sObjectDecoder, mc *kubectlmock.CmdRunner, mfs *kubectlmock.FSManager) {
 				// Getting server state part.
@@ -328,9 +328,9 @@ func TestDiffManagerDelete(t *testing.T) {
 
 		"Having resources should delete correctly.": {
 			resources: []model.Resource{
-				{Name: "test1", K8sObject: newK8sObject("test1", "ns1")},
-				{Name: "test2", K8sObject: newK8sObject("test2", "ns2")},
-				{Name: "test3", K8sObject: newK8sObject("test3", "ns3")},
+				{ID: "test1", K8sObject: newK8sObject("test1", "ns1")},
+				{ID: "test2", K8sObject: newK8sObject("test2", "ns2")},
+				{ID: "test3", K8sObject: newK8sObject("test3", "ns3")},
 			},
 			mock: func(mke *kubectlmock.K8sObjectEncoder, mkd *kubectlmock.K8sObjectDecoder, mc *kubectlmock.CmdRunner, mfs *kubectlmock.FSManager) {
 				expK8sResources1 := newK8sObject("test1", "ns1")

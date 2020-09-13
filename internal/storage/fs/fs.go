@@ -232,7 +232,6 @@ func (r *Repository) loadFS(rootPath string) error {
 			// Store the resource.
 			resources[id] = model.Resource{
 				ID:           id,
-				Name:         obj.GetName(),
 				GroupID:      groupID,
 				ManifestPath: path,
 				K8sObject:    obj,

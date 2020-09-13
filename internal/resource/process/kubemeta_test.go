@@ -37,8 +37,7 @@ func newCustomResource(kAPIVersion, kType, ns, name string, labels, annotations 
 		objLabels[k] = v
 	}
 	return model.Resource{
-		ID:   name,
-		Name: name,
+		ID: name,
 		K8sObject: &unstructured.Unstructured{
 			Object: tm{
 				"apiVersion": kAPIVersion,
