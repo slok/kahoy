@@ -217,8 +217,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	// Ask for confirmation
-	// TODO(jesus.vazquez): Skip when TBD paremeter --yes is set
-	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode {
+	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode && !cmdConfig.Apply.AutoProceed {
 		proceed, err := askYesNo(globalConfig.Stdin)
 		if err != nil {
 			return fmt.Errorf("could not read confirmation: %w", err)

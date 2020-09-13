@@ -52,7 +52,11 @@ Optional step if you already have one. We are going to use [Kind] to create a ne
 kind create cluster --name kahoy
 ```
 
-You will have a new kubectl context named `kind-kahoy`.
+You will have a new kubectl context named `kind-kahoy`. Switch to it with
+
+```bash
+kubectl config set-context kind-kahoy
+```
 
 ### Run tests
 
