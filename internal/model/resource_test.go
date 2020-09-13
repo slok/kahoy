@@ -2,6 +2,7 @@ package model_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -66,5 +67,59 @@ func TestGenResourceID(t *testing.T) {
 			assert.Equal(t, test.expID, id)
 		})
 	}
+}
 
+func TestNewGroup(t *testing.T) {
+	fourtyTwo := 42
+
+	tests := map[string]struct {
+		id       string
+		path     string
+		config   model.GroupConfig
+		expGroup model.Group
+	}{
+		"A regular group creation should succeed.": {
+			id:   "test1",
+			path: "tests/test1",
+			config: model.GroupConfig{
+				Priority: &fourtyTwo,
+				WaitConfig: &model.GroupWaitConfig{
+					Duration: 555 * time.Millisecond,
+				},
+			},
+			expGroup: model.Group{
+				ID:       "test1",
+				Path:     "tests/test1",
+				Priority: 42,
+				Wait: model.GroupWait{
+					Duration: 555 * time.Millisecond,
+				},
+			},
+		},
+
+		"If group doesn't have priority, default priority should be set.": {
+			id:   "test1",
+			path: "tests/test1",
+			config: model.GroupConfig{
+				WaitConfig: &model.GroupWaitConfig{
+					Duration: 555 * time.Millisecond,
+				},
+			},
+			expGroup: model.Group{
+				ID:       "test1",
+				Path:     "tests/test1",
+				Priority: 1000,
+				Wait: model.GroupWait{
+					Duration: 555 * time.Millisecond,
+				},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotGroup := model.NewGroup(test.id, test.path, test.config)
+			assert.Equal(t, test.expGroup, gotGroup)
+		})
+	}
 }
