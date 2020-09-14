@@ -15,6 +15,7 @@
 - Allow groups waiting specific time after apply.
 - Add `fs-include` and `fs-exclude` arg options to kahoy app global configuration file as an alternative.
 - JSON report with the resources applied and deleted after the execution.
+- Confirmation prompt when running `kahoy apply` without diff or dry_run modes enabled. Optional flag `--auto-approve` to disable the prompt, useful for non interactive scenarios like CI.
 
 ### Changed
 
