@@ -217,7 +217,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	// Ask for confirmation
-	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode && !cmdConfig.Apply.AutoProceed {
+	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode && !cmdConfig.Apply.AutoApprove {
 		proceed, err := askYesNo(globalConfig.Stdin)
 		if err != nil {
 			return fmt.Errorf("could not read confirmation: %w", err)
