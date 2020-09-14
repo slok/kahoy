@@ -218,7 +218,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	// Ask for confirmation
 	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode && !cmdConfig.Apply.AutoApprove {
-		proceed, err := askYesNo(globalConfig.Stdin)
+		proceed, err := askYesNo(globalConfig.Stdout, globalConfig.Stdin)
 		if err != nil {
 			return fmt.Errorf("could not read confirmation: %w", err)
 		}
@@ -297,10 +297,10 @@ func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceproce
 
 // askYesNo prompts the user with a dialog to ask whether wants to proceed
 // or not
-func askYesNo(reader io.Reader) (bool, error) {
+func askYesNo(writer io.Writer, reader io.Reader) (bool, error) {
 	var s string
 
-	fmt.Printf("Do you want to proceed? (y/N): ")
+	fmt.Fprintf(writer, "Do you want to proceed? (y/N): ")
 	_, err := fmt.Fscan(reader, &s)
 	if err != nil {
 		return false, err
