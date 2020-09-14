@@ -295,7 +295,7 @@ func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceproce
 	return resProc, nil
 }
 
-// askYesNo prompts the user with a dialog to ask whether he wants to proceed
+// askYesNo prompts the user with a dialog to ask whether wants to proceed
 // or not
 func askYesNo(reader io.Reader) (bool, error) {
 	var s string
