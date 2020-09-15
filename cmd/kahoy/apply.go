@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/slok/kahoy/internal/kubernetes"
@@ -214,6 +216,19 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		return fmt.Errorf("could not create batch manager: %w", err)
 	}
 
+	// Ask for confirmation
+	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode && !cmdConfig.Apply.AutoApprove {
+		proceed, err := askYesNo(globalConfig.Stdout, globalConfig.Stdin)
+		if err != nil {
+			return fmt.Errorf("could not read confirmation: %w", err)
+		}
+
+		if !proceed {
+			return nil
+		}
+
+	}
+
 	err = manager.Apply(ctx, applyRes)
 	if err != nil {
 		return fmt.Errorf("could not apply resources correctly: %w", err)
@@ -236,6 +251,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	return nil
 }
 
+// splitPlan takes a list of resources from the plan and splits them by state.
 func splitPlan(statePlan []plan.State) (apply, delete []model.Resource, err error) {
 	applyRes := []model.Resource{}
 	deleteRes := []model.Resource{}
@@ -277,4 +293,25 @@ func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceproce
 	)
 
 	return resProc, nil
+}
+
+// askYesNo prompts the user with a dialog to ask whether wants to proceed
+// or not
+func askYesNo(writer io.Writer, reader io.Reader) (bool, error) {
+	var s string
+
+	fmt.Fprintf(writer, "Do you want to proceed? (y/N): ")
+	_, err := fmt.Fscan(reader, &s)
+	if err != nil {
+		return false, err
+	}
+
+	s = strings.TrimSpace(s)
+	s = strings.ToLower(s)
+
+	if s == "y" || s == "yes" {
+		return true, nil
+	}
+
+	return false, nil
 }

@@ -55,6 +55,7 @@ type CmdConfig struct {
 		DryRun                   bool
 		IncludeChanges           bool
 		ReportPath               string
+		AutoApprove              bool
 	}
 }
 
@@ -63,7 +64,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	kubeHome := filepath.Join(homedir.HomeDir(), ".kube", "config")
 
 	c := CmdConfig{}
-	app := kingpin.New("kahoy", "A simple Kubernetes deployer tool for raw manifests")
+	app := kingpin.New("kahoy", "A simple Kubernetes deployment tool for raw manifests")
 	app.Version(Version)
 	app.DefaultEnvars()
 
@@ -91,6 +92,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("kube-include-annotation", "Selector (annotation query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2)").Short('a').StringVar(&c.Apply.KubeAnnotationSelector)
 	apply.Flag("include-changes", "Excludes all the resources without changes (old vs new states).").Short('f').BoolVar(&c.Apply.IncludeChanges)
 	apply.Flag("report-path", "Path to a file where the report data will be written, use `-` for stdout or nothing to disable").Short('r').StringVar(&c.Apply.ReportPath)
+	apply.Flag("auto-approve", "applies changes without asking for confirmation. Useful to run Kahoy on non interactive scenarios like CI.").BoolVar(&c.Apply.AutoApprove)
 
 	// Deprecated flags.
 	apply.Flag("git-diff-filter", "DEPRECATED, use --include-changes.").Hidden().BoolVar(&c.Apply.IncludeChanges)
