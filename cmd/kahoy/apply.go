@@ -15,6 +15,7 @@ import (
 	resourcemanage "github.com/slok/kahoy/internal/resource/manage"
 	managebatch "github.com/slok/kahoy/internal/resource/manage/batch"
 	managedryrun "github.com/slok/kahoy/internal/resource/manage/dryrun"
+	"github.com/slok/kahoy/internal/resource/manage/kubectl"
 	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
 	managewait "github.com/slok/kahoy/internal/resource/manage/wait"
 	resourceprocess "github.com/slok/kahoy/internal/resource/process"
@@ -216,6 +217,20 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		return fmt.Errorf("could not create batch manager: %w", err)
 	}
 
+	// If we need to create namespaces before apply, we wrap the manager with the
+	// ns ensure manager that will ensure the namespace exists.
+	if cmdConfig.Apply.CreateNamespace && !cmdConfig.Apply.DryRun {
+		manager, err = kubectl.NewNamespaceEnsurer(kubectl.NamespaceEnsurerConfig{
+			Manager:     manager,
+			KubeConfig:  cmdConfig.Apply.KubeConfig,
+			KubeContext: cmdConfig.Apply.KubeContext,
+			Logger:      logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create namespace ensurer manager: %w", err)
+		}
+	}
+
 	// Ask for confirmation
 	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode && !cmdConfig.Apply.AutoApprove {
 		proceed, err := askYesNo(globalConfig.Stdout, globalConfig.Stdin)
@@ -226,7 +241,6 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		if !proceed {
 			return nil
 		}
-
 	}
 
 	err = manager.Apply(ctx, applyRes)

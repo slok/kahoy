@@ -399,6 +399,7 @@ Check this [Kustomize example][kustomize-example].
 - [Non resource YAMLs](#non-resource-yamls)
 - [Ignore a resource](#ignore-a-resource)
 - [Why so many filtering options?](#why-so-many-filtering-options)
+- [I have namespace not found error on regular apply or diff](#I-have-namespace-not-found-error-on-regular-apply-or-diff)
 - [Why don't use kubectl `prune` to delete resources?](#why-dont-use-kubectl-prune-to-delete-resources)
 - [Github actions integration](#github-actions-integration)
 - [Configuration file](#configuration-file)
@@ -552,6 +553,24 @@ All these filtering options give users a way of solving lots of use cases, for e
 - Ignore CRDs that have an annotation, becase controller change the information (`--kube-include-annotation ...`)
 - Integrate Kahoy gradually including manifests (`--fs-include monitoring/grafana --fs-include monitoring/prometheus`)
 - ...
+
+### I have namespace not found error on regular apply or diff
+
+When we apply a namespaced resource on a namespace that does not exists, the action will fail with an error like:
+
+```text
+Error from server (NotFound): namespaces "some-namespace" not found
+```
+
+This happens when you don't apply/create the `Namespaces` before the namespaced Kubernetes resources. Or when you do a diff `kahoy --diff`. Kahoy uses server-side diff, so it will try a fake/dry-run apply to get the diff and because there is no namespace, it will fail.
+
+This is a tricky [known problem](https://github.com/kubernetes/kubernetes/issues/83562), to solve this at this moment is only one option, and is to create the namespace before the server-side apply.
+
+By default Kahoy will not create the missing namespaces of applied resources, but with `--create-namespace`, it will. This will work with regular mode `kahoy apply` and also diff mode `kahoy apply --diff`.
+
+**Be aware using it with `--diff` would create a namespace, this means that the diff would have a write operation on the cluster, the ns creation.**
+
+Is a good practice that if you use `--create-namespace`, you add to your resources the `Namespace` manifest, this way in the case you delete anytime the resources along with the namespace, the created namespace will be garbage collected by Kahoy.
 
 ### Why don't use kubectl `prune` to delete resources?
 
