@@ -159,9 +159,9 @@ Kahoy would load 4 resources with these IDs:
 
 A group is a way of adding options (e.g deployment priority) to the resources in the group. You could have one or many based on what you need.
 
-Kahoy will identify the groups by the path where the manifests are based on the root of the manifests. E.g:
+Kahoy will identify the groups from the directory structure that contains the manifests. See the following example:
 
-Having this tree and our manifests root in `./manifests`
+Given this tree and our manifests root in `./manifests`
 
 ```bash
 ./manifests/
@@ -220,7 +220,7 @@ Will get a diff against the server of the planned resources (server-side, cluste
 
 ### Default (Apply)
 
-Will apply the resources that need to exist and delete the ones that don't. Apply uses Kubectl and [server-side][serverside-apply] apply.
+Will apply the resources that need to exist and delete the ones that don't. Apply uses Kubectl with [server-side][serverside-apply] apply.
 
 ## :page_facing_up: Manifest source modes
 
@@ -244,7 +244,7 @@ Instead of providing the `before-commit`, by default will get the base parent of
 
 Apart from knowing how to get an old and a new state from a git repository. **Git mode understands diff/patches**, this would make Kahoy only be applied what has been changed between these two revisions/commits. This is interesting in many cases:
 
-- When you have lost of resources:
+- When you have lots of resources:
   - Have a clear view of what is changing.
   - Blazing fast deployments.
 - Operators sometimes change deployed manifests, this mode avoids overwriting every manifest on each deployment.
@@ -359,9 +359,13 @@ kahoy apply \
 
 ### batch by priorities
 
+<<<<<<< Updated upstream
 Kahoy knows how to manage priorities. By default it will batch all the manifests with a default priority (`1000`), but maybe you want to deploy some groups first (e.g CRDs or the NS).
+=======
+Kahoy knows how to manage priorities between groups. By default it will batch all the manifests with a default priority (`1000`), but maybe you want to deploy some groups first (e.g CRDs or the NS.
+>>>>>>> Stashed changes
 
-you would have `kahoy.yml` on your repo root (or any other path and use `--config-file`), with the group options:
+Given this `kahoy.yml` on your repo root (or any other path and use `--config-file`), with the group options:
 
 ```yaml
 version: v1
@@ -377,7 +381,7 @@ groups:
     priority: 300
 ```
 
-This will make Kahoy apply first the `ns` group, then `crd` group, then `system/roles` group, and finally the rest.
+it will make Kahoy apply first the `ns` group, then `crd` group, then `system/roles` group, and finally the rest.
 
 ### Kustomize and Kahoy
 
