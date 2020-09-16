@@ -34,7 +34,7 @@ Maintain Kubernetes resources in sync easily.
 
 Did you ever wish for a tool that could deploy all your manifests to a Kubernetes cluster without much hassle? Without worrying about applying the manifests in a specific order with kubectl, or setting up a complex CI workflow or even installing a more advanced tool that you first need to learn and observe.
 
-You probably noticed a big gap between what can be done with kubectl and more advanced tools like Helm and Spinnaker. But.. what about all the cases where we just need a bit more than what kubectl can offer?
+You probably noticed a big gap between what can be done with kubectl and more advanced tools like Helm and Flux. But.. what about all the cases where we just need a bit more than what kubectl can offer?
 
 Kahoy is a minimal and flexible tool to deploy your Kubernetes **raw** manifest resources to a cluster.
 
