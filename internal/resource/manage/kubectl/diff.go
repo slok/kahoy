@@ -285,6 +285,8 @@ func (d diffManager) Delete(ctx context.Context, resources []model.Resource) err
 // Existing resources will be returned with the fields data up to date (server data).
 // If any of the resources is not on the server it will not be returned.
 func (d diffManager) getResourcesFromAPIServer(ctx context.Context, objs []model.K8sObject) ([]model.K8sObject, error) {
+	logger := d.logger.WithValues(log.Kv{"ext-cmd": "kubectl"})
+
 	// Encode objects.
 	yamlData, err := d.yamlEncoder.EncodeObjects(ctx, objs)
 	if err != nil {
@@ -306,7 +308,7 @@ func (d diffManager) getResourcesFromAPIServer(ctx context.Context, objs []model
 			if line == "" {
 				continue
 			}
-			d.logger.Errorf(line)
+			logger.Errorf(line)
 		}
 		return nil, fmt.Errorf("error while running delete diff command: %s: %w", outErr.String(), err)
 	}

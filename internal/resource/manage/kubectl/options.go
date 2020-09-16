@@ -39,6 +39,24 @@ func withDiffCmd() kubectlCmdOption {
 	}
 }
 
+func withCreateCmd() kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, "create")
+	}
+}
+
+func withNamespaceKind() kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, "namespace")
+	}
+}
+
+func withResourceName(name string) kubectlCmdOption {
+	return func(args []string) []string {
+		return append(args, name)
+	}
+}
+
 func withContext(context string) kubectlCmdOption {
 	return func(args []string) []string {
 		if context == "" {

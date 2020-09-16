@@ -22,15 +22,18 @@ import (
 // expCmdMatcher returns an *exec.Cmd matcher for  mock.MatchedBy.
 func expCmdMatcher(expArgs []string, expInput string) func(cmd *exec.Cmd) bool {
 	return func(cmd *exec.Cmd) bool {
-		data, err := ioutil.ReadAll(cmd.Stdin)
-		if err != nil {
-			return false
-		}
-		// Write back in case further checks are made.
-		cmd.Stdin = bytes.NewReader(data)
+		if expInput != "" {
+			data, err := ioutil.ReadAll(cmd.Stdin)
+			if err != nil {
+				return false
+			}
 
-		if string(data) != expInput {
-			return false
+			// Write back in case further checks are made.
+			cmd.Stdin = bytes.NewReader(data)
+
+			if string(data) != expInput {
+				return false
+			}
 		}
 
 		if len(expArgs) != len(cmd.Args) {
