@@ -43,8 +43,8 @@
 - File based filtering (include exclude).
 - Kubernetes type filtering (exclude).
 - Add States repositories (old and new).
-- Paths mode (load from fs).
-- Git mode (load form Git repository).
+- Paths provider (load from fs).
+- Git provider (load form Git repository).
 - Git filtering based on `git diff`.
 - Git states based on previous commit or `git merge-base`.
 - Grouping of resources.

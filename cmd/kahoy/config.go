@@ -18,10 +18,10 @@ const (
 	DefaultConfigFile = "kahoy.yml"
 )
 
-// Apply modes.
+// Apply providers.
 const (
-	ApplyModePaths = "paths"
-	ApplyModeGit   = "git"
+	ApplyProviderPaths = "paths"
+	ApplyProviderGit   = "git"
 )
 
 // CmdConfig is the configuration of the command
@@ -51,7 +51,7 @@ type CmdConfig struct {
 		KubeAnnotationSelector   string
 		GitBeforeCommit          string
 		GitDefaultBranch         string
-		Mode                     string
+		Provider                 string
 		DryRun                   bool
 		IncludeChanges           bool
 		ReportPath               string
@@ -81,7 +81,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("kube-context", "Kubernetes configuration context.").StringVar(&c.Apply.KubeContext)
 	apply.Flag("diff", "Diff instead of applying changes.").BoolVar(&c.Apply.DiffMode)
 	apply.Flag("dry-run", "Execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
-	apply.Flag("mode", "Selects how apply will select the state, load manifests... git needs to be executed from a git repository.").Default(ApplyModeGit).EnumVar(&c.Apply.Mode, ApplyModePaths, ApplyModeGit)
+	apply.Flag("provider", "Selects which provider to use to load the old and new states. Git needs to be executed from a git repository.").Default(ApplyProviderGit).EnumVar(&c.Apply.Provider, ApplyProviderPaths, ApplyProviderGit)
 	apply.Flag("fs-old-manifests-path", "Kubernetes current manifests path.").Short('o').StringVar(&c.Apply.ManifestsPathOld)
 	apply.Flag("fs-new-manifests-path", "Kubernetes expected manifests path.").Short('n').Required().StringVar(&c.Apply.ManifestsPathNew)
 	apply.Flag("fs-exclude", "Regex to ignore manifest files and dirs. Can be repeated.").Short('e').StringsVar(&c.Apply.ExcludeManifests)
@@ -116,13 +116,13 @@ func (c *CmdConfig) validate() error {
 		return fmt.Errorf(`only one of "dry run" and "diff" execution modes can be used at the same time`)
 	}
 
-	switch c.Apply.Mode {
-	case ApplyModePaths:
+	switch c.Apply.Provider {
+	case ApplyProviderPaths:
 		if c.Apply.ManifestsPathOld == "" {
-			return fmt.Errorf("manifests old path is required when using %q mode", ApplyModePaths)
+			return fmt.Errorf("manifests old path is required when using %q provider", ApplyProviderPaths)
 		}
 
-	case ApplyModeGit:
+	case ApplyProviderGit:
 		if c.Apply.ManifestsPathOld == "" {
 			c.Apply.ManifestsPathOld = c.Apply.ManifestsPathNew
 		}
@@ -131,7 +131,7 @@ func (c *CmdConfig) validate() error {
 			return fmt.Errorf(`at least one of "git default branch" or "git before commit" is required`)
 		}
 	default:
-		return fmt.Errorf("unknown mode: %q", c.Apply.Mode)
+		return fmt.Errorf("unknown provider: %q", c.Apply.Provider)
 	}
 
 	return nil
