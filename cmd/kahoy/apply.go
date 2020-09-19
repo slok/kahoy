@@ -27,7 +27,7 @@ import (
 
 // RunApply runs the apply command.
 func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfig) error {
-	report, err := model.NewReport()
+	report, err := model.NewState()
 	if err != nil {
 		return fmt.Errorf("could not start the app report: %w", err)
 	}
@@ -145,7 +145,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	// Select the execution logic based on diff, dry-run...
 	var (
 		manager    resourcemanage.ResourceManager = resourcemanage.NewNoopManager(logger)
-		reportRepo storage.ReportRepository       = storage.NewNoopReportRepository(logger)
+		reportRepo storage.StateRepository        = storage.NewNoopStateRepository(logger)
 	)
 	switch {
 	case cmdConfig.Apply.DryRun:
@@ -192,7 +192,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 		// Write output to stdout.
 		case "-":
-			reportRepo = storagejson.NewReportRepository(globalConfig.Stdout)
+			reportRepo = storagejson.NewStateRepository(globalConfig.Stdout)
 
 		// Anything else write as if it was a path to a file.
 		default:
@@ -203,7 +203,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			logger.Infof("report will be written to %q", cmdConfig.Apply.ReportPath)
 			defer outFile.Close()
 
-			reportRepo = storagejson.NewReportRepository(outFile)
+			reportRepo = storagejson.NewStateRepository(outFile)
 		}
 	}
 
@@ -257,7 +257,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	report.EndedAt = time.Now().UTC()
 	report.AppliedResources = applyRes
 	report.DeletedResources = deleteRes
-	err = reportRepo.StoreReport(ctx, *report)
+	err = reportRepo.StoreState(ctx, *report)
 	if err != nil {
 		return fmt.Errorf("could not store report: %w", err)
 	}
