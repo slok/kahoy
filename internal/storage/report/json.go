@@ -1,4 +1,4 @@
-package json
+package report
 
 import (
 	"context"
@@ -12,23 +12,23 @@ import (
 	"github.com/slok/kahoy/internal/storage"
 )
 
-type stateRepository struct {
+type jsonStateRepository struct {
 	out io.Writer
 }
 
-// NewStateRepository returns a new repository that knows how to write JSON
-// states on the received output.
-func NewStateRepository(out io.Writer) storage.StateRepository {
-	return stateRepository{out: out}
+// NewJSONStateRepository returns a new repository that knows how to write JSON
+// states on the received output in report mode.
+func NewJSONStateRepository(out io.Writer) storage.StateRepository {
+	return jsonStateRepository{out: out}
 }
 
-func (s stateRepository) StoreState(ctx context.Context, state model.State) error {
-	data, err := s.mapStateToJSON(state)
+func (j jsonStateRepository) StoreState(ctx context.Context, state model.State) error {
+	data, err := mapStateToJSON(state)
 	if err != nil {
 		return fmt.Errorf("could not map state to JSON: %w", err)
 	}
 
-	_, err = s.out.Write(data)
+	_, err = j.out.Write(data)
 	if err != nil {
 		return fmt.Errorf("could not write JSON state: %w", err)
 	}
@@ -57,15 +57,15 @@ type jsonResource struct {
 	Name       string `json:"name"`
 }
 
-func (s stateRepository) mapStateToJSON(state model.State) ([]byte, error) {
+func mapStateToJSON(state model.State) ([]byte, error) {
 	// Map resources.
 	applied := make([]jsonResource, 0, len(state.AppliedResources))
 	for _, res := range state.AppliedResources {
-		applied = append(applied, s.mapResourceToJSON(res))
+		applied = append(applied, mapResourceToJSON(res))
 	}
 	deleted := make([]jsonResource, 0, len(state.DeletedResources))
 	for _, res := range state.DeletedResources {
-		deleted = append(deleted, s.mapResourceToJSON(res))
+		deleted = append(deleted, mapResourceToJSON(res))
 	}
 
 	jr := jsonReport{
@@ -85,7 +85,7 @@ func (s stateRepository) mapStateToJSON(state model.State) ([]byte, error) {
 	return data, nil
 }
 
-func (s stateRepository) mapResourceToJSON(res model.Resource) jsonResource {
+func mapResourceToJSON(res model.Resource) jsonResource {
 	gvk := res.K8sObject.GetObjectKind().GroupVersionKind()
 
 	jr := jsonResource{

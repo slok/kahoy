@@ -22,7 +22,7 @@ import (
 	"github.com/slok/kahoy/internal/storage"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
 	storagegit "github.com/slok/kahoy/internal/storage/git"
-	storagejson "github.com/slok/kahoy/internal/storage/json"
+	storagereport "github.com/slok/kahoy/internal/storage/report"
 )
 
 // RunApply runs the apply command.
@@ -192,7 +192,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 		// Write output to stdout.
 		case "-":
-			reportRepo = storagejson.NewStateRepository(globalConfig.Stdout)
+			reportRepo = storagereport.NewJSONStateRepository(globalConfig.Stdout)
 
 		// Anything else write as if it was a path to a file.
 		default:
@@ -203,7 +203,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			logger.Infof("report will be written to %q", cmdConfig.Apply.ReportPath)
 			defer outFile.Close()
 
-			reportRepo = storagejson.NewStateRepository(outFile)
+			reportRepo = storagereport.NewJSONStateRepository(outFile)
 		}
 	}
 

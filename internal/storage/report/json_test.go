@@ -1,4 +1,4 @@
-package json_test
+package report_test
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/slok/kahoy/internal/model"
-	"github.com/slok/kahoy/internal/storage/json"
+	"github.com/slok/kahoy/internal/storage/report"
 )
 
 func newCustomResource(kAPIVersion, kType, ns, name, group string) model.Resource {
@@ -73,7 +73,7 @@ func TestStateRepository(t *testing.T) {
 			assert := assert.New(t)
 
 			var out bytes.Buffer
-			r := json.NewStateRepository(&out)
+			r := report.NewJSONStateRepository(&out)
 			err := r.StoreState(context.TODO(), test.state)
 
 			if test.expErr {
