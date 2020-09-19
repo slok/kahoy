@@ -5,6 +5,7 @@
 ### Breaking
 
 - `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-include-annotation` is `-a` short flag.
+- `--mode` flag renamed to `--provider`.
 
 ### Added
 
