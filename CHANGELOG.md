@@ -21,7 +21,6 @@
 
 ### Changed
 
-- Deprecate `--git-diff-filter` flag in favor of `--include-changes`.
 - `--kube-exclude-type` short flag changed from `-a` to `-t`, `--kube-include-annotation` is `-a` short flag.
 - On Diff, deleted resources now show the real fields and resource the server will delete (before we didn't check the server state).
 - Fix YAML failing on load when YAML file was multiresource and had files only with comments.
@@ -34,6 +33,7 @@
 ### Removed
 
 - Git filtering in favor of generic filtering based on Kubernetes resource diff.
+- `--git-diff-filter` flag in favor of `--include-changes`.
 
 ## [v1.0.0] - 2020-08-31
 
