@@ -96,9 +96,6 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("auto-approve", "applies changes without asking for confirmation. Useful to run Kahoy on non interactive scenarios like CI.").BoolVar(&c.Apply.AutoApprove)
 	apply.Flag("create-namespace", "creates missing namespaces of the applied resources, used in regular and diff exacution modes.").BoolVar(&c.Apply.CreateNamespace)
 
-	// Deprecated flags.
-	apply.Flag("git-diff-filter", "DEPRECATED, use --include-changes.").Hidden().BoolVar(&c.Apply.IncludeChanges)
-
 	// Parse the commandline.
 	cmd, err := app.Parse(args)
 	if err != nil {
