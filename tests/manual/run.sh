@@ -16,7 +16,7 @@ function kahoy_apply() {
     new_path="${1}"
 
     go run ./cmd/kahoy apply \
-        --mode "paths" \
+        --provider "paths" \
         --config-file "${config_file}" \
         --fs-old-manifests-path "${all_path}" \
         --fs-new-manifests-path "${new_path}"

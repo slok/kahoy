@@ -24,7 +24,7 @@ Maintain Kubernetes resources in sync easily.
 - [:pencil2: Concepts](#pencil2-concepts)
 - [:wrench: How does it work](#wrench-how-does-it-work)
 - [:computer: Execution options](#computer-execution-options)
-- [:page_facing_up: Manifest source modes](#page_facing_up-manifest-source-modes)
+- [:page_facing_up: Manifest source providers](#page_facing_up-manifest-source-providers)
 - [:bulb: Use cases](#bulb-use-cases)
 - [:question: F.A.Q](#question-faq)
 - [:tophat: Alternatives](#tophat-alternatives)
@@ -99,7 +99,7 @@ Kahoy doesn't depend on app/service, labels/selectors, or any other kind of app 
 Kahoy plans what to apply or delete based on an `old` and a `new` state of manifests. These states can come from different sources:
 
 - `paths`: Given 2 filesystem paths, it will use one for the old state and the other for the new state.
-- `git`: Given 2 revisions (depends on the `git` mode), it will use the old git revision to get the manifest's state at that moment, and the new git revision to get the manifest's state on that moment.
+- `git`: Given 2 revisions (depends on the `git` provider), it will use the old git revision to get the manifest's state at that moment, and the new git revision to get the manifest's state on that moment.
 
 ### Resource
 
@@ -220,9 +220,9 @@ Will get a diff against the server of the planned resources (server-side, cluste
 
 Will apply the resources that need to exist and delete the ones that don't. Apply uses Kubectl and [server-side][serverside-apply] apply.
 
-## :page_facing_up: Manifest source modes
+## :page_facing_up: Manifest source providers
 
-Kahoy needs two manifest states (old and new) to plan what resources need to exist/gone in the cluster. How these manifests are provided is using the `mode`
+Kahoy needs two manifest states (old and new) to plan what resources need to exist/gone in the cluster. How these manifests are provided is using the `provider`
 
 ### `paths` (File system)
 
@@ -234,18 +234,18 @@ This one is the most generic one and can be used when you want to manage almost 
 
 This is the best one for **gitops**.
 
-This is the default mode, this mode understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
+This is the default provider. This provider understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
 
 Using `before-commit` will make a plan based on the manifests of `HEAD` (new state) and the commit provided (old state). Normally used when executed from `master/main` branch.
 
-Instead of providing the `before-commit`, by default will get the base parent of the current branch `HEAD` (new state) against the default branch (old state), normally `master/main`). This mode is used when you are executing kahoy from a branch in a pull request.
+Instead of providing the `before-commit`, by default will get the base parent of the current branch `HEAD` (new state) against the default branch (old state), normally `master/main`). This provider is used when you are executing kahoy from a branch in a pull request.
 
-Apart from knowing how to get an old and a new state from a git repository. **Git mode understands diff/patches**, this would make Kahoy only be applied what has been changed between these two revisions/commits. This is interesting in many cases:
+Apart from knowing how to get an old and a new state from a git repository. **Git provider understands diff/patches**, this would make Kahoy only be applied what has been changed between these two revisions/commits. This is interesting in many cases:
 
 - When you have lost of resources:
   - Have a clear view of what is changing.
   - Blazing fast deployments.
-- Operators sometimes change deployed manifests, this mode avoids overwriting every manifest on each deployment.
+- Operators sometimes change deployed manifests, this provider avoids overwriting every manifest on each deployment.
 - Split full syncs with partial syncs (you can continue making a full sync every hour or whatever).
 
 ## :bulb: Use cases
@@ -308,29 +308,29 @@ kahoy apply \
 
 ### Delete all
 
-Instead of using git, use the fs by using the `paths` mode. Use the new state as `dev/null`.
+Instead of using git, use the fs by using the `paths` provider. Use the new state as `dev/null`.
 
 ```bash
 kahoy apply \
-    --mode="paths" \
+    --provider="paths" \
     --fs-old-manifests-path "./manifests" \
     --fs-new-manifests-path "/dev/null"
 ```
 
 ### Deploy all
 
-Instead of using git, use the fs by using the `paths` mode. Use the old state as `dev/null`.
+Instead of using git, use the fs by using the `paths` provider. Use the old state as `dev/null`.
 
 ```bash
 kahoy apply \
-    --mode="paths" \
+    --provider="paths" \
     --fs-old-manifests-path "/dev/null" \
     --fs-new-manifests-path "./manifests"
 ```
 
 ### Deploy only some manifests
 
-You can use the file filtering option `--fs-include`, works with any mode (`git`, `paths`...)
+You can use the file filtering option `--fs-include`, works with any provider (`git`, `paths`...)
 
 ```bash
 kahoy apply \
@@ -392,7 +392,7 @@ Check this [Kustomize example][kustomize-example].
 - [Partial and full syncs?](#partial-and-full-syncs)
 - [How is Garbage collection handled?](#how-is-garbage-collection-handled)
 - [Why git?](#why-git)
-- [When to use paths mode?](#when-to-use-paths-mode)
+- [When to use paths provider?](#when-to-use-paths-provider)
 - [Env vars as options](#env-vars-as-options)
 - [Kustomize or helm manifests](#kustomize-or-helm-manifests)
 - [Encrypted secrets?](#encrypted-secrets)
@@ -479,14 +479,14 @@ This gives us the opportunity to track changes on our resources, applying a reli
 
 That's why Kahoy understands git, knows how to get two revisions, and compares the manifests that changed in those revisions, plan them and apply.
 
-### When to use paths mode?
+### When to use paths provider?
 
-Kahoy understands git and most of the time you will not need it if you are using a repository. However, if you want to make everything yourself, using `paths` mode gives you full control. e.g:
+Kahoy understands git and most of the time you will not need it if you are using a repository. However, if you want to make everything yourself, using `paths` provider gives you full control. e.g:
 
 - Prepare two manifest paths.
   - `new` manifests is the main repository
   - `old` manifests is a copy of `new` (`cp -r`) and checkout to a previous revision.
-- Use `--mode=paths` to pass those manifest paths (`--fs-old-manifests-path`, `--fs-new-manifests-path`) to the two repo paths in different states.
+- Use `--provider=paths` to pass those manifest paths (`--fs-old-manifests-path`, `--fs-new-manifests-path`) to the two repo paths in different states.
 - If you want to only apply on changes, use `--include-changes`.
 
 Check an example [script][bash-git-example] that prepares two manifests paths with the different revisions.
@@ -497,7 +497,7 @@ You can use environment vars as options using `KAHOY_XXXX_XXXX`, cli args have p
 
 - `--debug`: `KAHOY_DEBUG`
 - `--kube-context`: `KAHOY_KUBE_CONTEXT`
-- `--mode`: `KAHOY_MODE`
+- `--provider`: `KAHOY_PROVIDER`
 - `--fs-include`: `KAHOY_FS_INCLUDE`
 - ...
 
@@ -514,14 +514,14 @@ Encrypted secrets can't be understood by Kahoy, there are different solutions:
 - Ignore encrypted files and apply them separately.
   - Invoke Kahoy ignoring them using `--fs-exclude`.
   - Decrypt the secrets.
-  - Apply them using Kahoy with `--mode=paths` and `--fs-include` option.
+  - Apply them using Kahoy with `--provider=paths` and `--fs-include` option.
 - Move to a different solution where git repository doesn't have encrypted secrets (webhooks, controllers...).
 
 ### Non resource YAMLs
 
 Kahoy will try loading all yamls as resources, if it fails, Kahoy will fail, this can be a problem when you have yamls that are not Kubernetes resources.
 
-Use `--fs-exclude`, it works with `paths` and `git` modes.
+Use `--fs-exclude`, it works with `paths` and `git` providers.
 
 ### Ignore a resource
 

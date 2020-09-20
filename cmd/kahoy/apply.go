@@ -33,9 +33,9 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	logger := globalConfig.Logger.WithValues(log.Kv{
-		"id":   report.ID,
-		"cmd":  "apply",
-		"mode": cmdConfig.Apply.Mode,
+		"id":       report.ID,
+		"cmd":      "apply",
+		"provider": cmdConfig.Apply.Provider,
 	})
 	logger.Infof("running command")
 
@@ -50,8 +50,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		oldResourceRepo, newResourceRepo storage.ResourceRepository
 		newGroupRepo                     storage.GroupRepository
 	)
-	switch cmdConfig.Apply.Mode {
-	case ApplyModeGit:
+	switch cmdConfig.Apply.Provider {
+	case ApplyProviderGit:
 		oldRepo, newRepo, err := storagegit.NewRepositories(storagegit.RepositoriesConfig{
 			ExcludeRegex:       fsExclude,
 			IncludeRegex:       fsInclude,
@@ -71,7 +71,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		newResourceRepo = newRepo
 		newGroupRepo = newRepo
 
-	case ApplyModePaths:
+	case ApplyProviderPaths:
 		oldRepo, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
 			ExcludeRegex:      fsExclude,
 			IncludeRegex:      fsInclude,
@@ -89,7 +89,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		newResourceRepo = newRepo
 		newGroupRepo = newRepo
 	default:
-		return fmt.Errorf("unknown apply mode: %s", cmdConfig.Apply.Mode)
+		return fmt.Errorf("unknown apply provider: %s", cmdConfig.Apply.Provider)
 	}
 
 	// Get resources from repositories.

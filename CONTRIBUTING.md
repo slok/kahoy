@@ -64,7 +64,7 @@ kubectl config set-context kind-kahoy
 
 Kahoy comes with a handy set of use cases for manual testing. You can check them in [`tests/manual`][manual-tests]. These tests come with a `run.sh` file that will run the different use cases with some predefined flags for Kahoy.
 
-How these use cases work is simple, they use `--mode=paths`, and we have different manifest directories in different states.
+How these use cases work is simple, they use `--provider=paths`, and we have different manifest directories in different states.
 
 - [`manifests-all`][manifests-all]: It has all the resources.
 - [`manifests-shuffle`][manifests-shuffle]: It has all resources but with different structure.
