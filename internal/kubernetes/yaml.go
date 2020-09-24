@@ -17,6 +17,7 @@ import (
 	"github.com/slok/kahoy/internal/model"
 	"github.com/slok/kahoy/internal/resource/manage/kubectl"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
+	storagekubernetes "github.com/slok/kahoy/internal/storage/kubernetes"
 )
 
 // YAMLObjectSerializer handles YAML based raw data, by decoding and encoding from/into
@@ -29,8 +30,9 @@ type YAMLObjectSerializer struct {
 
 // Interface assertion.
 var (
-	_ storagefs.K8sObjectDecoder = YAMLObjectSerializer{}
-	_ kubectl.K8sObjectEncoder   = YAMLObjectSerializer{}
+	_ storagefs.K8sObjectDecoder            = YAMLObjectSerializer{}
+	_ kubectl.K8sObjectEncoder              = YAMLObjectSerializer{}
+	_ storagekubernetes.K8sObjectSerializer = YAMLObjectSerializer{}
 )
 
 // NewYAMLObjectSerializer returns a new YAMLNewYAMLObjectSerializer.
