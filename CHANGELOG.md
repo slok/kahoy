@@ -19,6 +19,7 @@
 - Confirmation prompt when running `kahoy apply` without diff or dry-run modes enabled.
 - Optional `--auto-approve` to disable the confirmation prompt.
 - Optional `--create-namespace` on regular and diff modes that will create missing namespaces of applied resources.
+- Kubernetes provider.
 
 ### Changed
 

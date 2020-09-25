@@ -45,10 +45,10 @@ Unlike other tools, Kahoy will adapt to your needs and not the other way around,
 - Deploy anything, a `Namespace`, `Ingress`, `CRD`, domain apps (e.g `Deployment`+`service`)...
 - Plans what to delete or deploy based on two manifest states (old and new).
 - Garbage collection resources.
-- Load states from different sources (fs, git...).
+- Load states from different sources/providers (fs, git, kubernetes...).
 - Plans at Kubernetes resource level (not file/manifest level, not app/release level)
 - Different execution modes: Diff, Dry run...
-- Gitops ready (split commands, understands git repositories).
+- Gitops ready (split commands, understands git repositories, apply only changes).
 - Use full syncs or partial syncs based on resource changes/diffs.
 - Deploy priorities.
 - Multiple filtering options (file paths, resource namespace, types...).
@@ -224,6 +224,28 @@ Will apply the resources that need to exist and delete the ones that don't. Appl
 
 Kahoy needs two manifest states (old and new) to plan what resources need to exist/gone in the cluster. How these manifests are provided is using the `provider`
 
+| Provider   | Easy | Flexible | Fast | History |
+| ---------- | ---- | -------- | ---- | ------- |
+| Kubernetes | ✔    | ✔        | ✖    | ✖       |
+| Git        | ✖    | ✖        | ✔    | ✔       |
+| Paths      | ✖    | ✔        | ✔    | ✖       |
+
+### `kubernetes`
+
+Given an storage ID and a namespace, at the end of the execution it will store the executed state (applied and deleted resources).
+
+The ID is important because you can have different states for each Kahoy execution flows on the same cluster.
+
+The state will be stored with a secret per existing resource.
+
+This provider gives reliable and easy management, but is slower and requires space on the cluster (however the stored resources are compressed).
+
+If you want to check all the resource states, you can do (Check annotations for more information):
+
+```bash
+kubectl -n {STORAGE_NAMESPACE} get secrets -l 'kahoy.slok.dev/storage-id={STORAGE_ID}'
+```
+
 ### `paths` (File system)
 
 Given 2 manifest file system paths, plans what needs to be applied against a cluster, and what needs to be deleted.
@@ -232,21 +254,13 @@ This one is the most generic one and can be used when you want to manage almost 
 
 ### `git`
 
-This is the best one for **gitops**.
-
-This is the default provider. This provider understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
+This provider understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
 
 Using `before-commit` will make a plan based on the manifests of `HEAD` (new state) and the commit provided (old state). Normally used when executed from `master/main` branch.
 
 Instead of providing the `before-commit`, by default will get the base parent of the current branch `HEAD` (new state) against the default branch (old state), normally `master/main`). This provider is used when you are executing kahoy from a branch in a pull request.
 
-Apart from knowing how to get an old and a new state from a git repository. **Git provider understands diff/patches**, this would make Kahoy only be applied what has been changed between these two revisions/commits. This is interesting in many cases:
-
-- When you have lost of resources:
-  - Have a clear view of what is changing.
-  - Blazing fast deployments.
-- Operators sometimes change deployed manifests, this provider avoids overwriting every manifest on each deployment.
-- Split full syncs with partial syncs (you can continue making a full sync every hour or whatever).
+Apart from knowing how to get an old and a new state from a git repository.
 
 ## :bulb: Use cases
 
@@ -393,6 +407,7 @@ Check this [Kustomize example][kustomize-example].
 - [How is Garbage collection handled?](#how-is-garbage-collection-handled)
 - [Why git?](#why-git)
 - [When to use paths provider?](#when-to-use-paths-provider)
+- [When to use kubernetes provider?](#when-to-use-kubernetes-provider)
 - [Env vars as options](#env-vars-as-options)
 - [Kustomize or helm manifests](#kustomize-or-helm-manifests)
 - [Encrypted secrets?](#encrypted-secrets)
@@ -490,6 +505,12 @@ Kahoy understands git and most of the time you will not need it if you are using
 - If you want to only apply on changes, use `--include-changes`.
 
 Check an example [script][bash-git-example] that prepares two manifests paths with the different revisions.
+
+### When to use Kubernetes provider?
+
+When you want Kahoy manage the latest state for you instead of you managing the latest state (e.g: Using Git history).
+
+This will make an easy and reliable way of managing the state.
 
 ### Env vars as options
 
