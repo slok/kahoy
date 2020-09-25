@@ -8,7 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/slok/kahoy/internal/kubernetes"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+
+	internalkubernetes "github.com/slok/kahoy/internal/kubernetes"
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
 	"github.com/slok/kahoy/internal/plan"
@@ -22,6 +26,7 @@ import (
 	"github.com/slok/kahoy/internal/storage"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
 	storagegit "github.com/slok/kahoy/internal/storage/git"
+	storagekubernetes "github.com/slok/kahoy/internal/storage/kubernetes"
 	storagereport "github.com/slok/kahoy/internal/storage/report"
 )
 
@@ -40,7 +45,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	logger.Infof("running command")
 
 	// Create YAML serializer.
-	kubernetesSerializer := kubernetes.NewYAMLObjectSerializer(logger)
+	kubernetesSerializer := internalkubernetes.NewYAMLObjectSerializer(logger)
 
 	// Aggregate options (cmd flags + kahoy config files).
 	fsExclude := append(cmdConfig.Apply.ExcludeManifests, globalConfig.AppConfig.Fs.Exclude...)
@@ -49,6 +54,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	var (
 		oldResourceRepo, newResourceRepo storage.ResourceRepository
 		newGroupRepo                     storage.GroupRepository
+		stateRepo                        storage.StateRepository
 	)
 	switch cmdConfig.Apply.Provider {
 	case ApplyProviderGit:
@@ -88,6 +94,47 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		oldResourceRepo = oldRepo
 		newResourceRepo = newRepo
 		newGroupRepo = newRepo
+
+	case ApplyProviderK8s:
+		kubeCfg, err := loadKubernetesConfig(cmdConfig)
+		if err != nil {
+			return fmt.Errorf("could not load Kubernetes configuration: %w", err)
+		}
+		cli, err := kubernetes.NewForConfig(kubeCfg)
+		if err != nil {
+			return fmt.Errorf("could not create client-go kubernetes client: %w", err)
+		}
+
+		k8sRepo, err := storagekubernetes.NewRepository(storagekubernetes.RepositoryConfig{
+			Namespace:  cmdConfig.Apply.KubeProviderNs,
+			StorageID:  cmdConfig.Apply.KubeProviderID,
+			Serializer: kubernetesSerializer,
+			Client:     internalkubernetes.NewClient(cli, logger),
+			Logger:     logger.WithValues(log.Kv{"repo-state": "old"}),
+		})
+		if err != nil {
+			return fmt.Errorf("could not create state storer: %w", err)
+		}
+
+		_, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
+			ExcludeRegex:      fsExclude,
+			IncludeRegex:      fsInclude,
+			OldPath:           os.DevNull,
+			NewPath:           cmdConfig.Apply.ManifestsPathNew,
+			KubernetesDecoder: kubernetesSerializer,
+			AppConfig:         &globalConfig.AppConfig,
+			Logger:            logger.WithValues(log.Kv{"repo-state": "new"}),
+		})
+		if err != nil {
+			return fmt.Errorf("could not create fs repos storage: %w", err)
+		}
+
+		// State store and old repository is from Kubernetes.
+		stateRepo = k8sRepo
+		oldResourceRepo = k8sRepo
+		newResourceRepo = newRepo
+		newGroupRepo = newRepo
+
 	default:
 		return fmt.Errorf("unknown apply provider: %s", cmdConfig.Apply.Provider)
 	}
@@ -149,9 +196,11 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	)
 	switch {
 	case cmdConfig.Apply.DryRun:
+		stateRepo = storage.NewNoopStateRepository(logger)
 		manager = managedryrun.NewManager(cmdConfig.Global.NoColor, nil)
 
 	case cmdConfig.Apply.DiffMode:
+		stateRepo = storage.NewNoopStateRepository(logger)
 		manager, err = managekubectl.NewDiffManager(managekubectl.DiffManagerConfig{
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
 			KubeContext: cmdConfig.Apply.KubeContext,
@@ -253,10 +302,17 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		return fmt.Errorf("could not delete resources correctly: %w", err)
 	}
 
-	// Store report.
 	report.EndedAt = time.Now().UTC()
 	report.AppliedResources = applyRes
 	report.DeletedResources = deleteRes
+
+	// Store executed state.
+	err = stateRepo.StoreState(ctx, *report)
+	if err != nil {
+		return fmt.Errorf("could not store state: %w", err)
+	}
+
+	// Show report.
 	err = reportRepo.StoreState(ctx, *report)
 	if err != nil {
 		return fmt.Errorf("could not store report: %w", err)
@@ -328,4 +384,27 @@ func askYesNo(writer io.Writer, reader io.Reader) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// loadKubernetesConfig loads kubernetes configuration based on flags.
+func loadKubernetesConfig(cmdCfg CmdConfig) (*rest.Config, error) {
+	config, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{
+			ExplicitPath: cmdCfg.Apply.KubeConfig,
+		},
+		&clientcmd.ConfigOverrides{
+			CurrentContext: cmdCfg.Apply.KubeContext,
+			// TODO(slok): Timeout.
+		},
+	).ClientConfig()
+
+	if err != nil {
+		return nil, fmt.Errorf("could not load Kubernetes configuration: %w", err)
+	}
+
+	// Set better cli rate limiter.
+	config.QPS = 100
+	config.Burst = 100
+
+	return config, nil
 }

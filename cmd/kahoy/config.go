@@ -22,6 +22,7 @@ const (
 const (
 	ApplyProviderPaths = "paths"
 	ApplyProviderGit   = "git"
+	ApplyProviderK8s   = "kubernetes"
 )
 
 // CmdConfig is the configuration of the command
@@ -57,6 +58,8 @@ type CmdConfig struct {
 		ReportPath               string
 		AutoApprove              bool
 		CreateNamespace          bool
+		KubeProviderID           string
+		KubeProviderNs           string
 	}
 }
 
@@ -81,7 +84,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("kube-context", "Kubernetes configuration context.").StringVar(&c.Apply.KubeContext)
 	apply.Flag("diff", "Diff instead of applying changes.").BoolVar(&c.Apply.DiffMode)
 	apply.Flag("dry-run", "Execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
-	apply.Flag("provider", "Selects which provider to use to load the old and new states. Git needs to be executed from a git repository.").Default(ApplyProviderGit).EnumVar(&c.Apply.Provider, ApplyProviderPaths, ApplyProviderGit)
+	apply.Flag("provider", "Selects which provider to use to load the old and new states. Git needs to be executed from a git repository.").Default(ApplyProviderGit).EnumVar(&c.Apply.Provider, ApplyProviderPaths, ApplyProviderGit, ApplyProviderK8s)
 	apply.Flag("fs-old-manifests-path", "Kubernetes current manifests path.").Short('o').StringVar(&c.Apply.ManifestsPathOld)
 	apply.Flag("fs-new-manifests-path", "Kubernetes expected manifests path.").Short('n').Required().StringVar(&c.Apply.ManifestsPathNew)
 	apply.Flag("fs-exclude", "Regex to ignore manifest files and dirs. Can be repeated.").Short('e').StringsVar(&c.Apply.ExcludeManifests)
@@ -95,6 +98,8 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("report-path", "Path to a file where the report data will be written, use `-` for stdout or nothing to disable").Short('r').StringVar(&c.Apply.ReportPath)
 	apply.Flag("auto-approve", "applies changes without asking for confirmation. Useful to run Kahoy on non interactive scenarios like CI.").BoolVar(&c.Apply.AutoApprove)
 	apply.Flag("create-namespace", "creates missing namespaces of the applied resources, used in regular and diff exacution modes.").BoolVar(&c.Apply.CreateNamespace)
+	apply.Flag("kube-provider-id", "Kubernetes storage provider ID.").StringVar(&c.Apply.KubeProviderID)
+	apply.Flag("kube-provider-namespace", "Kubernetes storage provider namespace.").StringVar(&c.Apply.KubeProviderNs)
 
 	// Parse the commandline.
 	cmd, err := app.Parse(args)
@@ -130,6 +135,15 @@ func (c *CmdConfig) validate() error {
 		if c.Apply.GitDefaultBranch == "" && c.Apply.GitBeforeCommit == "" {
 			return fmt.Errorf(`at least one of "git default branch" or "git before commit" is required`)
 		}
+	case ApplyProviderK8s:
+		if c.Apply.KubeProviderID == "" {
+			return fmt.Errorf(`using Kubernetes provider requires to set a provider ID`)
+		}
+
+		if c.Apply.KubeProviderNs == "" {
+			return fmt.Errorf(`using Kubernetes provider requires to set the namespace`)
+		}
+
 	default:
 		return fmt.Errorf("unknown provider: %q", c.Apply.Provider)
 	}
