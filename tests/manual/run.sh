@@ -33,8 +33,7 @@ function kahoy_kube_apply() {
         --config-file "${config_file}" \
         --fs-new-manifests-path "${new_path}" \
         --auto-approve \
-        --kube-provider-id "kahoy-test" \
-        --kube-provider-namespace "default" \
+        --kube-provider-id "test-kahoy" \
         --report-path=-
 }
 

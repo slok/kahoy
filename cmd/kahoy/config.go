@@ -99,7 +99,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("auto-approve", "applies changes without asking for confirmation. Useful to run Kahoy on non interactive scenarios like CI.").BoolVar(&c.Apply.AutoApprove)
 	apply.Flag("create-namespace", "creates missing namespaces of the applied resources, used in regular and diff exacution modes.").BoolVar(&c.Apply.CreateNamespace)
 	apply.Flag("kube-provider-id", "Kubernetes storage provider ID.").StringVar(&c.Apply.KubeProviderID)
-	apply.Flag("kube-provider-namespace", "Kubernetes storage provider namespace.").StringVar(&c.Apply.KubeProviderNs)
+	apply.Flag("kube-provider-namespace", "Kubernetes storage provider namespace.").Default("default").StringVar(&c.Apply.KubeProviderNs)
 
 	// Parse the commandline.
 	cmd, err := app.Parse(args)
@@ -139,11 +139,6 @@ func (c *CmdConfig) validate() error {
 		if c.Apply.KubeProviderID == "" {
 			return fmt.Errorf(`using Kubernetes provider requires to set a provider ID`)
 		}
-
-		if c.Apply.KubeProviderNs == "" {
-			return fmt.Errorf(`using Kubernetes provider requires to set the namespace`)
-		}
-
 	default:
 		return fmt.Errorf("unknown provider: %q", c.Apply.Provider)
 	}
