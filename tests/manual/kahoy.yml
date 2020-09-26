@@ -10,17 +10,17 @@ groups:
   - id: ns
     priority: 100
     wait:
-      duration: 10s
+      duration: 3s
 
   - id: root
     priority: 200
     wait:
-      duration: 2s
+      duration: 1s
 
   - id: group-a/group-c/group-d
     priority: 200
     wait:
-      duration: 5s
+      duration: 2s
 
   - id: group-b/group-e
     priority: 550
