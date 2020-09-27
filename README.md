@@ -187,6 +187,8 @@ These would be the group IDs:
 
 ## :wrench: How does it work
 
+![high level architecture](docs/img/kahoy-high-level.png)
+
 - Load manifests into K8s resources.
   - Filter manifest at file level if required.
   - Load old state `Resource`s and `Group`s.
@@ -200,6 +202,9 @@ These would be the group IDs:
   - Batch resources (e.g by priority).
   - Apply.
   - Delete.
+- Post operations.
+  - Store state.
+  - ouput status.
 
 ## :computer: Execution options
 
