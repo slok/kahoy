@@ -1,4 +1,4 @@
-package json
+package report
 
 import (
 	"context"
@@ -12,25 +12,25 @@ import (
 	"github.com/slok/kahoy/internal/storage"
 )
 
-type reportRepository struct {
+type jsonStateRepository struct {
 	out io.Writer
 }
 
-// NewReportRepository returns a new repository that knows how to write JSON
-// reports on the received output.
-func NewReportRepository(out io.Writer) storage.ReportRepository {
-	return reportRepository{out: out}
+// NewJSONStateRepository returns a new repository that knows how to write JSON
+// states on the received output in report mode.
+func NewJSONStateRepository(out io.Writer) storage.StateRepository {
+	return jsonStateRepository{out: out}
 }
 
-func (r reportRepository) StoreReport(ctx context.Context, report model.Report) error {
-	data, err := r.mapReportToJSON(report)
+func (j jsonStateRepository) StoreState(ctx context.Context, state model.State) error {
+	data, err := mapStateToJSON(state)
 	if err != nil {
-		return fmt.Errorf("could not map report to JSON: %w", err)
+		return fmt.Errorf("could not map state to JSON: %w", err)
 	}
 
-	_, err = r.out.Write(data)
+	_, err = j.out.Write(data)
 	if err != nil {
-		return fmt.Errorf("could not write JSON report: %w", err)
+		return fmt.Errorf("could not write JSON state: %w", err)
 	}
 
 	return nil
@@ -57,22 +57,22 @@ type jsonResource struct {
 	Name       string `json:"name"`
 }
 
-func (r reportRepository) mapReportToJSON(report model.Report) ([]byte, error) {
+func mapStateToJSON(state model.State) ([]byte, error) {
 	// Map resources.
-	applied := make([]jsonResource, 0, len(report.AppliedResources))
-	for _, res := range report.AppliedResources {
-		applied = append(applied, r.mapResourceToJSON(res))
+	applied := make([]jsonResource, 0, len(state.AppliedResources))
+	for _, res := range state.AppliedResources {
+		applied = append(applied, mapResourceToJSON(res))
 	}
-	deleted := make([]jsonResource, 0, len(report.DeletedResources))
-	for _, res := range report.DeletedResources {
-		deleted = append(deleted, r.mapResourceToJSON(res))
+	deleted := make([]jsonResource, 0, len(state.DeletedResources))
+	for _, res := range state.DeletedResources {
+		deleted = append(deleted, mapResourceToJSON(res))
 	}
 
 	jr := jsonReport{
 		Version:          "v1",
-		ID:               report.ID,
-		StartedAt:        report.StartedAt.Format(time.RFC3339),
-		EndedAt:          report.EndedAt.Format(time.RFC3339),
+		ID:               state.ID,
+		StartedAt:        state.StartedAt.Format(time.RFC3339),
+		EndedAt:          state.EndedAt.Format(time.RFC3339),
 		AppliedResources: applied,
 		DeletedResources: deleted,
 	}
@@ -85,7 +85,7 @@ func (r reportRepository) mapReportToJSON(report model.Report) ([]byte, error) {
 	return data, nil
 }
 
-func (r reportRepository) mapResourceToJSON(res model.Resource) jsonResource {
+func mapResourceToJSON(res model.Resource) jsonResource {
 	gvk := res.K8sObject.GetObjectKind().GroupVersionKind()
 
 	jr := jsonResource{

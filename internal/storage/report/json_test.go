@@ -1,4 +1,4 @@
-package json_test
+package report_test
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/slok/kahoy/internal/model"
-	"github.com/slok/kahoy/internal/storage/json"
+	"github.com/slok/kahoy/internal/storage/report"
 )
 
 func newCustomResource(kAPIVersion, kType, ns, name, group string) model.Resource {
@@ -32,17 +32,17 @@ func newCustomResource(kAPIVersion, kType, ns, name, group string) model.Resourc
 	}
 }
 
-func TestReportRepository(t *testing.T) {
+func TestStateRepository(t *testing.T) {
 	t0, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:03Z")
 	t1, _ := time.Parse(time.RFC3339, "1912-06-23T01:02:42Z")
 
 	tests := map[string]struct {
-		report model.Report
+		state  model.State
 		expOut string
 		expErr bool
 	}{
-		"Having no resources should give the correct report without resorces": {
-			report: model.Report{
+		"Having no resources should give the correct state without resorces": {
+			state: model.State{
 				ID:        "id1",
 				StartedAt: t0,
 				EndedAt:   t1,
@@ -50,8 +50,8 @@ func TestReportRepository(t *testing.T) {
 			expOut: `{"version":"v1","id":"id1","started_at":"1912-06-23T01:02:03Z","ended_at":"1912-06-23T01:02:42Z","applied_resources":[],"deleted_resources":[]}`,
 		},
 
-		"Having resources should give the correct report without resorces": {
-			report: model.Report{
+		"Having resources should give the correct state without resorces": {
+			state: model.State{
 				ID:        "id1",
 				StartedAt: t0,
 				EndedAt:   t1,
@@ -73,8 +73,8 @@ func TestReportRepository(t *testing.T) {
 			assert := assert.New(t)
 
 			var out bytes.Buffer
-			r := json.NewReportRepository(&out)
-			err := r.StoreReport(context.TODO(), test.report)
+			r := report.NewJSONStateRepository(&out)
+			err := r.StoreState(context.TODO(), test.state)
 
 			if test.expErr {
 				assert.Error(err)

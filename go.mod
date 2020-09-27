@@ -13,7 +13,10 @@ require (
 	github.com/oklog/ulid v1.3.1
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.6.1
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
-	k8s.io/apimachinery v0.18.8
-	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/api v0.18.9
+	k8s.io/apimachinery v0.18.9
+	k8s.io/client-go v0.18.9
+	k8s.io/utils v0.0.0-20200912215256-4140de9c8800 // indirect
 )

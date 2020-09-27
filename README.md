@@ -24,7 +24,7 @@ Maintain Kubernetes resources in sync easily.
 - [:pencil2: Concepts](#pencil2-concepts)
 - [:wrench: How does it work](#wrench-how-does-it-work)
 - [:computer: Execution options](#computer-execution-options)
-- [:page_facing_up: Manifest source modes](#page_facing_up-manifest-source-modes)
+- [:page_facing_up: Manifest source providers](#page_facing_up-manifest-source-providers)
 - [:bulb: Use cases](#bulb-use-cases)
 - [:question: F.A.Q](#question-faq)
 - [:tophat: Alternatives](#tophat-alternatives)
@@ -44,19 +44,16 @@ Kahoy will adapt to your needs and not the other way around, its been designed a
 
 - Simple, flexible, and lightweight.
 - Deploys a deletes Kubernetes resources.
-- Deploy anything, a `Namespace`, `Ingress`, `CRD`, domain apps (e.g `Deployment`+`service`)...
-- Plans what to delete or deploy based on two manifest states (old and new).
+- Deploy anything, a `Namespace`, `Ingress`, `CRD`, domain apps (e.g `Deployment`+`Service`)...
 - Garbage collection resources.
-- Load states from different sources (fs, git...).
+- Load states from different sources/providers (fs, git, kubernetes...).
 - Plans at Kubernetes resource level (not file/manifest level, not app/release level)
-- Different execution modes: Diff, Dry run...
-- Gitops ready (split commands, understands git repositories).
+- Gitops ready (split commands, understands git repositories, apply only changes, Diff, Dry run...).
 - Use full syncs or partial syncs based on resource changes/diffs.
 - Deploy priorities.
 - Multiple filtering options (file paths, resource namespace, types...).
-- Uses Kubernetes >=v1.18 and server-side apply.
 - Push mode (triggered from CI), not pull (controller).
-- Use Kubectl under the hood.
+- Use Kubectl under the hood (Kubernetes >=v1.18 and server-side apply).
 - Safe deletion of resources (doesn't use `prune` method to delete K8s resources).
 - Reports of what applies and deletes (useful to combine with other apps, e.g: wait, checks, notifications...).
 
@@ -101,7 +98,7 @@ Kahoy does not depend on any running service, labels or annotation selectors, or
 Kahoy plans what to apply or delete based on an `old` and a `new` state of manifests. These states can come from different sources:
 
 - `paths`: Given 2 filesystem paths, it will use one for the old state and the other for the new state.
-- `git`: Given 2 revisions (depends on the `git` mode), it will use the old git revision to get the manifest's state at that moment, and the new git revision to get the manifest's state on that moment.
+- `git`: Given 2 revisions (depends on the `git` provider), it will use the old git revision to get the manifest's state at that moment, and the new git revision to get the manifest's state on that moment.
 
 ### Resource
 
@@ -222,9 +219,53 @@ Will get a diff against the server of the planned resources (server-side, cluste
 
 Will apply the resources that need to exist and delete the ones that don't. Apply uses Kubectl with [server-side][serverside-apply] apply.
 
-## :page_facing_up: Manifest source modes
+## :page_facing_up: Manifest source providers
 
-Kahoy needs two manifest states (old and new) to plan what resources need to exist/gone in the cluster. How these manifests are provided is using the `mode`
+Kahoy needs two manifest states (old and new) to plan what resources need to exist/gone in the cluster. How these manifests are provided is using the `provider`
+
+| Provider   | Easy | Flexible | Fast | History |
+| ---------- | ---- | -------- | ---- | ------- |
+| Kubernetes | ✔    | ✔        | ✖    | ✖       |
+| Git        | ✖    | ✖        | ✔    | ✔       |
+| Paths      | ✖    | ✔        | ✔    | ✖       |
+
+### `kubernetes`
+
+Given an storage ID and a namespace, at the end of the execution it will store the executed state (applied and deleted resources).
+
+The ID is important because you can have different states for each Kahoy execution flows on the same cluster.
+
+> Note: The state is stored with a `Secret` per existing resource. Be aware of [object count quota](https://kubernetes.io/docs/concepts/policy/resource-quotas/#object-count-quota)
+
+With this state storage, it will load the `old` manifest state from Kubernetes and `new` manifest state from an fs path. This means that unlike other modes, using dry-run with Kubernetes provider needs access to a cluster.
+
+This provider gives reliable and easy management, but is slower (Needs to get the state from the cluster) and requires space on the cluster to store the state (however the stored resources are compressed).
+
+#### Check kahoy state
+
+If you want to check all the resource states, you can do (Check `Secret` annotations for more information):
+
+```bash
+kubectl -n {STORAGE_NAMESPACE} get secrets -l 'kahoy.slok.dev/storage-id={STORAGE_ID}'
+```
+
+#### Move kahoy state
+
+In case you want to move kahoy state to another namespaces you can get the resources and apply them in another namespace.
+
+```bash
+kubectl -n {STORAGE_OLD_NS}  get secrets -l 'kahoy.slok.dev/storage-id={STORAGE_ID}' -o json | \
+  jq '.items[].metadata.namespace = "{STORAGE_NEW_NS}"' | \
+  kubectl -n {STORAGE_NEW_NS} apply -f-
+```
+
+#### Delete kahoy state
+
+In the strange case that you want to reset Kahoy state, you can do it by removing these secrets and apply again all the manifests to create the latest state again:
+
+```bash
+kubectl -n {STORAGE_NAMESPACE} delete secrets -l 'kahoy.slok.dev/storage-id={STORAGE_ID}'
+```
 
 ### `paths` (File system)
 
@@ -234,21 +275,11 @@ This one is the most generic one and can be used when you want to manage almost 
 
 ### `git`
 
-This is the best one for **gitops**.
-
-This is the default mode, this mode understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
+This provider understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
 
 Using `before-commit` will make a plan based on the manifests of `HEAD` (new state) and the commit provided (old state). Normally used when executed from `master/main` branch.
 
-Instead of providing the `before-commit`, by default will get the base parent of the current branch `HEAD` (new state) against the default branch (old state), normally `master/main`). This mode is used when you are executing kahoy from a branch in a pull request.
-
-Apart from knowing how to get an old and a new state from a git repository. **Git mode understands diff/patches**, this would make Kahoy only be applied what has been changed between these two revisions/commits. This is interesting in many cases:
-
-- When you have lots of resources:
-  - Have a clear view of what is changing.
-  - Blazing fast deployments.
-- Operators sometimes change deployed manifests, this mode avoids overwriting every manifest on each deployment.
-- Split full syncs with partial syncs (you can continue making a full sync every hour or whatever).
+Instead of providing the `before-commit`, by default will get the base parent of the current branch `HEAD` (new state) against the default branch (old state), normally `master/main`). This provider is used when you are executing kahoy from a branch in a pull request.
 
 ## :bulb: Use cases
 
@@ -310,29 +341,29 @@ kahoy apply \
 
 ### Delete all
 
-Instead of using git, use the fs by using the `paths` mode. Use the new state as `dev/null`.
+Instead of using git, use the fs by using the `paths` provider. Use the new state as `dev/null`.
 
 ```bash
 kahoy apply \
-    --mode="paths" \
+    --provider="paths" \
     --fs-old-manifests-path "./manifests" \
     --fs-new-manifests-path "/dev/null"
 ```
 
 ### Deploy all
 
-Instead of using git, use the fs by using the `paths` mode. Use the old state as `dev/null`.
+Instead of using git, use the fs by using the `paths` provider. Use the old state as `dev/null`.
 
 ```bash
 kahoy apply \
-    --mode="paths" \
+    --provider="paths" \
     --fs-old-manifests-path "/dev/null" \
     --fs-new-manifests-path "./manifests"
 ```
 
 ### Deploy only some manifests
 
-You can use the file filtering option `--fs-include`, works with any mode (`git`, `paths`...)
+You can use the file filtering option `--fs-include`, works with any provider (`git`, `paths`...)
 
 ```bash
 kahoy apply \
@@ -394,7 +425,8 @@ Check this [Kustomize example][kustomize-example].
 - [Partial and full syncs?](#partial-and-full-syncs)
 - [How is Garbage collection handled?](#how-is-garbage-collection-handled)
 - [Why git?](#why-git)
-- [When to use paths mode?](#when-to-use-paths-mode)
+- [When to use paths provider?](#when-to-use-paths-provider)
+- [When to use kubernetes provider?](#when-to-use-kubernetes-provider)
 - [Env vars as options](#env-vars-as-options)
 - [Kustomize or helm manifests](#kustomize-or-helm-manifests)
 - [Encrypted secrets?](#encrypted-secrets)
@@ -481,17 +513,23 @@ This gives us the opportunity to track changes on our resources, applying a reli
 
 That's why Kahoy understands git, knows how to get two revisions, and compares the manifests that changed in those revisions, plan them and apply.
 
-### When to use paths mode?
+### When to use paths provider?
 
-Kahoy understands git and most of the time you will not need it if you are using a repository. However, if you want to make everything yourself, using `paths` mode gives you full control. e.g:
+Kahoy understands git and most of the time you will not need it if you are using a repository. However, if you want to make everything yourself, using `paths` provider gives you full control. e.g:
 
 - Prepare two manifest paths.
   - `new` manifests is the main repository
   - `old` manifests is a copy of `new` (`cp -r`) and checkout to a previous revision.
-- Use `--mode=paths` to pass those manifest paths (`--fs-old-manifests-path`, `--fs-new-manifests-path`) to the two repo paths in different states.
+- Use `--provider=paths` to pass those manifest paths (`--fs-old-manifests-path`, `--fs-new-manifests-path`) to the two repo paths in different states.
 - If you want to only apply on changes, use `--include-changes`.
 
 Check an example [script][bash-git-example] that prepares two manifests paths with the different revisions.
+
+### When to use Kubernetes provider?
+
+When you want Kahoy manage the latest state for you instead of you managing the latest state (e.g: Using Git history).
+
+This will make an easy and reliable way of managing the state.
 
 ### Env vars as options
 
@@ -499,7 +537,7 @@ You can use environment vars as options using `KAHOY_XXXX_XXXX`, cli args have p
 
 - `--debug`: `KAHOY_DEBUG`
 - `--kube-context`: `KAHOY_KUBE_CONTEXT`
-- `--mode`: `KAHOY_MODE`
+- `--provider`: `KAHOY_PROVIDER`
 - `--fs-include`: `KAHOY_FS_INCLUDE`
 - ...
 
@@ -516,14 +554,14 @@ Encrypted secrets can't be understood by Kahoy, there are different solutions:
 - Ignore encrypted files and apply them separately.
   - Invoke Kahoy ignoring them using `--fs-exclude`.
   - Decrypt the secrets.
-  - Apply them using Kahoy with `--mode=paths` and `--fs-include` option.
+  - Apply them using Kahoy with `--provider=paths` and `--fs-include` option.
 - Move to a different solution where git repository doesn't have encrypted secrets (webhooks, controllers...).
 
 ### Non resource YAMLs
 
 Kahoy will try loading all yamls as resources, if it fails, Kahoy will fail, this can be a problem when you have yamls that are not Kubernetes resources.
 
-Use `--fs-exclude`, it works with `paths` and `git` modes.
+Use `--fs-exclude`, it works with `paths` and `git` providers.
 
 ### Ignore a resource
 
@@ -633,8 +671,8 @@ Kahoy can give a report at the end of the execution with the information of the 
 
 This is very flexible and powerful because it gives the ability to plug new apps after Kahoy execution e.g:
 
-- Push notifications (TODO(slok): Set example link).
-- Wait for resources be available (TODO(slok): Set example link).
+- Push notifications
+- Wait for resources be available: [Example][wait-example].
 - Push metrics.
 - Execute sanity checks
 - ...
@@ -712,6 +750,7 @@ Check [CONTRIBUTING.md](CONTRIBUTING.md) file.
 [kubectl]: https://kubernetes.io/docs/reference/kubectl/overview/
 [serverside-apply]: https://kubernetes.io/blog/2020/04/01/kubernetes-1.18-feature-server-side-apply-beta-2/#what-is-server-side-apply
 [github-actions-example]: https://github.com/slok/kahoy-github-actions-example
+[wait-example]: https://github.com/slok/kahoy-app-deploy-example
 [bash-git-example]: https://gist.github.com/slok/3f37c2a0dd823d5b66db869a468109ce
 [kustomize-example]: https://github.com/slok/kahoy-kustomize-example
 [kubectl-delete-docs]: https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/#how-to-delete-objects
