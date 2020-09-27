@@ -359,11 +359,7 @@ kahoy apply \
 
 ### batch by priorities
 
-<<<<<<< Updated upstream
-Kahoy knows how to manage priorities. By default it will batch all the manifests with a default priority (`1000`), but maybe you want to deploy some groups first (e.g CRDs or the NS).
-=======
-Kahoy knows how to manage priorities between groups. By default it will batch all the manifests with a default priority (`1000`), but maybe you want to deploy some groups first (e.g CRDs or the NS.
->>>>>>> Stashed changes
+Kahoy knows how to manage priorities between groups. By default it will batch all the manifests with a default priority (`1000`), but maybe you want to deploy some groups first (e.g CRDs or the NS).
 
 Given this `kahoy.yml` on your repo root (or any other path and use `--config-file`), with the group options:
 
