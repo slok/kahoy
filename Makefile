@@ -69,6 +69,9 @@ gen: go-gen ## Generates all.
 deps:  ## Fixes the dependencies
 	@$(DOCKER_RUN_CMD) /bin/sh -c './scripts/deps.sh'
 
+ci-build: ## Builds the production binary in CI environment (without docker).
+	@$(BUILD_BINARY_CMD)
+
 .PHONY: ci-unit-test
 ci-test:  ## Runs unit test in CI environment (without docker).
 	@$(UNIT_TEST_CMD)
