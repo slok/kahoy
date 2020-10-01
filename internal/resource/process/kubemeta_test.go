@@ -152,6 +152,86 @@ func TestExcludeKubeTypeProcessor(t *testing.T) {
 	}
 }
 
+func TestIncludeNamespaceProcessor(t *testing.T) {
+	tests := map[string]struct {
+		regexes      []string
+		resources    []model.Resource
+		expResources []model.Resource
+		expErr       bool
+	}{
+		"No regexes should not filter anything.": {
+			regexes: []string{},
+			resources: []model.Resource{
+				newResource("v1", "Pod", "test-ns1", "test-name"),
+				newResource("v1", "Pod", "test-ns2", "test-name"),
+			},
+			expResources: []model.Resource{
+				newResource("v1", "Pod", "test-ns1", "test-name"),
+				newResource("v1", "Pod", "test-ns2", "test-name"),
+			},
+		},
+
+		"Matching regexes should keep resources and exclude non matching ones.": {
+			regexes: []string{
+				"test-ns*",
+			},
+			resources: []model.Resource{
+				newResource("v1", "Pod", "test-ns1", "test-name"),
+				newResource("v1", "Pod", "test-ns2", "test-name"),
+				newResource("v1", "Pod", "ns3", "test-name"),
+			},
+			expResources: []model.Resource{
+				newResource("v1", "Pod", "test-ns1", "test-name"),
+				newResource("v1", "Pod", "test-ns2", "test-name"),
+			},
+		},
+
+		"If no resources match given regex no resources are returned.": {
+			regexes: []string{
+				"test-ns*",
+			},
+			resources: []model.Resource{
+				newResource("v1", "Pod", "ns1", "test-name"),
+				newResource("v1", "Pod", "ns2", "test-name"),
+				newResource("v1", "Pod", "ns3", "test-name"),
+			},
+			expResources: []model.Resource{},
+		},
+
+		"If all resources match regexes, all resources are returned.": {
+			regexes: []string{
+				"ns1",
+				"ns2",
+			},
+			resources: []model.Resource{
+				newResource("v1", "Pod", "ns1", "test-name"),
+				newResource("v1", "Pod", "ns2", "test-name"),
+			},
+			expResources: []model.Resource{
+				newResource("v1", "Pod", "ns1", "test-name"),
+				newResource("v1", "Pod", "ns2", "test-name"),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			proc, err := process.NewIncludeNamespaceProcessor(test.regexes, log.Noop)
+			require.NoError(err)
+			gotResources, err := proc.Process(context.TODO(), test.resources)
+
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expResources, gotResources)
+			}
+		})
+	}
+}
+
 func TestKubeLabelSelectorProcessor(t *testing.T) {
 	tests := map[string]struct {
 		selector     string

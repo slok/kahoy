@@ -64,6 +64,58 @@ func NewExcludeKubeTypeProcessor(kubeTypeRegex []string, logger log.Logger) (Res
 	}), nil
 }
 
+// NewIncludeNamespaceProcessor returns a new Resource processor that will
+// remove resources that are not present in a given list of namespaces. if the
+// list of namespaces is empty then all resources remain.
+func NewIncludeNamespaceProcessor(includeNamespaceRegex []string, logger log.Logger) (ResourceProcessor, error) {
+	logger = logger.WithValues(log.Kv{"app-svc": "process.IncludeNamespaceProcessor"})
+
+	compiledRegex := make([]*regexp.Regexp, 0, len(includeNamespaceRegex))
+	for _, r := range includeNamespaceRegex {
+		if r == "" {
+			continue
+		}
+		cr, err := regexp.Compile(r)
+		if err != nil {
+			return nil, fmt.Errorf("invalid regex %q: %w", r, err)
+		}
+		compiledRegex = append(compiledRegex, cr)
+	}
+
+	return ResourceProcessorFunc(func(ctx context.Context, resources []model.Resource) ([]model.Resource, error) {
+
+		// If there are no regex, there is nothing to do and we return
+		// all resources
+		if len(compiledRegex) == 0 {
+			return resources, nil
+		}
+
+		newRes := []model.Resource{}
+
+		for _, r := range resources {
+			namespace := r.K8sObject.GetNamespace()
+
+			// Check if any of the regexes match, if they match,
+			// then include them.
+			match := false
+			for _, regex := range compiledRegex {
+				if regex.MatchString(namespace) {
+					match = true
+					break
+				}
+			}
+			if !match {
+				resourceLogger(logger, r).Debugf("resource ignored")
+				continue
+			}
+
+			newRes = append(newRes, r)
+		}
+
+		return newRes, nil
+	}), nil
+}
+
 // NewKubeLabelSelectorProcessor returns a new Resource processor that will exclude (remove)
 // from the received resources, the ones that don't match with the received Kubernetes
 // label selector.

@@ -344,7 +344,12 @@ func splitPlan(statePlan []plan.State) (apply, delete []model.Resource, err erro
 func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceprocess.ResourceProcessor, error) {
 	exclKubeTypeProc, err := resourceprocess.NewExcludeKubeTypeProcessor(cmdConfig.Apply.ExcludeKubeTypeResources, logger)
 	if err != nil {
-		return nil, fmt.Errorf("could not create Kubernetes resorce type exclude processor: %w", err)
+		return nil, fmt.Errorf("could not create Kubernetes resource type exclude processor: %w", err)
+	}
+
+	incNamespacesProc, err := resourceprocess.NewIncludeNamespaceProcessor(cmdConfig.Apply.IncludeNamespaces, logger)
+	if err != nil {
+		return nil, fmt.Errorf("could not create Kubernetes resource namespace include processor: %w", err)
 	}
 
 	includeLabelProc, err := resourceprocess.NewKubeLabelSelectorProcessor(cmdConfig.Apply.KubeLabelSelector, logger)
@@ -359,6 +364,7 @@ func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceproce
 
 	resProc := resourceprocess.NewResourceProcessorChain(
 		exclKubeTypeProc,
+		incNamespacesProc,
 		includeLabelProc,
 		includeAnnotationProc,
 	)
