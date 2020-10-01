@@ -30,15 +30,35 @@ jobs:
   integration-test:
     name: Integration test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        kubernetes: [1.18.8, 1.19.1]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2-beta
         with:
           go-version: 1.15
       - name: Execute tests
+        env:
+          KIND_VERSION: v0.9.0
         run: |
+          # Get dependencies.
+          echo "Getting dependencies..."
+          curl -Lo kind https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64 && chmod +x kind && sudo mv kind /usr/local/bin/
+          curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v${{ matrix.kubernetes }}/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+
+          # Start cluster.
+          echo "Starting ${{ matrix.kubernetes }} Kubernetes cluster..."
+          kind create cluster --image kindest/node:v${{ matrix.kubernetes }}
+
+          # Build binary
+          echo "Building Kahoy binary..."
           make ci-build
-          KAHOY_INTEGRATION_BINARY=${PWD}/bin/kahoy make ci-integration
+          sudo mv ./bin/kahoy /usr/local/bin/
+
+          # Execute integration tests
+          echo "Executing integration tests..."
+          make ci-integration
 
   rolling-release-image:
     # Only on master.
