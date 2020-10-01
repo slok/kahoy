@@ -6,7 +6,15 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
+
+	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 const (
@@ -32,10 +40,14 @@ func (c *Config) defaults() error {
 		return fmt.Errorf("kahoy binary missing in %q: %w", c.Binary, err)
 	}
 
+	if c.KubeConfig == "" {
+		c.KubeConfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
+	}
+
 	return nil
 }
 
-// GetIntegrationConfig returns the configuration of the
+// GetIntegrationConfig returns the configuration of the integration tests environment.
 func GetIntegrationConfig(ctx context.Context) (*Config, error) {
 	c := &Config{
 		Binary:      os.Getenv(envKahoyBin),
@@ -49,6 +61,61 @@ func GetIntegrationConfig(ctx context.Context) (*Config, error) {
 	}
 
 	return c, nil
+}
+
+// NewKubernetesClient returns a new client.
+func NewKubernetesClient(ctx context.Context, config Config) (kubernetes.Interface, error) {
+	kConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{
+			ExplicitPath: config.KubeConfig,
+		},
+		&clientcmd.ConfigOverrides{
+			CurrentContext: config.KubeContext,
+			Timeout:        "3s",
+		},
+	).ClientConfig()
+
+	if err != nil {
+		return nil, fmt.Errorf("could not load Kubernetes configuration: %w", err)
+	}
+
+	cli, err := kubernetes.NewForConfig(kConfig)
+	if err != nil {
+		return nil, fmt.Errorf("could not create client-go kubernetes client: %w", err)
+	}
+
+	return cli, nil
+}
+
+// CleanTestsNamespace knows how to clean test namespace.
+func CleanTestsNamespace(ctx context.Context, cli kubernetes.Interface) error {
+	const integrationTestsNamespace = "kahoy-integration-test"
+
+	err := cli.CoreV1().Namespaces().Delete(context.TODO(), integrationTestsNamespace, metav1.DeleteOptions{})
+	if err != nil && !kubeerrors.IsNotFound(err) {
+		return err
+	}
+
+	// Wait.
+	ticker := time.NewTicker(200 * time.Millisecond)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	for {
+		select {
+		case <-ticker.C:
+		case <-ctx.Done():
+			return fmt.Errorf("context cancelled")
+		}
+
+		// Check if deleted.
+		_, err := cli.CoreV1().Namespaces().Get(context.TODO(), integrationTestsNamespace, metav1.GetOptions{})
+		if err != nil && kubeerrors.IsNotFound(err) {
+			break
+		}
+	}
+
+	return nil
 }
 
 // RunKahoy executes kahoy command.
