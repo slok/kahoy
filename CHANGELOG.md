@@ -20,6 +20,7 @@
 - Optional `--auto-approve` to disable the confirmation prompt.
 - Optional `--create-namespace` on regular and diff modes that will create missing namespaces of applied resources.
 - Kubernetes provider.
+- Optional `---include-namespace` to only apply resources of given namespaces.
 
 ### Changed
 
