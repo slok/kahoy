@@ -17,11 +17,8 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-const (
-	envKahoyBin         = "KAHOY_INTEGRATION_BINARY"
-	envKahoyKubeContext = "KAHOY_INTEGRATION_KUBE_CONTEXT"
-	envKahoyKubeConfig  = "KAHOY_INTEGRATION_KUBE_CONFIG"
-)
+// IntegrationTestsNamespace is the namespace where the tests are being executed
+const IntegrationTestsNamespace = "kahoy-integration-test"
 
 // Config is the configuration for integration tests.
 type Config struct {
@@ -49,6 +46,12 @@ func (c *Config) defaults() error {
 
 // GetIntegrationConfig returns the configuration of the integration tests environment.
 func GetIntegrationConfig(ctx context.Context) (*Config, error) {
+	const (
+		envKahoyBin         = "KAHOY_INTEGRATION_BINARY"
+		envKahoyKubeContext = "KAHOY_INTEGRATION_KUBE_CONTEXT"
+		envKahoyKubeConfig  = "KAHOY_INTEGRATION_KUBE_CONFIG"
+	)
+
 	c := &Config{
 		Binary:      os.Getenv(envKahoyBin),
 		KubeConfig:  os.Getenv(envKahoyKubeContext),
@@ -89,27 +92,25 @@ func NewKubernetesClient(ctx context.Context, config Config) (kubernetes.Interfa
 
 // CleanTestsNamespace knows how to clean test namespace.
 func CleanTestsNamespace(ctx context.Context, cli kubernetes.Interface) error {
-	const integrationTestsNamespace = "kahoy-integration-test"
-
-	err := cli.CoreV1().Namespaces().Delete(context.TODO(), integrationTestsNamespace, metav1.DeleteOptions{})
+	err := cli.CoreV1().Namespaces().Delete(context.TODO(), IntegrationTestsNamespace, metav1.DeleteOptions{})
 	if err != nil && !kubeerrors.IsNotFound(err) {
 		return err
 	}
 
 	// Wait.
 	ticker := time.NewTicker(200 * time.Millisecond)
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	for {
 		select {
 		case <-ticker.C:
 		case <-ctx.Done():
-			return fmt.Errorf("context cancelled")
+			return fmt.Errorf("context cancelled while waiting for namespace cleanup")
 		}
 
 		// Check if deleted.
-		_, err := cli.CoreV1().Namespaces().Get(context.TODO(), integrationTestsNamespace, metav1.GetOptions{})
+		_, err := cli.CoreV1().Namespaces().Get(context.TODO(), IntegrationTestsNamespace, metav1.GetOptions{})
 		if err != nil && kubeerrors.IsNotFound(err) {
 			break
 		}
