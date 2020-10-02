@@ -85,7 +85,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("kube-context", "Kubernetes configuration context.").StringVar(&c.Apply.KubeContext)
 	apply.Flag("diff", "Diff instead of applying changes.").BoolVar(&c.Apply.DiffMode)
 	apply.Flag("dry-run", "Execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
-	apply.Flag("provider", "Selects which provider to use to load the old and new states. Git needs to be executed from a git repository.").Default(ApplyProviderGit).EnumVar(&c.Apply.Provider, ApplyProviderPaths, ApplyProviderGit, ApplyProviderK8s)
+	apply.Flag("provider", "Selects which provider to use to load the old and new states. Git needs to be executed from a git repository.").Default(ApplyProviderK8s).EnumVar(&c.Apply.Provider, ApplyProviderPaths, ApplyProviderGit, ApplyProviderK8s)
 	apply.Flag("fs-old-manifests-path", "Kubernetes current manifests path.").Short('o').StringVar(&c.Apply.ManifestsPathOld)
 	apply.Flag("fs-new-manifests-path", "Kubernetes expected manifests path.").Short('n').Required().StringVar(&c.Apply.ManifestsPathNew)
 	apply.Flag("fs-exclude", "Regex to ignore manifest files and dirs. Can be repeated.").Short('e').StringsVar(&c.Apply.ExcludeManifests)
