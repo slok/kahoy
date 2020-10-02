@@ -65,13 +65,11 @@ Kahoy will adapt to your needs and not the other way around, its been designed a
 
 ## :key: Getting started
 
-A simple example that applies (and deletes if necessary) what changed between the states `HEAD` (new) and `2cd4a1c1a7921ec593432cfdb9307dc8d6584862` (old) git revisions.
-
 ```bash
-kahoy apply -n "./manifests" -c "2cd4a1c1a7921ec593432cfdb9307dc8d6584862"
+kahoy apply --kube-provider-id "ci" -n "./manifests"
 ```
 
-And thats just one way of doing it, for more advanced ways of using this, check:
+Thats just one way of doing it, for more advanced ways of using Kahoy, check:
 
 - `kahoy apply --help`.
 - [Use cases](<(#bulb-use-cases)>) section.
@@ -246,6 +244,15 @@ With this state storage, it will load the `old` manifest state from Kubernetes a
 
 This provider gives reliable and easy management, but is slower (Needs to get the state from the cluster) and requires space on the cluster to store the state (however the stored resources are compressed).
 
+Example of usage:
+
+```bash
+kahoy apply \
+  --provider "kubernetes" \
+  --kube-provider-id "ci" \
+  --fs-new-manifests-path "./manifests"
+```
+
 #### Check kahoy state
 
 If you want to check all the resource states, you can do (Check `Secret` annotations for more information):
@@ -278,6 +285,15 @@ Given 2 manifest file system paths, plans what needs to be applied against a clu
 
 This one is the most generic one and can be used when you want to manage almost everything, e.g previous Kahoy execution, prepare using bash scripts, kustomize, secrets...
 
+Example of usage:
+
+```bash
+kahoy apply \
+  --provider "paths" \
+  --fs-old-manifests-path "./old-manifests" \
+  --fs-new-manifests-path "./manifests"
+```
+
 ### `git`
 
 This provider understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
@@ -285,6 +301,15 @@ This provider understands git and can read states from a git repository, these 2
 Using `before-commit` will make a plan based on the manifests of `HEAD` (new state) and the commit provided (old state). Normally used when executed from `master/main` branch.
 
 Instead of providing the `before-commit`, by default will get the base parent of the current branch `HEAD` (new state) against the default branch (old state), normally `master/main`). This provider is used when you are executing kahoy from a branch in a pull request.
+
+Example of usage:
+
+```bash
+kahoy apply \
+  --provider "git" \
+  --git-before-commit-sha "b060762ef93bbe2d03e108d1788eb3505df519a3" \
+  --fs-new-manifests-path "./manifests"
+```
 
 ## :bulb: Use cases
 
