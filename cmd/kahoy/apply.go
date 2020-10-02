@@ -55,7 +55,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	var (
 		oldResourceRepo, newResourceRepo storage.ResourceRepository
 		newGroupRepo                     storage.GroupRepository
-		stateRepo                        storage.StateRepository
+		stateRepo                        storage.StateRepository = storage.NewNoopStateRepository(logger)
 	)
 	switch cmdConfig.Apply.Provider {
 	case ApplyProviderGit:
