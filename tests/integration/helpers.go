@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-// IntegrationTestsNamespace is the namespace where the tests are being executed
+// IntegrationTestsNamespace is the namespace where the tests are being executed.
 const IntegrationTestsNamespace = "kahoy-integration-test"
 
 // Config is the configuration for integration tests.
@@ -119,10 +120,15 @@ func CleanTestsNamespace(ctx context.Context, cli kubernetes.Interface) error {
 	return nil
 }
 
+var multiSpaceRegex = regexp.MustCompile(" +")
+
 // RunKahoy executes kahoy command.
 func RunKahoy(ctx context.Context, config Config, kahoyCmd string) (stdout, stderr []byte, err error) {
 	// Sanitize command.
 	kahoyCmd = strings.TrimSpace(kahoyCmd)
+	kahoyCmd = multiSpaceRegex.ReplaceAllString(kahoyCmd, " ")
+
+	// Split into args.
 	args := strings.Split(kahoyCmd, " ")
 	if args[0] == "kahoy" || args[0] == config.Binary {
 		args = args[1:]

@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func TestKahoyApplyPaths(t *testing.T) {
+func TestKahoyApplyKubernetes(t *testing.T) {
 	tests := map[string]struct {
 		preCmds        []string // Will be executed before cmd.
 		cmd            string
@@ -23,7 +23,7 @@ func TestKahoyApplyPaths(t *testing.T) {
 		expErr         bool
 	}{
 		"Applying resources should apply them on the cluster": {
-			cmd: `kahoy apply --provider=paths --create-namespace -o /dev/null -n testdata/apply-all`,
+			cmd: `kahoy apply --provider=kubernetes --create-namespace -n testdata/apply-all --kube-provider-id=kahoy-test --kube-provider-namespace=kahoy-integration-test`,
 			exp: func(t *testing.T, cli kubernetes.Interface) {
 				// Check resources exists on the cluster.
 				expExists := []string{"app1", "app2", "app3", "app4", "app5"}
@@ -38,9 +38,9 @@ func TestKahoyApplyPaths(t *testing.T) {
 		"Having resources to delete and report enabled, it should delete them correctly from the cluster and return the report.": {
 			preCmds: []string{
 				// Populate the cluster with all resources.
-				`kahoy apply --provider=paths --create-namespace -o /dev/null -n testdata/apply-all`,
+				`kahoy apply --provider=kubernetes --create-namespace -n testdata/apply-all --kube-provider-id=kahoy-test --kube-provider-namespace=kahoy-integration-test`,
 			},
-			cmd: `kahoy apply --provider=paths --create-namespace -o testdata/apply-all -n testdata/apply-some --report-path=-`,
+			cmd: `kahoy apply --provider=kubernetes --create-namespace -n testdata/apply-some --report-path=- --kube-provider-id=kahoy-test --kube-provider-namespace=kahoy-integration-test`,
 			exp: func(t *testing.T, cli kubernetes.Interface) {
 				assert := assert.New(t)
 
@@ -72,9 +72,9 @@ func TestKahoyApplyPaths(t *testing.T) {
 		"Having only changes, it should apply only changes correctly.": {
 			preCmds: []string{
 				// Populate the cluster with all resources.
-				`kahoy apply --provider=paths --create-namespace -o /dev/null -n testdata/apply-all`,
+				`kahoy apply --provider=kubernetes --create-namespace -n testdata/apply-all --kube-provider-id=kahoy-test --kube-provider-namespace=kahoy-integration-test`,
 			},
-			cmd: `kahoy apply --provider=paths --create-namespace -o testdata/apply-all -n testdata/apply-some-changes --report-path=- --include-changes`,
+			cmd: `kahoy apply --provider=kubernetes --create-namespace -n testdata/apply-some-changes --report-path=- --include-changes --kube-provider-id=kahoy-test --kube-provider-namespace=kahoy-integration-test`,
 			exp: func(t *testing.T, cli kubernetes.Interface) {
 				assert := assert.New(t)
 
