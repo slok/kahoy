@@ -1,6 +1,8 @@
 # Changelog
 
-## [unreleased]
+## Unreleased
+
+## [v2.0.0] - 2020-10-05
 
 ### Breaking
 
@@ -59,5 +61,6 @@
 - No color mode.
 - Debug mode.
 
-[unreleased]: https://github.com/slok/kahoy/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/slok/kahoy/compare/v2.0.0...HEAD
+[v2.0.0]: https://github.com/slok/kahoy/compare/v1.0.0...v2.0.0
 [v1.0.0]: https://github.com/slok/kahoy/releases/tag/v1.0.0
