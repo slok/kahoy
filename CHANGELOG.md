@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Documentation base.
+
 ## [v2.0.0] - 2020-10-05
 
 ### Breaking

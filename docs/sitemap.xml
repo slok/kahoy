@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>https://docs.kahoy.dev/categories/</loc>
+  </url>
+  
+  <url>
+    <loc>https://docs.kahoy.dev/features/</loc>
+  </url>
+  
+  <url>
+    <loc>https://docs.kahoy.dev/provider/git/</loc>
+  </url>
+  
+  <url>
+    <loc>https://docs.kahoy.dev/</loc>
+  </url>
+  
+  <url>
+    <loc>https://docs.kahoy.dev/provider/kubernetes/</loc>
+  </url>
+  
+  <url>
+    <loc>https://docs.kahoy.dev/provider/paths/</loc>
+  </url>
+  
+  <url>
+    <loc>https://docs.kahoy.dev/provider/</loc>
+  </url>
+  
+  <url>
+    <loc>https://docs.kahoy.dev/tags/</loc>
+  </url>
+  
+</urlset>

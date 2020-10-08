@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="docs/img/logo.png" width="25%" align="center" alt="kahoy">
+    <img src="docs-src/static/img/logo.png" width="25%" align="center" alt="kahoy">
 </p>
 
 # Kahoy
@@ -10,7 +10,7 @@
 
 Maintain Kubernetes resources in sync easily.
 
-![kahoy run example](docs/img/kahoy.gif)
+![kahoy run example](docs-src/static/img/kahoy.gif)
 
 ---
 
@@ -59,22 +59,7 @@ Kahoy will adapt to your needs and not the other way around, its been designed a
 
 ## :shipit: Install
 
-- Docker: Ready image with all the required tools (e.g Kubectl) `docker pull slok/kahoy`.
-- Releases: Go to [releases](https://github.com/slok/kahoy/releases).
-- Build from source: `git clone git@github.com:slok/kahoy.git && cd ./kahoy && make build`.
-
 ## :key: Getting started
-
-```bash
-kahoy apply --kube-provider-id "ci" -n "./manifests"
-```
-
-Thats just one way of doing it, for more advanced ways of using Kahoy, check:
-
-- `kahoy apply --help`.
-- [Use cases](<(#bulb-use-cases)>) section.
-- [Github actions example][github-actions-example].
-- [Kustomize example][kustomize-example].
 
 ## :mag: Scope
 
@@ -185,7 +170,7 @@ These would be the group IDs:
 
 ## :wrench: How does it work
 
-![high level architecture](docs/img/kahoy-high-level.png)
+![high level architecture](docs-src/static/img/kahoy-high-level.png)
 
 - Load manifests into K8s resources.
   - Filter manifest at file level if required.
@@ -210,13 +195,13 @@ These would be the group IDs:
 
 Will plan what resources need to exist on the cluster and what needs to be removed (client-side, no cluster required).
 
-![dry run](docs/img/dry-run.png)
+![dry run](docs-src/static/img/dry-run.png)
 
 ### Diff
 
 Will get a diff against the server of the planned resources (server-side, cluster required).
 
-![diff](docs/img/diff.png)
+![diff](docs-src/static/img/diff.png)
 
 ### Default (Apply)
 

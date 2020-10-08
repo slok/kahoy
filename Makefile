@@ -69,6 +69,14 @@ gen: go-gen ## Generates all.
 deps:  ## Fixes the dependencies
 	@$(DOCKER_RUN_CMD) /bin/sh -c './scripts/deps.sh'
 
+.PHONY: docs-serve
+docs-serve: ## Runs a server with the documentation.
+	./scripts/docs/run.sh
+
+.PHONY: docs-gen
+docs-gen: ## Runs documentation generation.
+	./scripts/docs/generate.sh
+
 ci-build: ## Builds the production binary in CI environment (without docker).
 	@$(BUILD_BINARY_CMD)
 

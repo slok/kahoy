@@ -1,0 +1,26 @@
+baseURL: "https://docs.kahoy.dev/"
+languageCode: "en-us"
+title: "Kahoy documentation"
+publishDir: "../docs"
+theme: "hugo-geekdoc"
+
+# Disable so the version of hugo is not set on the html and generating the docs with
+# different versions always fail because of the metadata.
+disableHugoGeneratorInject: true
+
+# Geekdoc required configuration.
+pygmentsUseClasses: true
+pygmentsCodeFences: true
+disablePathToLower: true
+
+# Needed for mermaid shortcodes.
+markup:
+  markup.goldmark.renderer:
+    # Needed for mermaid shortcode.
+    unsafe: true
+  markup.tableOfContents:
+    startLevel: 1
+    endLevel: 9
+
+params:
+  geekdocLogo: "img/logo.png"
