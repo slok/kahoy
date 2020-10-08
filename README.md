@@ -59,7 +59,22 @@ Kahoy will adapt to your needs and not the other way around, its been designed a
 
 ## :shipit: Install
 
+- Docker: Ready image with all the required tools (e.g Kubectl) `docker pull slok/kahoy`.
+- Releases: Go to [releases](https://github.com/slok/kahoy/releases).
+- Build from source: `git clone git@github.com:slok/kahoy.git && cd ./kahoy && make build`.
+
 ## :key: Getting started
+
+```bash
+kahoy apply --kube-provider-id "ci" -n "./manifests"
+```
+
+Thats just one way of doing it, for more advanced ways of using Kahoy, check:
+
+- `kahoy apply --help`.
+- [Use cases](<(#bulb-use-cases)>) section.
+- [Github actions example][github-actions-example].
+- [Kustomize example][kustomize-example].
 
 ## :mag: Scope
 
@@ -146,18 +161,18 @@ Given this tree and our manifests root in `./manifests`
 ```bash
 ./manifests/
 ├── alertgram
-│   ├── alertgram-secret.yaml
-│   └── alertgram.yaml
+│   ├── alertgram-secret.yaml
+│   └── alertgram.yaml
 ├── bilrost
-│   └── bilrost.yaml
+│   └── bilrost.yaml
 ├── root-stuff.yaml
 └── grafana
-    ├── config.yaml
-    ├── grafana-dashboards
-    │   ├── grafana-dashboards-kubernetes.yaml
-    │   └── grafana-dashboards-provision.yaml
-    ├── grafana.yaml
-    └── ingress.yaml
+    ├── config.yaml
+    ├── grafana-dashboards
+    │   ├── grafana-dashboards-kubernetes.yaml
+    │   └── grafana-dashboards-provision.yaml
+    ├── grafana.yaml
+    └── ingress.yaml
 ```
 
 These would be the group IDs:
