@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="docs/img/logo.png" width="25%" align="center" alt="kahoy">
+    <img src="docs-src/static/img/logo.png" width="25%" align="center" alt="kahoy">
 </p>
 
 # Kahoy
@@ -10,7 +10,7 @@
 
 Maintain Kubernetes resources in sync easily.
 
-![kahoy run example](docs/img/kahoy.gif)
+![kahoy run example](docs-src/static/img/kahoy.gif)
 
 ---
 
@@ -161,18 +161,18 @@ Given this tree and our manifests root in `./manifests`
 ```bash
 ./manifests/
 ├── alertgram
-│   ├── alertgram-secret.yaml
-│   └── alertgram.yaml
+│   ├── alertgram-secret.yaml
+│   └── alertgram.yaml
 ├── bilrost
-│   └── bilrost.yaml
+│   └── bilrost.yaml
 ├── root-stuff.yaml
 └── grafana
-    ├── config.yaml
-    ├── grafana-dashboards
-    │   ├── grafana-dashboards-kubernetes.yaml
-    │   └── grafana-dashboards-provision.yaml
-    ├── grafana.yaml
-    └── ingress.yaml
+    ├── config.yaml
+    ├── grafana-dashboards
+    │   ├── grafana-dashboards-kubernetes.yaml
+    │   └── grafana-dashboards-provision.yaml
+    ├── grafana.yaml
+    └── ingress.yaml
 ```
 
 These would be the group IDs:
@@ -185,7 +185,7 @@ These would be the group IDs:
 
 ## :wrench: How does it work
 
-![high level architecture](docs/img/kahoy-high-level.png)
+![high level architecture](docs-src/static/img/kahoy-high-level.png)
 
 - Load manifests into K8s resources.
   - Filter manifest at file level if required.
@@ -210,13 +210,13 @@ These would be the group IDs:
 
 Will plan what resources need to exist on the cluster and what needs to be removed (client-side, no cluster required).
 
-![dry run](docs/img/dry-run.png)
+![dry run](docs-src/static/img/dry-run.png)
 
 ### Diff
 
 Will get a diff against the server of the planned resources (server-side, cluster required).
 
-![diff](docs/img/diff.png)
+![diff](docs-src/static/img/diff.png)
 
 ### Default (Apply)
 
