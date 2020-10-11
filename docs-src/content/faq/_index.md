@@ -1,6 +1,6 @@
 ---
 title: "F.A.Q"
-weight: 999
+weight: 900
 ---
 
 {{< toc >}}

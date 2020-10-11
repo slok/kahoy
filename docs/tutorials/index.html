@@ -4,15 +4,15 @@
 <head>
     <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Use cases">
+<meta name="description" content="Tutorials">
 
-<title>Use cases | Kahoy documentation</title>
+<title>Tutorials | Kahoy documentation</title>
 
 <link rel="icon" href="/favicon/favicon-32x32.png" type="image/x-icon">
 <link rel="stylesheet" href="/main.min.css" media="screen">
 <link rel="stylesheet" href="/custom.css" media="screen">
 
-<link rel="alternate" type="application/rss+xml" href="https://docs.kahoy.dev/use-cases/index.xml" title="Kahoy documentation" />
+<link rel="alternate" type="application/rss+xml" href="https://docs.kahoy.dev/tutorials/index.xml" title="Kahoy documentation" />
 <!--Made with Geekdoc theme https://github.com/xoxys/hugo-geekdoc-->
 
 </head>
@@ -398,7 +398,7 @@
             <li>
             
                 <span class="flex">
-                    <a href="/use-cases/" class="gdoc-nav__entry is-active">
+                    <a href="/use-cases/" class="gdoc-nav__entry ">
                         Use cases
                     </a>
                 </span>
@@ -415,7 +415,7 @@
             <li>
             
                 <span class="flex">
-                    <a href="/tutorials/" class="gdoc-nav__entry ">
+                    <a href="/tutorials/" class="gdoc-nav__entry is-active">
                         Tutorials
                     </a>
                 </span>
@@ -662,7 +662,7 @@
         
     
     
-        <a href='/'>Kahoy documentation</a> / Use cases
+        <a href='/'>Kahoy documentation</a> / Tutorials
     
 
     
@@ -676,7 +676,7 @@
 </div>
 
     <article class="gdoc-markdown">
-        <h1>Use cases</h1>
+        <h1>Tutorials</h1>
         
 
 
@@ -684,98 +684,7 @@
     
 
 
-
-
-
-  <div class="gdoc-toc gdoc-toc__level--6"><nav id="TableOfContents">
-  <ul>
-    <li><a href="#dry-run-on-pull-requests">Dry run on pull requests</a></li>
-    <li><a href="#diff-for-ci-pull-requests">Diff for CI Pull requests</a></li>
-    <li><a href="#deploying-on-master-branch-when-pr-merged">Deploying on master branch (when PR merged)</a></li>
-    <li><a href="#schedule-a-full-sync">Schedule a full sync</a></li>
-    <li><a href="#exclude-some-manifest-files-eg-encrypted-secrets">Exclude some manifest files (e.g encrypted secrets)</a></li>
-    <li><a href="#delete-all">Delete all</a></li>
-    <li><a href="#deploy-all">Deploy all</a></li>
-    <li><a href="#deploy-only-some-manifests">Deploy only some manifests</a></li>
-    <li><a href="#multiple-envs">Multiple envs</a></li>
-    <li><a href="#batch-by-priorities">batch by priorities</a></li>
-    <li><a href="#kustomize-and-kahoy">Kustomize and Kahoy</a></li>
-  </ul>
-</nav><hr></div>
-
-
-<div class="gdoc-page__anchorwrap"><h2 id="dry-run-on-pull-requests">Dry run on pull requests<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#dry-run-on-pull-requests" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Dry run on pull requests" href="#dry-run-on-pull-requests"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>When someone pushes a branch different from master, would be nice to execute Dry run on the changes (partial sync) of that branch.</p>
-<p>Having our manifest in a git repository in <code>./manifests</code> and being our default branch <code>master</code>, we do this from a different branch.</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>    --dry-run <span class="se">\
-</span><span class="se"></span>    --include-changes <span class="se">\
-</span><span class="se"></span>    --fs-new-manifests-path <span class="s2">&#34;./manifests&#34;</span>
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="diff-for-ci-pull-requests">Diff for CI Pull requests<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#diff-for-ci-pull-requests" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Diff for CI Pull requests" href="#diff-for-ci-pull-requests"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>Same as above but with <code>--diff</code> instead of <code>--dry-run</code></p>
-<div class="gdoc-page__anchorwrap"><h2 id="deploying-on-master-branch-when-pr-merged">Deploying on master branch (when PR merged)<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#deploying-on-master-branch-when-pr-merged" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Deploying on master branch (when PR merged)" href="#deploying-on-master-branch-when-pr-merged"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>Kahoy needs to compare our <code>HEAD</code> against the previous applied state, that&rsquo;s why we need the <code>before-commit</code>.
-In this example, we use <code>--git-before-commit-sha</code> flag. Normally this variable can be obtained in the executing CI:</p>
-<p>Github actions uses <a href="https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context">Github context</a>, example:</p>
-<div class="highlight"><pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="nt">env</span><span class="p">:</span><span class="w">
-</span><span class="w">  </span><span class="nt">GIT_BEFORE_COMMIT_SHA</span><span class="p">:</span><span class="w"> </span><span class="l">${{ github.event.before }}</span><span class="w">
-</span></code></pre></div><p>So&hellip; in Kahoy:</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>    --include-changes <span class="se">\
-</span><span class="se"></span>    --git-before-commit-sha <span class="s2">&#34;</span><span class="si">${</span><span class="nv">GIT_BEFORE_COMMIT_SHA</span><span class="si">}</span><span class="s2">&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-new-manifests-path <span class="s2">&#34;./manifests&#34;</span>
-</code></pre></div><p>Note: For Gitlab CI, this uses <a href="https://docs.gitlab.com/ee/ci/variables/predefined_variables.html">env vars</a> (in <code>CI_COMMIT_BEFORE_SHA</code>).</p>
-<div class="gdoc-page__anchorwrap"><h2 id="schedule-a-full-sync">Schedule a full sync<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#schedule-a-full-sync" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Schedule a full sync" href="#schedule-a-full-sync"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>Check this <a href="https://github.com/slok/kahoy-github-actions-example">Github actions example</a> for more info.</p>
-<div class="gdoc-page__anchorwrap"><h2 id="exclude-some-manifest-files-eg-encrypted-secrets">Exclude some manifest files (e.g encrypted secrets)<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#exclude-some-manifest-files-eg-encrypted-secrets" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Exclude some manifest files (e.g encrypted secrets)" href="#exclude-some-manifest-files-eg-encrypted-secrets"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>If you have some files that you don&rsquo;t want to be managed by kahoy, you can ignore them at file system level using <code>--fs-exclude</code>. Can be repeated.</p>
-<p>E.g: exclude any file with the name secret on it.</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>    --fs-new-manifests-path <span class="s2">&#34;./manifests&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-exclude <span class="s2">&#34;secret&#34;</span>
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="delete-all">Delete all<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#delete-all" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Delete all" href="#delete-all"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>Instead of using git, use the fs by using the <code>paths</code> provider. Use the new state as <code>dev/null</code>.</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>    --provider<span class="o">=</span><span class="s2">&#34;paths&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-old-manifests-path <span class="s2">&#34;./manifests&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-new-manifests-path <span class="s2">&#34;/dev/null&#34;</span>
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="deploy-all">Deploy all<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#deploy-all" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Deploy all" href="#deploy-all"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>Instead of using git, use the fs by using the <code>paths</code> provider. Use the old state as <code>dev/null</code>.</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>    --provider<span class="o">=</span><span class="s2">&#34;paths&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-old-manifests-path <span class="s2">&#34;/dev/null&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-new-manifests-path <span class="s2">&#34;./manifests&#34;</span>
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="deploy-only-some-manifests">Deploy only some manifests<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#deploy-only-some-manifests" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Deploy only some manifests" href="#deploy-only-some-manifests"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>You can use the file filtering option <code>--fs-include</code>, works with any provider (<code>git</code>, <code>paths</code>&hellip;)</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>    --fs-new-manifests-path <span class="s2">&#34;./manifests&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-include <span class="s2">&#34;./manifests/prometheus&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-include <span class="s2">&#34;./manifests/grafana&#34;</span>
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="multiple-envs">Multiple envs<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#multiple-envs" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Multiple envs" href="#multiple-envs"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>If you have multiple envs on the same repository, you can have them in different manifests root.</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>    --kube-context <span class="s2">&#34;env1&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-new-manifests-path <span class="s2">&#34;./manifests/env1&#34;</span>
-</code></pre></div><div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>    --kube-context <span class="s2">&#34;env2&#34;</span> <span class="se">\
-</span><span class="se"></span>    --fs-new-manifests-path <span class="s2">&#34;./manifests/env2&#34;</span>
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="batch-by-priorities">batch by priorities<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#batch-by-priorities" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor batch by priorities" href="#batch-by-priorities"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>Kahoy knows how to manage priorities between groups. By default it will batch all the manifests with a default priority (<code>1000</code>), but maybe you want to deploy some groups first (e.g CRDs or the NS).</p>
-<p>Given this <code>kahoy.yml</code> on your repo root (or any other path and use <code>--config-file</code>), with the group options:</p>
-<div class="highlight"><pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l">v1</span><span class="w">
-</span><span class="w">
-</span><span class="w"></span><span class="nt">groups</span><span class="p">:</span><span class="w">
-</span><span class="w">  </span>- <span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l">crd</span><span class="w">
-</span><span class="w">    </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="m">200</span><span class="w">
-</span><span class="w">
-</span><span class="w">  </span>- <span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l">ns</span><span class="w">
-</span><span class="w">    </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="m">100</span><span class="w">
-</span><span class="w">
-</span><span class="w">  </span>- <span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l">system/roles</span><span class="w">
-</span><span class="w">    </span><span class="nt">priority</span><span class="p">:</span><span class="w"> </span><span class="m">300</span><span class="w">
-</span></code></pre></div><p>it will make Kahoy apply first the <code>ns</code> group, then <code>crd</code> group, then <code>system/roles</code> group, and finally the rest.</p>
-<div class="gdoc-page__anchorwrap"><h2 id="kustomize-and-kahoy">Kustomize and Kahoy<a data-clipboard-text="https://docs.kahoy.dev/use-cases/#kustomize-and-kahoy" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Kustomize and Kahoy" href="#kustomize-and-kahoy"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>Check this <a href="https://github.com/slok/kahoy-kustomize-example">Kustomize example</a>.</p>
+<p>TODO</p>
 
 
     </article>

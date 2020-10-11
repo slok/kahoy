@@ -1,6 +1,6 @@
 ---
 title: "Use cases"
-weight: 950
+weight: 600
 ---
 
 {{< toc >}}
