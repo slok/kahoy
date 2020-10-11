@@ -3,4 +3,4 @@ title: "Contributing"
 weight: 810
 ---
 
-TODO
+The contributing information is in Github, check [CONTRIBUTING.md](https://github.com/slok/kahoy/blob/master/CONTRIBUTING.md) file
