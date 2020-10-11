@@ -3,4 +3,4 @@ title: "Community"
 weight: 800
 ---
 
-TODO
+Learn here about the development process and how you can contribute.
