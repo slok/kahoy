@@ -7,22 +7,69 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language><atom:link href="https://docs.kahoy.dev/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Git provider</title>
-      <link>https://docs.kahoy.dev/provider/git/</link>
+      <title>Features</title>
+      <link>https://docs.kahoy.dev/introduction/features/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://docs.kahoy.dev/provider/git/</guid>
-      <description>This provider understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
-Using before-commit will make a plan based on the manifests of HEAD (new state) and the commit provided (old state). Normally used when executed from master/main branch.
-Instead of providing the before-commit, by default will get the base parent of the current branch HEAD (new state) against the default branch (old state), normally master/main).</description>
+      <guid>https://docs.kahoy.dev/introduction/features/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Getting started</title>
+      <link>https://docs.kahoy.dev/introduction/getting-started/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/introduction/getting-started/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Installing Kahoy</title>
+      <link>https://docs.kahoy.dev/introduction/install/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/introduction/install/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Concepts</title>
+      <link>https://docs.kahoy.dev/topics/cocepts/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/cocepts/</guid>
+      <description>Resource TODO
+Group TODO
+State (provider) TODO</description>
+    </item>
+    
+    <item>
+      <title>How does it work</title>
+      <link>https://docs.kahoy.dev/topics/how-does-it-work/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/how-does-it-work/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Execution modes</title>
+      <link>https://docs.kahoy.dev/topics/modes/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/modes/</guid>
+      <description>Dry run TODO
+Diff TODO
+Default TODO</description>
     </item>
     
     <item>
       <title>Kubernetes provider</title>
-      <link>https://docs.kahoy.dev/provider/kubernetes/</link>
+      <link>https://docs.kahoy.dev/topics/provider/kubernetes/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://docs.kahoy.dev/provider/kubernetes/</guid>
+      <guid>https://docs.kahoy.dev/topics/provider/kubernetes/</guid>
       <description>Given an storage ID and a namespace, at the end of the execution it will store the executed state (applied and deleted resources).
 The ID is important because you can have different states for each Kahoy execution flows on the same cluster.
  Note: The state is stored with a Secret per existing resource. Be aware of object count quota
@@ -30,15 +77,154 @@ The ID is important because you can have different states for each Kahoy executi
     </item>
     
     <item>
-      <title>Paths provider</title>
-      <link>https://docs.kahoy.dev/provider/paths/</link>
+      <title>Git provider</title>
+      <link>https://docs.kahoy.dev/topics/provider/git/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://docs.kahoy.dev/provider/paths/</guid>
+      <guid>https://docs.kahoy.dev/topics/provider/git/</guid>
+      <description>This provider understands git and can read states from a git repository, these 2 states are based on 2 git revisions.
+Using before-commit will make a plan based on the manifests of HEAD (new state) and the commit provided (old state). Normally used when executed from master/main branch.
+Instead of providing the before-commit, by default will get the base parent of the current branch HEAD (new state) against the default branch (old state), normally master/main).</description>
+    </item>
+    
+    <item>
+      <title>Paths provider</title>
+      <link>https://docs.kahoy.dev/topics/provider/paths/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/provider/paths/</guid>
       <description>Given 2 manifest file system paths, plans what needs to be applied against a cluster, and what needs to be deleted.
 This one is the most generic one and can be used when you want to manage almost everything, e.g previous Kahoy execution, prepare using bash scripts, kustomize, secrets&amp;hellip;
 Example of usage:
 kahoy apply \  --provider &amp;#34;paths&amp;#34; \  --fs-old-manifests-path &amp;#34;./old-manifests&amp;#34; \  --fs-new-manifests-path &amp;#34;./manifests&amp;#34; </description>
+    </item>
+    
+    <item>
+      <title>Sync types</title>
+      <link>https://docs.kahoy.dev/topics/sync-types/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/sync-types/</guid>
+      <description>TODO
+Partial TODO
+Full TODO</description>
+    </item>
+    
+    <item>
+      <title>Batch and priorities</title>
+      <link>https://docs.kahoy.dev/topics/batch-priorities/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/batch-priorities/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Filtering resources</title>
+      <link>https://docs.kahoy.dev/topics/filtering/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/filtering/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Report</title>
+      <link>https://docs.kahoy.dev/topics/report/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/report/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Garbage collection</title>
+      <link>https://docs.kahoy.dev/topics/garbage-collection/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/garbage-collection/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Configuration file</title>
+      <link>https://docs.kahoy.dev/topics/configuration-file/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/configuration-file/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Contributing</title>
+      <link>https://docs.kahoy.dev/community/contributing/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/community/contributing/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>History of the project</title>
+      <link>https://docs.kahoy.dev/community/history/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/community/history/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Generic app based deployments</title>
+      <link>https://docs.kahoy.dev/tutorials/generic-apps-deployments/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/tutorials/generic-apps-deployments/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Gitops production ready flow</title>
+      <link>https://docs.kahoy.dev/tutorials/gitops-production-ready-flow/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/tutorials/gitops-production-ready-flow/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Multiple env deployments</title>
+      <link>https://docs.kahoy.dev/tutorials/multicluster-deployments/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/tutorials/multicluster-deployments/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Scaling Kahoy to 20k apps</title>
+      <link>https://docs.kahoy.dev/tutorials/scaling-20k-apps/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/tutorials/scaling-20k-apps/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Using Git provider</title>
+      <link>https://docs.kahoy.dev/tutorials/using-git-provider/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/tutorials/using-git-provider/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Waiting deployment to be ready</title>
+      <link>https://docs.kahoy.dev/tutorials/waiting-deployments-finish/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/tutorials/waiting-deployments-finish/</guid>
+      <description>TODO</description>
     </item>
     
   </channel>

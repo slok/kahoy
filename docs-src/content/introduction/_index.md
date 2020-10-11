@@ -1,0 +1,50 @@
+---
+title: "Introduction"
+weight: 000
+---
+
+TODO Introduction.
+
+## Features
+
+- Simple, flexible, and lightweight.
+- Deploys a deletes Kubernetes resources.
+- Deploy anything, a `Namespace`, `Ingress`, `CRD`, domain apps (e.g `Deployment`+`Service`)...
+- Garbage collection resources.
+- Load states from different sources/providers (fs, git, kubernetes...).
+- Plans at Kubernetes resource level (not file/manifest level, not app/release level)
+- Gitops ready (split commands, understands git repositories, apply only changes, Diff, Dry run...).
+- Use full syncs or partial syncs based on resource changes/diffs.
+- Deploy priorities.
+- Multiple filtering options (file paths, resource namespace, types...).
+- Push mode (triggered from CI), not pull (controller).
+- Use Kubectl under the hood (Kubernetes >=v1.18 and server-side apply).
+- Safe deletion of resources (doesn't use `prune` method to delete K8s resources).
+- Reports of what applies and deletes (useful to combine with other apps, e.g: wait, checks, notifications...).
+
+## Alternatives
+
+Kahoy born because available alternatives are too complex, Kubernetes is a complex system by itself, adding more complexity in the cases where is not needed, is not a good solution.
+
+- [Helm]: Tries solving other kinds of problems, has templating (v2 tiller), the concept of releases, used to deploy single apps... However, you can use helm for templating and kahoy to deploy the generated manifests.
+- [Kustomize]: Similar scope as helm but with a different approach, like Helm, you can use kustomize for the templating and kahoy for deploying raw manifests.
+- [Kapp]: As Kahoy, tries solving the same problems of complexity that come with Helm, Kustomize... Very similar to Kahoy but with more complex options/flows, Kapp focuses on application level, Kahoy on Kubernetes resources, if you need something more complex than Kahoy, is likely that Kapp is your app.
+- [Flux]: Controller-based flow, very powerful but complex. If you want a more `pull` than `push` approach, maybe you want this.
+- [Kubectl]: Official tool. Is what kahoy uses under the hood, very powerful tool, lots of options, although to make it work correctly with a group of manifests/repository... you will need scripting or something like Kahoy. _We could say that Kahoy is a small layer on top of Kubectl_.
+
+## Scope
+
+- This tool does not perform any form of templating, the generation, and mutation of the YAMLs are out of the scope (We believe the are powerful tools that can be used together with Kahoy for that matter e.g kustomize+kahoy).
+- Manage the lifecycle of Kubernetes resources using raw YAML files and GitOps.
+- Run on CI (dry run, diff, apply)
+- Simplicity and flexibility.
+- Just a bit smarter than Kubectl.
+- Plan what should change declaring current and previous states (read about this in the Concepts section)
+
+If you need complex flows for your Kubernetes resources is likely that Kahoy is not for you.
+
+[helm]: https://helm.sh/
+[kustomize]: https://github.com/kubernetes-sigs/kustomize
+[kapp]: https://github.com/k14s/kapp
+[flux]: https://github.com/fluxcd/flux
+[kubectl]: https://kubernetes.io/docs/reference/kubectl/overview/
