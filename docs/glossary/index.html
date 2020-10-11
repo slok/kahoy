@@ -684,7 +684,91 @@
     
 
 
-<p>TODO</p>
+<p>Here are the explanations of some words and phrases used along the documentation.</p>
+
+
+
+  <div class="gdoc-toc gdoc-toc__level--6"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#resource">Resource</a></li>
+    <li><a href="#group">Group</a></li>
+    <li><a href="#provider">Provider</a></li>
+    <li><a href="#state">State</a></li>
+    <li><a href="#report">Report</a></li>
+    <li><a href="#kubernetes-provider-id-storage-id">Kubernetes provider id (storage id)</a></li>
+    <li><a href="#mode">Mode</a></li>
+    <li><a href="#multipurpose-deploy-tool">Multipurpose deploy tool</a></li>
+    <li><a href="#focused-on-kubernetes-resource">Focused on Kubernetes resource</a></li>
+    <li><a href="#focused-on-app-or-release-service">Focused on app (or release, service&hellip;)</a></li>
+    <li><a href="#safe-deletion">Safe deletion</a></li>
+    <li><a href="#ready-for-gitops">Ready for gitops</a></li>
+  </ul>
+</nav><hr></div>
+
+
+<div class="gdoc-page__anchorwrap"><h2 id="resource">Resource<a data-clipboard-text="https://docs.kahoy.dev/glossary/#resource" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Resource" href="#resource"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>Sometimes also called Object.</p>
+<p>A Kubernetes object or resource uniquely identified by Kahoy using the type, group, namespace and name. E.g:</p>
+<ul>
+<li><code>apps/v1/Deployment/monitoring/grafana</code></li>
+<li><code>core/v1/Service/monitoring/grafana</code></li>
+<li><code>core/v1/ServiceAccount/monitoring/grafana</code></li>
+<li><code>networking.k8s.io/v1beta1/Ingress/monitoring/grafana</code></li>
+</ul>
+<div class="gdoc-page__anchorwrap"><h2 id="group">Group<a data-clipboard-text="https://docs.kahoy.dev/glossary/#group" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Group" href="#group"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>A group of resources under the same path on the file system.</p>
+<div class="gdoc-page__anchorwrap"><h2 id="provider">Provider<a data-clipboard-text="https://docs.kahoy.dev/glossary/#provider" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Provider" href="#provider"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>The mechanism used to obtain the groups and resources. E.g:</p>
+<ul>
+<li>Git repository using the file system.</li>
+<li>Kubernetes secrets using the apiserver.</li>
+<li>A file system path.</li>
+</ul>
+<div class="gdoc-page__anchorwrap"><h2 id="state">State<a data-clipboard-text="https://docs.kahoy.dev/glossary/#state" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor State" href="#state"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>A Kahoy executed snapshot of the resource&rsquo;s data (yaml specs). A provider is used to obtain it. E.g:</p>
+<ul>
+<li>Git hash.</li>
+<li>Kubernetes secrets with some specific label.</li>
+<li>An file system path.</li>
+</ul>
+<div class="gdoc-page__anchorwrap"><h2 id="report">Report<a data-clipboard-text="https://docs.kahoy.dev/glossary/#report" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Report" href="#report"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>The output kahoy creates with the resources applied and deleted at the end of an execution.</p>
+<div class="gdoc-page__anchorwrap"><h2 id="kubernetes-provider-id-storage-id">Kubernetes provider id (storage id)<a data-clipboard-text="https://docs.kahoy.dev/glossary/#kubernetes-provider-id-storage-id" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Kubernetes provider id (storage id)" href="#kubernetes-provider-id-storage-id"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>The id used to identify Kahoy state on Kubernetes, giving the ability to execute multiple kahoy independent executions by using different ids on the same cluster and namespace.</p>
+<div class="gdoc-page__anchorwrap"><h2 id="mode">Mode<a data-clipboard-text="https://docs.kahoy.dev/glossary/#mode" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Mode" href="#mode"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>The way Kahoy is executed. E.g:</p>
+<ul>
+<li>Dry run.</li>
+<li>Diff.</li>
+<li>Default (regular).</li>
+</ul>
+<div class="gdoc-page__anchorwrap"><h2 id="multipurpose-deploy-tool">Multipurpose deploy tool<a data-clipboard-text="https://docs.kahoy.dev/glossary/#multipurpose-deploy-tool" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Multipurpose deploy tool" href="#multipurpose-deploy-tool"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>Means that Kahoy can deploy Kubernetes resources in multiple scenarios and use cases. E.g:</p>
+<ul>
+<li>Independent app/release (Helm style).</li>
+<li>As a full repository (Flux style).</li>
+<li>Multiple envs (single repository, env per path).</li>
+<li>Raw or simple (Kubectl style)</li>
+<li>&hellip;</li>
+</ul>
+<div class="gdoc-page__anchorwrap"><h2 id="focused-on-kubernetes-resource">Focused on Kubernetes resource<a data-clipboard-text="https://docs.kahoy.dev/glossary/#focused-on-kubernetes-resource" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Focused on Kubernetes resource" href="#focused-on-kubernetes-resource"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>Means that Kahoy focuses on the Kubernetes resource to identify and work with each of them (check if resource changed from previous state, filtering&hellip;).</p>
+<p>So, this means that it doesn&rsquo;t need extra information or mutate the resource itself to track it.</p>
+<p>Normally this implies that you are free to organize the deployment the way you want:</p>
+<ul>
+<li>Multiple apps/releases at the same time.</li>
+<li>Single app/release.</li>
+<li>Bunch of random resources (e.g register the CRDs).</li>
+</ul>
+<div class="gdoc-page__anchorwrap"><h2 id="focused-on-app-or-release-service">Focused on app (or release, service&hellip;)<a data-clipboard-text="https://docs.kahoy.dev/glossary/#focused-on-app-or-release-service" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Focused on app (or release, service&hellip;)" href="#focused-on-app-or-release-service"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>Means that the deployment (tool) identifies what deploys using the concept or the domain of a release/app/service.</p>
+<p>Normally this implies creating a namespace for the resources, adding extra labels to track it&hellip;, and can&rsquo;t be used with multiple resources of different apps at the same time.</p>
+<p>An example could be Helm or Kapp.</p>
+<div class="gdoc-page__anchorwrap"><h2 id="safe-deletion">Safe deletion<a data-clipboard-text="https://docs.kahoy.dev/glossary/#safe-deletion" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Safe deletion" href="#safe-deletion"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>Kahoy uses per resource identification and tracks each resource independently. This implies that it deletes explicitly the required resources, this method avoids side effects unlike <a href="https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/#how-to-delete-objects">prune</a> that can have side effects and is dangerous to use it.</p>
+<div class="gdoc-page__anchorwrap"><h2 id="ready-for-gitops">Ready for gitops<a data-clipboard-text="https://docs.kahoy.dev/glossary/#ready-for-gitops" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Ready for gitops" href="#ready-for-gitops"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>Means that Kahoy has been designed with CI, Git and automation in mind, so, is ready to be used in systems like Github actions or Gitlab CI easily.</p>
+<p>More information about Gitops concept: <a href="https://www.weave.works/technologies/gitops/">here</a></p>
 
 
     </article>
