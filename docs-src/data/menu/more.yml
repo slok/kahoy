@@ -1,0 +1,10 @@
+---
+more:
+  - name: Releases
+    ref: "https://github.com/slok/kahoy/releases"
+    external: true
+    icon: "download"
+  - name: "Github"
+    ref: "https://github.com/slok/kahoy"
+    external: true
+    icon: "github"
