@@ -12,9 +12,12 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://docs.kahoy.dev/topics/cocepts/</guid>
-      <description>Resource TODO
-Group TODO
-State (provider) TODO</description>
+      <description>Resource Group State (provider) Plan   Resource Is a Kubernetes resource, Kahoy will identify resources by type, namespace, and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename&amp;hellip;) it will not affect at the plan. E.g:
+Having these 2 manifests:
+grafana.yaml:
+---apiVersion:apps/v1kind:Deploymentmetadata:name:grafananamespace:monitoring#...---apiVersion:v1kind:ServiceAccountmetadata:name:grafananamespace:monitoring#...---apiVersion:v1kind:Servicemetadata:name:grafananamespace:monitoring#...ingress.yaml:
+apiVersion:networking.k8s.io/v1beta1kind:Ingressmetadata:name:grafananamespace:monitoring#...Kahoy would load 4 resources with these IDs:
+ apps/v1/Deployment/monitoring/grafana core/v1/Service/monitoring/grafana core/v1/ServiceAccount/monitoring/grafana networking.k8s.io/v1beta1/Ingress/monitoring/grafana   Note: Because resources are identified by its type, ns, and name, you can move around in files without affecting how Kahoy will identify them.</description>
     </item>
     
     <item>
@@ -90,6 +93,15 @@ Full TODO</description>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://docs.kahoy.dev/topics/configuration-file/</guid>
+      <description>TODO</description>
+    </item>
+    
+    <item>
+      <title>Create namespace</title>
+      <link>https://docs.kahoy.dev/topics/create-namespace/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://docs.kahoy.dev/topics/create-namespace/</guid>
       <description>TODO</description>
     </item>
     
