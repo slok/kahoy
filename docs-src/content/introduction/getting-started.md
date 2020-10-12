@@ -11,7 +11,7 @@ weight: 010
 
 ## Install Kahoy
 
-Get latest binary release from [Github][latest-release] or refer to the [Installing Kahoy]({{< ref "introduction/install.md" >}}) section.
+Get the latest binary release from [Github][latest-release] or refer to the [Installing Kahoy]({{< ref "introduction/install.md" >}}) section.
 
 ## Using Kahoy
 
