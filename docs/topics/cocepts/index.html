@@ -142,11 +142,7 @@
             
             <li>
             
-                <span class="flex">
-                    <a href="/topics/" class="gdoc-nav__entry ">
-                        Topics
-                    </a>
-                </span>
+                <span class="flex">Topics</span>
             
 
             
@@ -375,6 +371,23 @@
                 <span class="flex">
                     <a href="/topics/configuration-file/" class="gdoc-nav__entry ">
                         Configuration file
+                    </a>
+                </span>
+            
+
+            
+            
+            </li>
+            
+            
+        
+            
+            
+            <li>
+            
+                <span class="flex">
+                    <a href="/topics/create-namespace/" class="gdoc-nav__entry ">
+                        Create namespace
                     </a>
                 </span>
             
@@ -691,12 +704,92 @@
     
 
 
+
+
+
+  <div class="gdoc-toc gdoc-toc__level--6"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#resource">Resource</a></li>
+    <li><a href="#group">Group</a></li>
+    <li><a href="#state-provider">State (provider)</a></li>
+    <li><a href="#plan">Plan</a></li>
+  </ul>
+</nav><hr></div>
+
+
 <div class="gdoc-page__anchorwrap"><h2 id="resource">Resource<a data-clipboard-text="https://docs.kahoy.dev/topics/cocepts/#resource" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Resource" href="#resource"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>TODO</p>
+<p>Is a Kubernetes resource, Kahoy will identify resources by type, namespace, and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename&hellip;) it will not affect at the plan. E.g:</p>
+<p>Having these 2 manifests:</p>
+<p><code>grafana.yaml</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="nn">---</span><span class="w">
+</span><span class="w"></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l">apps/v1</span><span class="w">
+</span><span class="w"></span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">Deployment</span><span class="w">
+</span><span class="w"></span><span class="nt">metadata</span><span class="p">:</span><span class="w">
+</span><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">grafana</span><span class="w">
+</span><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l">monitoring</span><span class="w">
+</span><span class="w"></span><span class="c">#...</span><span class="w">
+</span><span class="w"></span><span class="nn">---</span><span class="w">
+</span><span class="w"></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l">v1</span><span class="w">
+</span><span class="w"></span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">ServiceAccount</span><span class="w">
+</span><span class="w"></span><span class="nt">metadata</span><span class="p">:</span><span class="w">
+</span><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">grafana</span><span class="w">
+</span><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l">monitoring</span><span class="w">
+</span><span class="w"></span><span class="c">#...</span><span class="w">
+</span><span class="w"></span><span class="nn">---</span><span class="w">
+</span><span class="w"></span><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l">v1</span><span class="w">
+</span><span class="w"></span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">Service</span><span class="w">
+</span><span class="w"></span><span class="nt">metadata</span><span class="p">:</span><span class="w">
+</span><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">grafana</span><span class="w">
+</span><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l">monitoring</span><span class="w">
+</span><span class="w"></span><span class="c">#...</span><span class="w">
+</span></code></pre></div><p><code>ingress.yaml</code>:</p>
+<div class="highlight"><pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="nt">apiVersion</span><span class="p">:</span><span class="w"> </span><span class="l">networking.k8s.io/v1beta1</span><span class="w">
+</span><span class="w"></span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l">Ingress</span><span class="w">
+</span><span class="w"></span><span class="nt">metadata</span><span class="p">:</span><span class="w">
+</span><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">grafana</span><span class="w">
+</span><span class="w">  </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l">monitoring</span><span class="w">
+</span><span class="w"></span><span class="c">#...</span><span class="w">
+</span></code></pre></div><p>Kahoy would load 4 resources with these IDs:</p>
+<ul>
+<li><code>apps/v1/Deployment/monitoring/grafana</code></li>
+<li><code>core/v1/Service/monitoring/grafana</code></li>
+<li><code>core/v1/ServiceAccount/monitoring/grafana</code></li>
+<li><code>networking.k8s.io/v1beta1/Ingress/monitoring/grafana</code></li>
+</ul>
+<blockquote>
+<p>Note: Because resources are identified by its <code>type</code>, <code>ns</code>, and <code>name</code>, you can move around in files without affecting how Kahoy will identify them.</p>
+</blockquote>
 <div class="gdoc-page__anchorwrap"><h2 id="group">Group<a data-clipboard-text="https://docs.kahoy.dev/topics/cocepts/#group" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Group" href="#group"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>TODO</p>
+<p>A group is a way of adding options (e.g deployment priority) to the resources in the group. You could have one or many based on what you need.</p>
+<p>Kahoy will identify the groups from the directory structure that contains the manifests. See the following example:</p>
+<p>Given this tree and our manifests root in <code>./manifests</code></p>
+<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">./manifests/
+├── alertgram
+│   ├── alertgram-secret.yaml
+│   └── alertgram.yaml
+├── bilrost
+│   └── bilrost.yaml
+├── root-stuff.yaml
+└── grafana
+    ├── config.yaml
+    ├── grafana-dashboards
+    │   ├── grafana-dashboards-kubernetes.yaml
+    │   └── grafana-dashboards-provision.yaml
+    ├── grafana.yaml
+    └── ingress.yaml
+</code></pre></div><p>These would be the group IDs:</p>
+<ul>
+<li><code>alertgram</code></li>
+<li><code>bilrost</code></li>
+<li><code>root</code> (this is the root id).</li>
+<li><code>grafana</code></li>
+<li><code>grafana/grafana-dashboards</code></li>
+</ul>
 <div class="gdoc-page__anchorwrap"><h2 id="state-provider">State (provider)<a data-clipboard-text="https://docs.kahoy.dev/topics/cocepts/#state-provider" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor State (provider)" href="#state-provider"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>TODO</p>
+<p>Kahoy plans what to apply or delete based on an <code>old</code> and a <code>new</code> state of manifests. These states can come from different sources.</p>
+<p>Check <a href="/topics/provider/">providers section</a> for mor information.</p>
+<div class="gdoc-page__anchorwrap"><h2 id="plan">Plan<a data-clipboard-text="https://docs.kahoy.dev/topics/cocepts/#plan" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Plan" href="#plan"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
+<p>Is the result of resources to apply and/or delete. Its calculated based on the old and new states.</p>
 
 
     </article>

@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Kubernetes provider">
+<meta name="description" content="Create namespace">
 
-<title>Kubernetes provider | Kahoy documentation</title>
+<title>Create namespace | Kahoy documentation</title>
 
 <link rel="icon" href="/favicon/favicon-32x32.png" type="image/x-icon">
 <link rel="stylesheet" href="/main.min.css" media="screen">
@@ -226,7 +226,7 @@
             <li>
             
                 <span class="flex">
-                    <a href="/topics/provider/kubernetes/" class="gdoc-nav__entry is-active">
+                    <a href="/topics/provider/kubernetes/" class="gdoc-nav__entry ">
                         Kubernetes provider
                     </a>
                 </span>
@@ -386,7 +386,7 @@
             <li>
             
                 <span class="flex">
-                    <a href="/topics/create-namespace/" class="gdoc-nav__entry ">
+                    <a href="/topics/create-namespace/" class="gdoc-nav__entry is-active">
                         Create namespace
                     </a>
                 </span>
@@ -679,14 +679,7 @@
         
     
     
-        
-        
-        
-    
-    
-        <a href='/'>Kahoy documentation</a> / <a href='/topics/'>Topics</a> / <a href='/topics/provider/'>Provider</a> / Kubernetes provider
-    
-
+        <a href='/'>Kahoy documentation</a> / <a href='/topics/'>Topics</a> / Create namespace
     
 
     
@@ -703,7 +696,7 @@
 
 
     <article class="gdoc-markdown">
-        <h1>Kubernetes provider</h1>
+        <h1>Create namespace</h1>
         
 
 
@@ -711,30 +704,8 @@
     
 
 
-<p>Given an storage ID and a namespace, at the end of the execution it will store the executed state (applied and deleted resources).</p>
-<p>The ID is important because you can have different states for each Kahoy execution flows on the same cluster.</p>
-<blockquote>
-<p>Note: The state is stored with a <code>Secret</code> per existing resource. Be aware of <a href="https://kubernetes.io/docs/concepts/policy/resource-quotas/#object-count-quota">object count quota</a></p>
-</blockquote>
-<p>With this state storage, it will load the <code>old</code> manifest state from Kubernetes and <code>new</code> manifest state from an fs path. This means that unlike other modes, using dry-run with Kubernetes provider needs access to a cluster.</p>
-<p>This provider gives reliable and easy management, but is slower (Needs to get the state from the cluster) and requires space on the cluster to store the state (however the stored resources are compressed).</p>
-<p>Example of usage:</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kahoy apply <span class="se">\
-</span><span class="se"></span>  --provider <span class="s2">&#34;kubernetes&#34;</span> <span class="se">\
-</span><span class="se"></span>  --kube-provider-id <span class="s2">&#34;ci&#34;</span> <span class="se">\
-</span><span class="se"></span>  --fs-new-manifests-path <span class="s2">&#34;./manifests&#34;</span>
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="check-kahoy-state">Check kahoy state<a data-clipboard-text="https://docs.kahoy.dev/topics/provider/kubernetes/#check-kahoy-state" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Check kahoy state" href="#check-kahoy-state"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>If you want to check all the resource states, you can do (Check <code>Secret</code> annotations for more information):</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kubectl -n <span class="o">{</span>STORAGE_NAMESPACE<span class="o">}</span> get secrets -l <span class="s1">&#39;kahoy.slok.dev/storage-id={STORAGE_ID}&#39;</span>
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="move-kahoy-state">Move kahoy state<a data-clipboard-text="https://docs.kahoy.dev/topics/provider/kubernetes/#move-kahoy-state" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Move kahoy state" href="#move-kahoy-state"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>In case you want to move kahoy state to another namespaces you can get the resources and apply them in another namespace.</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kubectl -n <span class="o">{</span>STORAGE_OLD_NS<span class="o">}</span>  get secrets -l <span class="s1">&#39;kahoy.slok.dev/storage-id={STORAGE_ID}&#39;</span> -o json <span class="p">|</span> <span class="se">\
-</span><span class="se"></span>  jq <span class="s1">&#39;.items[].metadata.namespace = &#34;{STORAGE_NEW_NS}&#34;&#39;</span> <span class="p">|</span> <span class="se">\
-</span><span class="se"></span>  kubectl -n <span class="o">{</span>STORAGE_NEW_NS<span class="o">}</span> apply -f-
-</code></pre></div><div class="gdoc-page__anchorwrap"><h2 id="delete-kahoy-state">Delete kahoy state<a data-clipboard-text="https://docs.kahoy.dev/topics/provider/kubernetes/#delete-kahoy-state" class="gdoc-page__anchor gdoc-page__anchor--right clip" aria-label="Anchor Delete kahoy state" href="#delete-kahoy-state"><svg class="icon link"><use xlink:href="#link"></use></svg></a></h2></div>
-<p>In the strange case that you want to reset Kahoy state, you can do it by removing these secrets and apply again all the manifests to create the latest state again:</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">kubectl -n <span class="o">{</span>STORAGE_NAMESPACE<span class="o">}</span> delete secrets -l <span class="s1">&#39;kahoy.slok.dev/storage-id={STORAGE_ID}&#39;</span>
-</code></pre></div>
+<p>TODO</p>
+
 
     </article>
 
