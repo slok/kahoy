@@ -13,4 +13,4 @@ rm -rf ./docs && mkdir ./docs
 echo "docs.kahoy.dev" > ./docs/CNAME
 
 # Generate.
-hugo -s ./docs-src
+hugo -s ./docs-src --minify

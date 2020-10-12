@@ -6,4 +6,4 @@ IFS=$'\t\n'
 
 command -v hugo >/dev/null 2>&1 || { echo 'please install hugo'; exit 1; }
 
-hugo server -s ./docs-src --bind=0.0.0.0 
+hugo server -s ./docs-src --minify --bind=0.0.0.0 
