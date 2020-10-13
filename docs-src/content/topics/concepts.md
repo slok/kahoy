@@ -7,7 +7,9 @@ weight: 305
 
 ## Resource
 
-Is a Kubernetes resource, Kahoy will identify resources by type, namespace, and name, so, if the manifests file arrangement changes (grouping in files, splitting, rename...) it will not affect at the plan. E.g:
+When we refer to a Resource we mean any Kubernetes resource.
+
+Kahoy internally identifies resources by type, namespace, and name. Thanks to this the user can arrange any number of kubernetes resources in a single yaml or split them in multiple yamls. Both scenarios will be considered equal and it will not affect any of the operations run by Kahoy. Take a look at the following example:
 
 Having these 2 manifests:
 
@@ -55,7 +57,7 @@ Kahoy would load 4 resources with these IDs:
 - `core/v1/ServiceAccount/monitoring/grafana`
 - `networking.k8s.io/v1beta1/Ingress/monitoring/grafana`
 
-> Note: Because resources are identified by its `type`, `ns`, and `name`, you can move around in files without affecting how Kahoy will identify them.
+> Note: Because resources are identified by their `type`, `ns`, and `name`, you can safely move them around between files and it will not affect how Kahoy identifies them.
 
 ## Group
 
@@ -90,12 +92,15 @@ These would be the group IDs:
 - `grafana`
 - `grafana/grafana-dashboards`
 
-## State (provider)
+## State Provider
 
-Kahoy plans what to apply or delete based on an `old` and a `new` state of manifests. These states can come from different sources.
+Kahoy plans what to apply or delete based on an `old` and a `new` state of manifests. These states can come from different sources and thats entirely up to
+the user needs.
 
-Check [providers section]({{< relref "provider/" >}}) for mor information.
+Check [providers section]({{< relref "provider/" >}}) for more information.
 
-## Plan
+## Kahoy Plan
 
-Is the result of resources to apply and/or delete. Its calculated based on the old and new states.
+Kahoy plan is a command that creates an execution plan for the user to inspect.
+It's calculated based on the old and new states and prompts the user with all
+the meaningful information about the incoming changes.
