@@ -1,5 +1,5 @@
 ---
-title: "Git provider"
+title: "Git"
 weight: 336
 ---
 
