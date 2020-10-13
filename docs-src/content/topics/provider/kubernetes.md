@@ -1,5 +1,5 @@
 ---
-title: "Kubernetes provider"
+title: "Kubernetes"
 weight: 333
 ---
 

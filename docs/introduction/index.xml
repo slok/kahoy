@@ -2,8 +2,9 @@
 Using Kahoy We&amp;rsquo;re going to go through a brief example of how a normal interaction deploying manifests with Kahoy would look like.
 We&amp;rsquo;re given the following scenario:
 Kahoy is configured with the default Kubernetes provider.</description></item><item><title>Alternatives and scope</title><link>https://docs.kahoy.dev/introduction/alternatives-and-scope/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://docs.kahoy.dev/introduction/alternatives-and-scope/</guid><description>Alternatives Kahoy was born because the available tools for deployment were too complex for our usecase, more on this under History of the project section. Kubernetes is a complex system by itself, adding more complexity in the cases where is not needed, is not a good solution.
-Helm: Tries solving other kinds of problems, has templating (v2 tiller), the concept of releases, used to deploy single apps&amp;hellip; However, you can use helm for templating and kahoy to deploy the generated manifests.</description></item><item><title>Installing Kahoy</title><link>https://docs.kahoy.dev/introduction/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://docs.kahoy.dev/introduction/install/</guid><description>Releases You have ready to be used binaries in Github releases.
+Helm: Tries solving other kinds of problems, has templating (v2 tiller), the concept of releases, used to deploy single apps&amp;hellip; However, you can use helm for templating and kahoy to deploy the generated manifests.</description></item><item><title>Installing Kahoy</title><link>https://docs.kahoy.dev/introduction/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://docs.kahoy.dev/introduction/install/</guid><description>Releases Kahoy is compiled for all common platforms and uploaded to Github releases.
 To get the latest release, grab it here.
-Docker In case you want to use Docker, you have a ready to be used image on docker hub, this image has Kahoy and some dependencies like kubectl and git.
-docker pull slok/kahoy Build from source You can build binaries from source easily.
+Docker In case you want to use Docker, you have a ready to be used image on docker hub
+docker pull slok/kahoy Note: This image has Kahoy and other dependencies like kubectl and git.
+Build from source You can build binaries from source easily.
 git clone git@github.com:slok/kahoy.git cd ./kahoy make build</description></item></channel></rss>

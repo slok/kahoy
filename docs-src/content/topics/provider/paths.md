@@ -1,5 +1,5 @@
 ---
-title: "Paths provider"
+title: "Paths"
 weight: 339
 ---
 
