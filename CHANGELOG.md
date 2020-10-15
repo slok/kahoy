@@ -4,7 +4,8 @@
 
 ### Added
 
-- Documentation base.
+- Documentation page.
+- `version` command.
 
 ## [v2.0.0] - 2020-10-05
 
