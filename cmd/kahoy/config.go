@@ -10,7 +10,8 @@ import (
 
 // Commandline subcommands IDs.
 const (
-	CmdArgApply = "apply"
+	CmdArgApply   = "apply"
+	CmdArgVersion = "version"
 )
 
 // Defaults.
@@ -103,6 +104,9 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("kube-provider-namespace", "Kubernetes storage provider namespace.").Default("default").StringVar(&c.Apply.KubeProviderNs)
 	apply.Flag("include-namespace", "Regex to include certain namespaces and ignore everything else. It's useful to scope down the execution. Can be repeated.").StringsVar(&c.Apply.IncludeNamespaces)
 
+	// Version command.
+	app.Command(CmdArgVersion, "Show application version.")
+
 	// Parse the commandline.
 	cmd, err := app.Parse(args)
 	if err != nil {
@@ -119,6 +123,17 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 }
 
 func (c *CmdConfig) validate() error {
+	switch c.Command {
+	case CmdArgApply:
+		return c.validateApply()
+	case CmdArgVersion:
+		return nil
+	}
+
+	return nil
+}
+
+func (c *CmdConfig) validateApply() error {
 	if c.Apply.DryRun && c.Apply.DiffMode {
 		return fmt.Errorf(`only one of "dry run" and "diff" execution modes can be used at the same time`)
 	}

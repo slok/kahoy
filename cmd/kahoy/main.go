@@ -100,7 +100,8 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	{
 		// Mapping for each command func and select the correct one.
 		commands := map[string]func(ctx context.Context, config CmdConfig, globalConfig GlobalConfig) error{
-			CmdArgApply: RunApply,
+			CmdArgApply:   RunApply,
+			CmdArgVersion: RunVersion,
 		}
 		cmd, ok := commands[config.Command]
 		if !ok {
