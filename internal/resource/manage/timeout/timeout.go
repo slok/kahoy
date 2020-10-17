@@ -36,7 +36,7 @@ func (c *TimeoutManagerConfig) defaults() error {
 }
 
 // NewTimeoutManager wraps the application resource manager ensuring that the
-// executions to either apply or delete resources have timeouts.
+// executions to either apply or delete resources has timeouts.
 func NewTimeoutManager(config TimeoutManagerConfig) (manage.ResourceManager, error) {
 	err := config.defaults()
 	if err != nil {
