@@ -101,6 +101,4 @@ Check [providers section]({{< relref "provider/" >}}) for more information.
 
 ## Kahoy Plan
 
-Kahoy plan is a command that creates an execution plan for the user to inspect.
-It's calculated based on the old and new states and prompts the user with all
-the meaningful information about the incoming changes.
+Kahoy plan creates an execution plan for the user to inspect. It's calculated based on the old and new states and prompts the user with all the meaningful information about the upcoming changes.
