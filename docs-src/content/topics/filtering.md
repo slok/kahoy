@@ -3,4 +3,8 @@ title: "Filtering resources"
 weight: 350
 ---
 
-TODO
+## File system level
+
+## Resource level
+
+## Kubernetes level
