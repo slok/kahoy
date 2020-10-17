@@ -5,30 +5,37 @@ weight: 320
 
 ## Dry-run
 
-Will plan and list the resources that need to exist and be deleted from the cluster.
+Will prompt the user with an execution plan that lists the resources that would be applied and/or deleted from the cluster in the event of running kahoy in the default mode.
 
 Enable this mode using `--dry-run` flag.
 
 {{< hint info >}}
-This operation doesn't require to use the Kubernetes cluster unless [Kubernetes provider]({{< ref "topics/provider/kubernetes.md" >}}) is used.
+This operation performs an in-memory comparison between the old and new states so it doesn't require to reach the Kubernetes cluster unless the [Kubernetes provider]({{< ref "topics/provider/kubernetes.md" >}}) is being used.
+{{< /hint >}}
+{{< hint info >}}
+Dry run execution mode is a read-only operation.
 {{< /hint >}}
 
 ![dry run](/img/dry-run.png)
 
 ## Diff
 
-Will get the diff against the current cluster manifests. Requires to connect to the Kubernetes cluster.
+Will prompt the diff between current resource manifests and existing cluster resources. This mode requires connectivity to the Kubernetes cluster.
 
 Enable this mode using `--diff` flag.
 
 ![diff](/img/diff.png)
 
-## Default (no options)
+{{< hint info >}}
+Diff execution mode is a read-only operation.
+{{< /hint >}}
 
-Will apply the resources that need to exist, and remove the ones that need to be deleted.
+## Default
 
-If we don't provide mode flags, this is the mode that will be used.
+Also known as the `apply` mode. This operation will **modify** the state of the cluster applying user desired changes.
+
+Unless application flags provided, this is the default execution mode.
 
 {{< hint info >}}
-Apply uses Kubectl with [server-side](https://kubernetes.io/blog/2020/04/01/kubernetes-1.18-feature-server-side-apply-beta-2/#what-is-server-side-apply) apply.
+Under the hood the apply mode relies on Kubectl with [server-side](https://kubernetes.io/blog/2020/04/01/kubernetes-1.18-feature-server-side-apply-beta-2/#what-is-server-side-apply) apply.
 {{< /hint >}}
