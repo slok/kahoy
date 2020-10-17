@@ -24,4 +24,4 @@ A pipeline is probably the best way to illustrate all the things that are happen
   - Store state.
   - Output the resulting changes.
 
-The above pipeline is also a good example to show what Kahoy doesn't do. Please visit the [scope of this project]({{< relref "/introduction/alternatives-and-scope.md#scope">}}) if you are missing any other functionality.
+The above pipeline is also a good example to show what Kahoy doesn't do. Please visit the [scope of this project]({{< relref "/introduction/scope-and-alternatives.md#scope">}}) if you are missing any other functionality.
