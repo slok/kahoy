@@ -205,6 +205,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		manager, err = managekubectl.NewDiffManager(managekubectl.DiffManagerConfig{
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
 			KubeContext: cmdConfig.Apply.KubeContext,
+			KubectlCmd:  cmdConfig.Apply.KubectlPath,
 			YAMLEncoder: kubernetesSerializer,
 			YAMLDecoder: kubernetesSerializer,
 			Logger:      logger,
@@ -217,6 +218,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		manager, err = managekubectl.NewManager(managekubectl.ManagerConfig{
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
 			KubeContext: cmdConfig.Apply.KubeContext,
+			KubectlCmd:  cmdConfig.Apply.KubectlPath,
 			YAMLEncoder: kubernetesSerializer,
 			Logger:      logger,
 		})
@@ -274,6 +276,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			Manager:     manager,
 			KubeConfig:  cmdConfig.Apply.KubeConfig,
 			KubeContext: cmdConfig.Apply.KubeContext,
+			KubectlCmd:  cmdConfig.Apply.KubectlPath,
 			Logger:      logger,
 		})
 		if err != nil {

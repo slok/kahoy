@@ -43,6 +43,7 @@ type CmdConfig struct {
 	Apply struct {
 		KubeContext              string
 		KubeConfig               string
+		KubectlPath              string
 		ManifestsPathOld         string
 		ManifestsPathNew         string
 		DiffMode                 bool
@@ -84,6 +85,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply := app.Command(CmdArgApply, "Will take all the manifests in the directory and apply to a Kubernetes cluster.")
 	apply.Flag("kube-config", "Kubernetes configuration configuration path.").Envar("KUBECONFIG").Default(kubeHome).StringVar(&c.Apply.KubeConfig)
 	apply.Flag("kube-context", "Kubernetes configuration context.").StringVar(&c.Apply.KubeContext)
+	apply.Flag("kubectl-path", "Kubectl binary path.").Default("kubectl").StringVar(&c.Apply.KubectlPath)
 	apply.Flag("diff", "Diff instead of applying changes.").BoolVar(&c.Apply.DiffMode)
 	apply.Flag("dry-run", "Execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
 	apply.Flag("provider", "Selects which provider to use to load the old and new states. Git needs to be executed from a git repository.").Default(ApplyProviderK8s).EnumVar(&c.Apply.Provider, ApplyProviderPaths, ApplyProviderGit, ApplyProviderK8s)

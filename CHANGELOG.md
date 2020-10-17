@@ -6,6 +6,7 @@
 
 - Documentation page.
 - `version` command.
+- Override Kubectl path with `--kubectl-path` flag.
 
 ## [v2.0.0] - 2020-10-05
 
