@@ -8,40 +8,27 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/slok/kahoy/internal/model"
-	"github.com/slok/kahoy/internal/resource/manage/managemock"
+	"github.com/slok/kahoy/internal/resource/manage"
 	"github.com/slok/kahoy/internal/resource/manage/timeout"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTimeoutManagerApply(t *testing.T) {
 	tests := map[string]struct {
-		config    timeout.TimeoutManagerConfig
-		resources []model.Resource
-		mock      func(mrm *managemock.ResourceManager)
-		expErr    bool
+		config  timeout.TimeoutManagerConfig
+		manager manage.ResourceManager
+		expErr  bool
 	}{
 		"Basic initialization should not fail.": {
-			mock: func(mrm *managemock.ResourceManager) {
-				mrm.On("Apply", mock.Anything, mock.Anything).Once().Return(nil)
-			},
+			manager: testManager{},
 		},
 
 		"If Apply takes longer than timeout, apply should fail.": {
 			config: timeout.TimeoutManagerConfig{
-				Timeout: 1 * time.Second,
+				Timeout: 1 * time.Nanosecond,
 			},
-			resources: []model.Resource{
-				{ID: "resource1", GroupID: "group1"},
-			},
-			mock: func(mrm *managemock.ResourceManager) {
-				expBatch := []model.Resource{
-					{ID: "resource1", GroupID: "group1"},
-				}
-				mrm.On("Apply", mock.Anything, expBatch).Once().Return(nil)
-				// TODO(jesus.vazquez) wait few seconds so manager timeouts
-			},
-			expErr: false, // TODO (jesus.vazquez) switch this to true
+			manager: testManager{},
+			expErr:  true,
 		},
 	}
 
@@ -50,16 +37,12 @@ func TestTimeoutManagerApply(t *testing.T) {
 			assert := assert.New(t)
 			require := require.New(t)
 
-			// Mocks.
-			mrm := &managemock.ResourceManager{}
-			test.mock(mrm)
-
 			// Execute.
-			test.config.Manager = mrm
+			test.config.Manager = test.manager
 			manager, err := timeout.NewTimeoutManager(test.config)
 			require.NoError(err)
 
-			err = manager.Apply(context.TODO(), test.resources)
+			err = manager.Apply(context.Background(), []model.Resource{})
 
 			// Check.
 			if test.expErr {
@@ -67,7 +50,34 @@ func TestTimeoutManagerApply(t *testing.T) {
 			} else {
 				assert.NoError(err)
 			}
-			mrm.AssertExpectations(t)
 		})
 	}
+}
+
+// testManager is a custom resource manager that handles context deadline
+// exceeded and returns nil error
+type testManager struct{}
+
+// Delete provides a mock function with given fields: ctx, resources and also
+// handles context done
+func (n testManager) Apply(ctx context.Context, resources []model.Resource) error {
+	// Handle context deadline before noop
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+	return nil
+}
+
+// Delete provides a mock function with given fields: ctx, resources and also
+// handles context done
+func (n testManager) Delete(ctx context.Context, resources []model.Resource) error {
+	// Handle context deadline before noop
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+	return nil
 }
