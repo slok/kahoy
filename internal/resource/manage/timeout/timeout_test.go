@@ -54,6 +54,47 @@ func TestTimeoutManagerApply(t *testing.T) {
 	}
 }
 
+func TestTimeoutManagerDelete(t *testing.T) {
+	tests := map[string]struct {
+		config  timeout.TimeoutManagerConfig
+		manager manage.ResourceManager
+		expErr  bool
+	}{
+		"Basic initialization should not fail.": {
+			manager: testManager{},
+		},
+
+		"If Delete takes longer than timeout, apply should fail.": {
+			config: timeout.TimeoutManagerConfig{
+				Timeout: 1 * time.Nanosecond,
+			},
+			manager: testManager{},
+			expErr:  true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Execute.
+			test.config.Manager = test.manager
+			manager, err := timeout.NewTimeoutManager(test.config)
+			require.NoError(err)
+
+			err = manager.Delete(context.Background(), []model.Resource{})
+
+			// Check.
+			if test.expErr {
+				assert.Error(err)
+			} else {
+				assert.NoError(err)
+			}
+		})
+	}
+}
+
 // testManager is a custom resource manager that handles context deadline
 // exceeded and returns nil error
 type testManager struct{}
