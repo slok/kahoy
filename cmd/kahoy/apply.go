@@ -22,6 +22,7 @@ import (
 	managedryrun "github.com/slok/kahoy/internal/resource/manage/dryrun"
 	"github.com/slok/kahoy/internal/resource/manage/kubectl"
 	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
+	"github.com/slok/kahoy/internal/resource/manage/timeout"
 	managewait "github.com/slok/kahoy/internal/resource/manage/wait"
 	resourceprocess "github.com/slok/kahoy/internal/resource/process"
 	"github.com/slok/kahoy/internal/storage"
@@ -257,6 +258,16 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 			reportRepo = storagereport.NewJSONStateRepository(outFile)
 		}
+	}
+
+	// Wrap resource manager with timeout manager
+	manager, err = timeout.NewTimeoutManager(timeout.TimeoutManagerConfig{
+		Timeout: 5 * time.Minute,
+		Manager: manager,
+		Logger:  logger,
+	})
+	if err != nil {
+		return fmt.Errorf("could not create timeout manager: %w", err)
 	}
 
 	// Wrap manager with batch manager. This should wrap the executors managers
