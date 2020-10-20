@@ -262,7 +262,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	// Wrap resource manager with timeout manager
 	manager, err = timeout.NewTimeoutManager(timeout.TimeoutManagerConfig{
-		Timeout: 5 * time.Minute,
+		Timeout: cmdConfig.Apply.ExecutionTimeout,
 		Manager: manager,
 		Logger:  logger,
 	})
