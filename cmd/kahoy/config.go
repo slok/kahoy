@@ -107,7 +107,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("kube-provider-id", "Kubernetes storage provider ID.").StringVar(&c.Apply.KubeProviderID)
 	apply.Flag("kube-provider-namespace", "Kubernetes storage provider namespace.").Default("default").StringVar(&c.Apply.KubeProviderNs)
 	apply.Flag("include-namespace", "Regex to include certain namespaces and ignore everything else. It's useful to scope down the execution. Can be repeated.").StringsVar(&c.Apply.IncludeNamespaces)
-	apply.Flag("execution-timeout", "This argments sets a timeout for each apply execution. It's optional and the default timeout is set to 5 minutes.").Default("5m").DurationVar(&c.Apply.ExecutionTimeout)
+	apply.Flag("execution-timeout", "This argments sets a timeout for each apply and delete execution. Use 0 to disable.").Default("5m").DurationVar(&c.Apply.ExecutionTimeout)
 
 	// Version command.
 	app.Command(CmdArgVersion, "Show application version.")
