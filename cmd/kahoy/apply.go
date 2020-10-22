@@ -260,14 +260,16 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		}
 	}
 
-	// Wrap resource manager with timeout manager
-	manager, err = timeout.NewTimeoutManager(timeout.TimeoutManagerConfig{
-		Timeout: cmdConfig.Apply.ExecutionTimeout,
-		Manager: manager,
-		Logger:  logger,
-	})
-	if err != nil {
-		return fmt.Errorf("could not create timeout manager: %w", err)
+	// Wrap resource manager with timeout manager if timeout is properly set
+	if cmdConfig.Apply.ExecutionTimeout != 0 {
+		manager, err = timeout.NewTimeoutManager(timeout.TimeoutManagerConfig{
+			Timeout: cmdConfig.Apply.ExecutionTimeout,
+			Manager: manager,
+			Logger:  logger,
+		})
+		if err != nil {
+			return fmt.Errorf("could not create timeout manager: %w", err)
+		}
 	}
 
 	// Wrap manager with batch manager. This should wrap the executors managers
