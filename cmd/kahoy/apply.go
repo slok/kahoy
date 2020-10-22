@@ -22,7 +22,7 @@ import (
 	managedryrun "github.com/slok/kahoy/internal/resource/manage/dryrun"
 	"github.com/slok/kahoy/internal/resource/manage/kubectl"
 	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
-	"github.com/slok/kahoy/internal/resource/manage/timeout"
+	manageTimeout "github.com/slok/kahoy/internal/resource/manage/timeout"
 	managewait "github.com/slok/kahoy/internal/resource/manage/wait"
 	resourceprocess "github.com/slok/kahoy/internal/resource/process"
 	"github.com/slok/kahoy/internal/storage"
@@ -262,7 +262,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	// Wrap resource manager with timeout manager if timeout is properly set
 	if cmdConfig.Apply.ExecutionTimeout != 0 {
-		manager, err = timeout.NewTimeoutManager(timeout.TimeoutManagerConfig{
+		manager, err = manageTimeout.NewTimeoutManager(manageTimeout.TimeoutManagerConfig{
 			Timeout: cmdConfig.Apply.ExecutionTimeout,
 			Manager: manager,
 			Logger:  logger,
