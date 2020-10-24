@@ -7,6 +7,8 @@
 - Documentation page.
 - `version` command.
 - Override Kubectl path with `--kubectl-path` flag.
+- Default 5 minute timeout for any apply operation.
+- `--execution-timeout` flag for the apply method to override the default timeout
 
 ## [v2.0.0] - 2020-10-05
 
