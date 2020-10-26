@@ -1,12 +1,19 @@
 ---
-title: "Provider"
+title: 'Provider'
 weight: 330
 ---
 
-Kahoy needs two manifest states (old and new) to plan what resources need to exist/gone in the cluster. How these manifests are provided is using the `provider`
+Kahoy needs two manifest states (old and new) to plan what resources have changed and which delete/apply actions need to be handled.
 
-| Provider   | Easy | Flexible | Fast | History |
-| ---------- | ---- | -------- | ---- | ------- |
-| Kubernetes | ✔    | ✔        | ✖    | ✖       |
-| Git        | ✖    | ✖        | ✔    | ✔       |
-| Paths      | ✖    | ✔        | ✔    | ✖       |
+How these manifest states are configured is determined by the `provider` parameters.
+
+| Provider                                            | Plug and Play | Flexible | Fast | History |
+| --------------------------------------------------- | ------------- | -------- | ---- | ------- |
+| [Kubernetes]({{< ref "kubernetes.md" >}}) (default) | ✔             | ✔        | ✖    | ✖       |
+| [Git]({{< ref "git.md" >}})                         | ✖             | ✖        | ✔    | ✔       |
+| [Paths]({{< ref "paths.md" >}})                     | ✖             | ✔        | ✔    | ✖       |
+
+- **Plug and Play**: Refers to how straightforward is to use Kahoy with this provider. For example using Kahoy with the `kubernetes` provider works out of the box. However using the `git` or `paths` providers would require a few configuration steps from the user.
+- **Flexible**: TBD
+- **Fast**: In terms of how fast kahoy can calculate the changes between the states. For example using the `paths` provider means old and new manifests can be read from the filesystem so Kahoy will read through them as fast as the hardware can be. Using the `kubernetes` provider however means you need to fetch the state from the cluster which involves higher latency calls.
+- **History**: TBD
