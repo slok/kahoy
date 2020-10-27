@@ -15,6 +15,13 @@ const (
 	CmdArgVersion = "version"
 )
 
+// Logger formats.
+const (
+	GlobalLoggerDefault = "default"
+	GlobalLoggerJSON    = "json"
+	GlobalLoggerSimple  = "simple"
+)
+
 // Defaults.
 const (
 	DefaultConfigFile = "kahoy.yml"
@@ -37,6 +44,7 @@ type CmdConfig struct {
 		Debug      bool
 		NoColor    bool
 		NoLog      bool
+		LoggerType string
 		ConfigFile string
 	}
 
@@ -81,6 +89,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	app.Flag("debug", "Enable debug mode.").BoolVar(&c.Global.Debug)
 	app.Flag("no-color", "Disable color.").BoolVar(&c.Global.NoColor)
 	app.Flag("no-log", "Disable logger.").BoolVar(&c.Global.NoLog)
+	app.Flag("logger", "Selects the logger type.").Default(GlobalLoggerDefault).EnumVar(&c.Global.LoggerType, GlobalLoggerDefault, GlobalLoggerJSON, GlobalLoggerSimple)
 	app.Flag("config-file", "App configuration file.").Default(DefaultConfigFile).StringVar(&c.Global.ConfigFile)
 
 	// Apply command.
