@@ -9,6 +9,7 @@
 - Override Kubectl path with `--kubectl-path` flag.
 - Default 5 minute timeout for any apply operation.
 - `--execution-timeout` flag for the apply method to override the default timeout
+- `--logger` flag to set the logger type, available optios are: default, json and simple.
 
 ## [v2.0.0] - 2020-10-05
 

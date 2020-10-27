@@ -46,10 +46,20 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 		logrusLog := logrus.New()
 		logrusLog.Out = stderr // By default logger goes to stderr (so it can split stdout prints).
 		logrusLogEntry := logrus.NewEntry(logrusLog)
-		logrusLogEntry.Logger.SetFormatter(&logrus.TextFormatter{
-			ForceColors:   !config.Global.NoColor,
-			DisableColors: config.Global.NoColor,
-		})
+
+		// Set logger formatter.
+		switch config.Global.LoggerType {
+		case GlobalLoggerDefault:
+			logrusLogEntry.Logger.SetFormatter(&logrus.TextFormatter{
+				ForceColors:   !config.Global.NoColor,
+				DisableColors: config.Global.NoColor,
+			})
+		case GlobalLoggerJSON:
+			logrusLogEntry.Logger.SetFormatter(&logrus.JSONFormatter{})
+		case GlobalLoggerSimple:
+			logrusLogEntry.Logger.SetFormatter(log.SimpleFormatter)
+		}
+
 		if config.Global.Debug {
 			logrusLogEntry.Logger.SetLevel(logrus.DebugLevel)
 		}
