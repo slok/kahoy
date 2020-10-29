@@ -192,8 +192,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	// Select the execution logic based on diff, dry-run...
 	var (
-		manager    resourcemanage.ResourceManager = resourcemanage.NewNoopManager(logger)
-		reportRepo storage.StateRepository        = storage.NewNoopStateRepository(logger)
+		manager    resourcemanage.ResourceManager
+		reportRepo storage.StateRepository = storage.NewNoopStateRepository(logger)
 	)
 	switch {
 	case cmdConfig.Apply.DryRun:
@@ -308,16 +308,13 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		}
 	}
 
-	err = manager.Apply(ctx, applyRes)
+	// Execute actions on resources.
+	err = applyDeleteResources(ctx, manager, applyRes, deleteRes, cmdConfig.Apply.DeleteFirst)
 	if err != nil {
-		return fmt.Errorf("could not apply resources correctly: %w", err)
+		return err
 	}
 
-	err = manager.Delete(ctx, deleteRes)
-	if err != nil {
-		return fmt.Errorf("could not delete resources correctly: %w", err)
-	}
-
+	// Set applied/deleted resources on report.
 	report.EndedAt = time.Now().UTC()
 	report.AppliedResources = applyRes
 	report.DeletedResources = deleteRes
@@ -429,4 +426,38 @@ func loadKubernetesConfig(cmdCfg CmdConfig) (*rest.Config, error) {
 	config.Burst = 100
 
 	return config, nil
+}
+
+func applyDeleteResources(ctx context.Context, manager resourcemanage.ResourceManager, applyRes, deleteRes []model.Resource, deleteFirst bool) error {
+	// Prepare.
+	apply := func() error {
+		err := manager.Apply(ctx, applyRes)
+		if err != nil {
+			return fmt.Errorf("could not apply resources correctly: %w", err)
+		}
+		return nil
+	}
+	delete := func() error {
+		err := manager.Delete(ctx, deleteRes)
+		if err != nil {
+			return fmt.Errorf("could not delete resources correctly: %w", err)
+		}
+		return nil
+	}
+
+	// Sort.
+	funcs := []func() error{apply, delete}
+	if deleteFirst {
+		funcs = []func() error{delete, apply}
+	}
+
+	// Execute.
+	for _, f := range funcs {
+		err := f()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
