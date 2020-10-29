@@ -651,3 +651,75 @@ func TestRepositoryStoreState(t *testing.T) {
 		})
 	}
 }
+
+func TestRepositoryFactory(t *testing.T) {
+	tests := map[string]struct {
+		config kubernetes.RepositoryConfig
+		expErr bool
+	}{
+		"Serializer is required.": {
+			config: kubernetes.RepositoryConfig{
+				Client:    &kubernetesmock.K8sClient{},
+				StorageID: "something",
+			},
+			expErr: true,
+		},
+
+		"Kubernetes client is required.": {
+			config: kubernetes.RepositoryConfig{
+				Serializer: &kubernetesmock.K8sObjectSerializer{},
+				StorageID:  "something",
+			},
+			expErr: true,
+		},
+
+		"StorageID requires to be a valid Kubernetes label value (length).": {
+			config: kubernetes.RepositoryConfig{
+				Client:     &kubernetesmock.K8sClient{},
+				Serializer: &kubernetesmock.K8sObjectSerializer{},
+				StorageID:  "1234567890123456789012345678901234567890123456789012345678901234",
+			},
+			expErr: true,
+		},
+
+		"StorageID requires to be a valid Kubernetes label value (characters).": {
+			config: kubernetes.RepositoryConfig{
+				Client:     &kubernetesmock.K8sClient{},
+				Serializer: &kubernetesmock.K8sObjectSerializer{},
+				StorageID:  "a b c",
+			},
+			expErr: true,
+		},
+
+		"StorageID can't be empty.": {
+			config: kubernetes.RepositoryConfig{
+				Client:     &kubernetesmock.K8sClient{},
+				Serializer: &kubernetesmock.K8sObjectSerializer{},
+				StorageID:  "",
+			},
+			expErr: true,
+		},
+
+		"StorageID with valid value.": {
+			config: kubernetes.RepositoryConfig{
+				Client:     &kubernetesmock.K8sClient{},
+				Serializer: &kubernetesmock.K8sObjectSerializer{},
+				StorageID:  "s-L_0.k",
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			_, err := kubernetes.NewRepository(test.config)
+
+			if test.expErr {
+				assert.Error(err)
+			} else {
+				assert.NoError(err)
+			}
+		})
+	}
+}

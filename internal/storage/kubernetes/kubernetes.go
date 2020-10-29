@@ -7,9 +7,11 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 
 	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
@@ -42,6 +44,9 @@ type RepositoryConfig struct {
 	// because kahoy can be run N times with different params (e.g manifest paths)
 	// and those would be two different state stores. StorageID is what Kahoy uses
 	// to keep those independent.
+	//
+	// StorageID has the same requirements as a Kubernetes label value.
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
 	StorageID  string
 	Serializer K8sObjectSerializer
 	Client     K8sClient
@@ -55,6 +60,12 @@ func (c *RepositoryConfig) defaults() error {
 
 	if c.StorageID == "" {
 		return fmt.Errorf("storage ID is required")
+	}
+
+	// Validate storage ID.
+	errStrs := validation.IsValidLabelValue(c.StorageID)
+	if len(errStrs) > 0 {
+		return fmt.Errorf("invalid storageID: %s", strings.Join(errStrs, ":"))
 	}
 
 	if c.Serializer == nil {
