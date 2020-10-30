@@ -7,7 +7,13 @@ Given an storage ID and a namespace, at the end of the execution it will store t
 
 The ID is important because you can have different states for each Kahoy execution flows on the same cluster.
 
-> Note: The state is stored with a `Secret` per existing resource. Be aware of [object count quota](https://kubernetes.io/docs/concepts/policy/resource-quotas/#object-count-quota)
+{{< hint info >}}
+The ID has the same requirements as a Kubernetes label value. More info [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
+{{< /hint >}}
+
+{{< hint warning >}}
+The state is stored with a `Secret` per existing resource. Be aware of [object count quota](https://kubernetes.io/docs/concepts/policy/resource-quotas/#object-count-quota).
+{{< /hint >}}
 
 With this state storage, it will load the `old` manifest state from Kubernetes and `new` manifest state from an fs path. This means that unlike other modes, using dry-run with Kubernetes provider needs access to a cluster.
 
