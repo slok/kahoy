@@ -10,6 +10,7 @@
 - Default 5 minute timeout for any apply operation.
 - `--execution-timeout` flag for the apply method to override the default timeout
 - `--logger` flag to set the logger type, available optios are: default, json and simple.
+- `--delete-first` flag that inverts the actions order on resources, `delete` before `apply`.
 - Kubernetes storage ID validates with the same requirements as a Kubernetes label value.
 
 ## [v2.0.0] - 2020-10-05
