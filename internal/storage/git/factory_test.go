@@ -288,6 +288,7 @@ func TestNewRepositories(t *testing.T) {
 			test.config.KubernetesDecoder = &fsmock.K8sObjectDecoder{}
 			test.config.GoGitOldRepo = mOld
 			test.config.GoGitNewRepo = mNew
+			test.config.ModelFactory = &model.ResourceAndGroupFactory{}
 			_, _, err := git.NewRepositories(test.config)
 
 			// Check.

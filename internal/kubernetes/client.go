@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/slok/kahoy/internal/log"
+	"github.com/slok/kahoy/internal/model"
 	storagekubernetes "github.com/slok/kahoy/internal/storage/kubernetes"
 )
 
@@ -21,6 +22,7 @@ type Client struct {
 }
 
 var _ storagekubernetes.K8sClient = Client{}
+var _ model.KubernetesDiscoveryClient = Client{}
 
 // NewClient returns a new Kubernetes client.
 func NewClient(coreCli kubernetes.Interface, logger log.Logger) Client {
@@ -114,4 +116,14 @@ func (c Client) EnsureMissingSecret(ctx context.Context, ns, name string) error 
 
 	logger.Debugf("secret has been deleted")
 	return nil
+}
+
+// GetServerGroupsAndResources returns the group and resource types from the API server.
+func (c Client) GetServerGroupsAndResources(ctx context.Context) ([]*metav1.APIGroup, []*metav1.APIResourceList, error) {
+	grs, res, err := c.coreCli.Discovery().ServerGroupsAndResources()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return grs, res, nil
 }

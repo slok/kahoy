@@ -15,6 +15,7 @@ type RepositoriesConfig struct {
 	NewPath           string
 	KubernetesDecoder K8sObjectDecoder
 	AppConfig         *model.AppConfig
+	ModelFactory      *model.ResourceAndGroupFactory
 	Logger            log.Logger
 }
 
@@ -27,6 +28,7 @@ func NewRepositories(config RepositoriesConfig) (oldRepo, newRepo *Repository, e
 		Path:              config.OldPath,
 		KubernetesDecoder: config.KubernetesDecoder,
 		AppConfig:         config.AppConfig,
+		ModelFactory:      config.ModelFactory,
 		Logger: config.Logger.WithValues(log.Kv{
 			"repo-state": "old",
 		}),
@@ -41,6 +43,7 @@ func NewRepositories(config RepositoriesConfig) (oldRepo, newRepo *Repository, e
 		Path:              config.NewPath,
 		KubernetesDecoder: config.KubernetesDecoder,
 		AppConfig:         config.AppConfig,
+		ModelFactory:      config.ModelFactory,
 		Logger: config.Logger.WithValues(log.Kv{
 			"repo-state": "new",
 		}),

@@ -47,10 +47,11 @@ type RepositoryConfig struct {
 	//
 	// StorageID has the same requirements as a Kubernetes label value.
 	// https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
-	StorageID  string
-	Serializer K8sObjectSerializer
-	Client     K8sClient
-	Logger     log.Logger
+	StorageID    string
+	Serializer   K8sObjectSerializer
+	Client       K8sClient
+	ModelFactory *model.ResourceAndGroupFactory
+	Logger       log.Logger
 }
 
 func (c *RepositoryConfig) defaults() error {
@@ -76,6 +77,10 @@ func (c *RepositoryConfig) defaults() error {
 		return fmt.Errorf("kubernetes client is required")
 	}
 
+	if c.ModelFactory == nil {
+		return fmt.Errorf("resource and group model factory is required")
+	}
+
 	if c.Logger == nil {
 		c.Logger = log.Noop
 	}
@@ -86,10 +91,11 @@ func (c *RepositoryConfig) defaults() error {
 
 // Repository knows how to store and load resources from a K8s storage (apiserver).
 type Repository struct {
-	namespace  string
-	storageID  string
-	serializer K8sObjectSerializer
-	client     K8sClient
+	namespace    string
+	storageID    string
+	serializer   K8sObjectSerializer
+	client       K8sClient
+	modelFactory *model.ResourceAndGroupFactory
 }
 
 var (
@@ -105,10 +111,11 @@ func NewRepository(config RepositoryConfig) (*Repository, error) {
 	}
 
 	return &Repository{
-		namespace:  config.Namespace,
-		storageID:  config.StorageID,
-		serializer: config.Serializer,
-		client:     config.Client,
+		namespace:    config.Namespace,
+		storageID:    config.StorageID,
+		serializer:   config.Serializer,
+		client:       config.Client,
+		modelFactory: config.ModelFactory,
 	}, nil
 }
 
@@ -168,7 +175,7 @@ func (r Repository) StoreState(ctx context.Context, state model.State) error {
 }
 
 func (r Repository) secretToResource(ctx context.Context, secret *corev1.Secret) (*model.Resource, error) {
-	id, ok := secret.Data[secretResIDKey]
+	_, ok := secret.Data[secretResIDKey]
 	if !ok {
 		return nil, fmt.Errorf("missing resource id in kubernetes secret")
 	}
@@ -193,12 +200,7 @@ func (r Repository) secretToResource(ctx context.Context, secret *corev1.Secret)
 		return nil, fmt.Errorf("could not deserialize kubernetes object data: %w", err)
 	}
 
-	return &model.Resource{
-		ID:           string(id),
-		GroupID:      string(group),
-		ManifestPath: string(path),
-		K8sObject:    kobj,
-	}, nil
+	return r.modelFactory.NewResource(kobj, string(group), string(path))
 }
 
 const (

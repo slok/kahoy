@@ -12,6 +12,11 @@
 - `--logger` flag to set the logger type, available optios are: default, json and simple.
 - `--delete-first` flag that inverts the actions order on resources, `delete` before `apply`.
 - Kubernetes storage ID validates with the same requirements as a Kubernetes label value.
+- Kahoy checks with the apiserver (using discovery API) if the loaded resource type is known by the API and fail if not.
+
+### Changed
+
+- Cluster scoped IDs ignore the namespace field for the kahoy resource ID.
 
 ## [v2.0.0] - 2020-10-05
 
