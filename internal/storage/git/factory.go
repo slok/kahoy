@@ -31,6 +31,7 @@ type RepositoriesConfig struct {
 	KubernetesDecoder fs.K8sObjectDecoder
 	AppConfig         *model.AppConfig
 	Logger            log.Logger
+	ModelFactory      *model.ResourceAndGroupFactory
 
 	// GitBeforeCommitSHA Used to set the Git old repo state.
 	// If empty it will use merge-base to get the common ancestor
@@ -169,7 +170,8 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 			"repo-state": "old",
 			"git-rev":    oldRef.Hash().String(),
 		}),
-		FSManager: newBillyFsManager(oldRepoFs),
+		FSManager:    newBillyFsManager(oldRepoFs),
+		ModelFactory: config.ModelFactory,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not create old Git fs %q repository storage: %w", config.OldRelPath, err)
@@ -185,7 +187,8 @@ func NewRepositories(config RepositoriesConfig) (old, new *fs.Repository, err er
 			"repo-state": "new",
 			"git-rev":    newRef.Hash().String(),
 		}),
-		FSManager: newBillyFsManager(newRepoFs),
+		FSManager:    newBillyFsManager(newRepoFs),
+		ModelFactory: config.ModelFactory,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not create new Git fs %q repository storage: %w", config.OldRelPath, err)

@@ -12,11 +12,27 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
+	"github.com/slok/kahoy/internal/model/modelmock"
 	"github.com/slok/kahoy/internal/storage"
 	"github.com/slok/kahoy/internal/storage/kubernetes"
 	"github.com/slok/kahoy/internal/storage/kubernetes/kubernetesmock"
 )
+
+func newModelResourceAndGroupFactory() *model.ResourceAndGroupFactory {
+	mk := &modelmock.KubernetesDiscoveryClient{}
+	mk.On("GetServerGroupsAndResources", mock.Anything).Return(nil, []*metav1.APIResourceList{
+		{
+			GroupVersion: "v1",
+			APIResources: []metav1.APIResource{
+				{Kind: "ConfigMap", Namespaced: true},
+			},
+		}}, nil)
+
+	f, _ := model.NewResourceAndGroupFactory(mk, log.Noop)
+	return f
+}
 
 func newResource(id, group, path, ns, name string) model.Resource {
 	type tm = map[string]interface{}
@@ -83,7 +99,7 @@ func TestRepositoryGetResource(t *testing.T) {
 				res1 := newResource("pid1", "gid1", "mp1", "ns1", "name1")
 				ms.On("DecodeObjects", mock.Anything, []byte("obj1")).Once().Return([]model.K8sObject{res1.K8sObject}, nil)
 			},
-			exp: newResource("pid1", "gid1", "mp1", "ns1", "name1"),
+			exp: newResource("core/v1/ConfigMap/ns1/name1", "gid1", "mp1", "ns1", "name1"),
 		},
 
 		"Getting a resource from Kubernetes without raw data should fail.": {
@@ -207,6 +223,7 @@ func TestRepositoryGetResource(t *testing.T) {
 			// Execute.
 			test.config.Client = mkc
 			test.config.Serializer = mks
+			test.config.ModelFactory = newModelResourceAndGroupFactory()
 			repo, err := kubernetes.NewRepository(test.config)
 			require.NoError(err)
 			gotRes, err := repo.GetResource(context.TODO(), test.id)
@@ -323,8 +340,8 @@ func TestRepositoryListResources(t *testing.T) {
 			},
 			exp: &storage.ResourceList{
 				Items: []model.Resource{
-					newResource("pid1", "gid1", "mp1", "ns1", "name1"),
-					newResource("pid2", "gid2", "mp2", "ns2", "name2"),
+					newResource("core/v1/ConfigMap/ns1/name1", "gid1", "mp1", "ns1", "name1"),
+					newResource("core/v1/ConfigMap/ns2/name2", "gid2", "mp2", "ns2", "name2"),
 				},
 			},
 		},
@@ -445,6 +462,7 @@ func TestRepositoryListResources(t *testing.T) {
 			// Execute.
 			test.config.Client = mkc
 			test.config.Serializer = mks
+			test.config.ModelFactory = newModelResourceAndGroupFactory()
 			repo, err := kubernetes.NewRepository(test.config)
 			require.NoError(err)
 			gotResList, err := repo.ListResources(context.TODO(), test.opts)
@@ -637,6 +655,7 @@ func TestRepositoryStoreState(t *testing.T) {
 			// Execute.
 			test.config.Client = mkc
 			test.config.Serializer = mks
+			test.config.ModelFactory = newModelResourceAndGroupFactory()
 			repo, err := kubernetes.NewRepository(test.config)
 			require.NoError(err)
 			err = repo.StoreState(context.TODO(), test.state)
@@ -713,6 +732,7 @@ func TestRepositoryFactory(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
 
+			test.config.ModelFactory = newModelResourceAndGroupFactory()
 			_, err := kubernetes.NewRepository(test.config)
 
 			if test.expErr {

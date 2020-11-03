@@ -12,9 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
+	"github.com/slok/kahoy/internal/model/modelmock"
 	"github.com/slok/kahoy/internal/storage"
 	"github.com/slok/kahoy/internal/storage/fs"
 	"github.com/slok/kahoy/internal/storage/fs/fsmock"
@@ -37,6 +40,20 @@ func (t testInfoFile) IsDir() bool        { return t.isDir }
 func (t testInfoFile) Sys() interface{}   { return nil }
 
 var _ os.FileInfo = &testInfoFile{}
+
+func newModelResourceAndGroupFactory() *model.ResourceAndGroupFactory {
+	mk := &modelmock.KubernetesDiscoveryClient{}
+	mk.On("GetServerGroupsAndResources", mock.Anything).Return(nil, []*metav1.APIResourceList{
+		{
+			GroupVersion: "v1",
+			APIResources: []metav1.APIResource{
+				{Kind: "ConfigMap", Namespaced: true},
+			},
+		}}, nil)
+
+	f, _ := model.NewResourceAndGroupFactory(mk, log.Noop)
+	return f
+}
 
 func newConfigmap(ns, name string) *unstructured.Unstructured {
 	return &unstructured.Unstructured{
@@ -570,6 +587,7 @@ func TestRepositoryLoadFS(t *testing.T) {
 			test.cfg.KubernetesDecoder = mkd
 
 			// Load and check errors.
+			test.cfg.ModelFactory = newModelResourceAndGroupFactory()
 			repo, err := fs.NewRepository(test.cfg)
 			if test.expErr != nil {
 				assert.True(errors.Is(err, test.expErr))

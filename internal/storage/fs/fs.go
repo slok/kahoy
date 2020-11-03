@@ -57,6 +57,7 @@ type Repository struct {
 	defaultIgnore bool
 	rootGroupID   string
 	appConfig     model.AppConfig
+	modelFactory  *model.ResourceAndGroupFactory
 
 	resourceMemoryRepo storagememory.ResourceRepository
 	groupMemoryRepo    storagememory.GroupRepository
@@ -78,6 +79,7 @@ type RepositoryConfig struct {
 	RootGroupID       string
 	Logger            log.Logger
 	AppConfig         *model.AppConfig
+	ModelFactory      *model.ResourceAndGroupFactory
 
 	// Internal.
 	compiledExcludeRegex []*regexp.Regexp
@@ -110,6 +112,10 @@ func (c *RepositoryConfig) defaults() error {
 
 	if c.RootGroupID == "" {
 		c.RootGroupID = "root"
+	}
+
+	if c.ModelFactory == nil {
+		return fmt.Errorf("resource and group model factory is required")
 	}
 
 	// Compile regex.
@@ -155,6 +161,7 @@ func NewRepository(config RepositoryConfig) (*Repository, error) {
 		logger:        config.Logger,
 		rootGroupID:   config.RootGroupID,
 		appConfig:     *config.AppConfig,
+		modelFactory:  config.ModelFactory,
 		excludeRegex:  config.compiledExcludeRegex,
 		includeRegex:  config.compiledIncludeRegex,
 		defaultIgnore: len(config.compiledIncludeRegex) > 0, // If we have any include rule, by default we ignore.
@@ -221,26 +228,24 @@ func (r *Repository) loadFS(rootPath string) error {
 			return err
 		}
 		for _, obj := range objs {
-			id := model.GenResourceID(obj)
+			resource, err := r.modelFactory.NewResource(obj, groupID, path)
+			if err != nil {
+				return fmt.Errorf("could not create model resource: %w", err)
+			}
 
 			// Check if we already have this resource.
-			stored, ok := resources[id]
+			stored, ok := resources[resource.ID]
 			if ok {
-				return fmt.Errorf("%w: resource collision with %s in %q and %q", internalerrors.ErrNotValid, id, stored.ManifestPath, path)
+				return fmt.Errorf("%w: resource collision with %s in %q and %q", internalerrors.ErrNotValid, resource.ID, stored.ManifestPath, path)
 			}
 
 			// Store the resource.
-			resources[id] = model.Resource{
-				ID:           id,
-				GroupID:      groupID,
-				ManifestPath: path,
-				K8sObject:    obj,
-			}
+			resources[resource.ID] = *resource
 		}
 
 		// Check if we already have the group and check if two different groups have the same name.
 		groupConfig := r.appConfig.Groups[groupID]
-		groups[groupID] = model.NewGroup(groupID, groupPath, groupConfig)
+		groups[groupID] = r.modelFactory.NewGroup(groupID, groupPath, groupConfig)
 
 		return nil
 	})

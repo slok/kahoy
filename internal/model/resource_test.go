@@ -5,21 +5,69 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"github.com/slok/kahoy/internal/log"
 	"github.com/slok/kahoy/internal/model"
+	"github.com/slok/kahoy/internal/model/modelmock"
 )
 
-func TestGenResourceID(t *testing.T) {
+func TestResourceAndGroupFactoryNewResource(t *testing.T) {
 	// Helper alias for verbosity of unstructured internal maps.
 	type tm = map[string]interface{}
 
+	testAPIResourceList := []*metav1.APIResourceList{
+		{
+			GroupVersion: "networking.k8s.io/v1beta1",
+			APIResources: []metav1.APIResource{
+				{Kind: "Ingress", Namespaced: true},
+			},
+		},
+		{
+			GroupVersion: "v1",
+			APIResources: []metav1.APIResource{
+				{Kind: "Pod", Namespaced: true},
+			},
+		},
+		{
+			GroupVersion: "rbac.authorization.k8s.io/v1",
+			APIResources: []metav1.APIResource{
+				{Kind: "ClusterRoleBinding", Namespaced: false},
+			},
+		},
+	}
+
 	tests := map[string]struct {
-		obj   model.K8sObject
-		expID string
+		groupID      string
+		manifestPath string
+		obj          model.K8sObject
+		mock         func(m *modelmock.KubernetesDiscoveryClient)
+		expResource  model.Resource
+		expErr       bool
 	}{
-		"A regular resource should gen correct ID": {
-			expID: "networking.k8s.io/v1beta1/Ingress/test-ns/test-name",
+		"A type that is unknown by the apiserver should fail.": {
+			obj: &unstructured.Unstructured{
+				Object: tm{
+					"apiVersion": "v1",
+					"kind":       "Service",
+					"metadata": tm{
+						"name":      "test-name",
+						"namespace": "test-ns",
+					},
+				},
+			},
+			groupID:      "test-group",
+			manifestPath: "/test",
+			mock: func(m *modelmock.KubernetesDiscoveryClient) {
+				m.On("GetServerGroupsAndResources", mock.Anything).Once().Return(nil, testAPIResourceList, nil)
+			},
+			expErr: true,
+		},
+
+		"A namespaced known type should return correctly the resource.": {
 			obj: &unstructured.Unstructured{
 				Object: tm{
 					"apiVersion": "networking.k8s.io/v1beta1",
@@ -30,24 +78,60 @@ func TestGenResourceID(t *testing.T) {
 					},
 				},
 			},
-		},
-
-		"A resource with default ns should gen correct ID": {
-			expID: "networking.k8s.io/v1beta1/Ingress/default/test-name",
-			obj: &unstructured.Unstructured{
-				Object: tm{
-					"apiVersion": "networking.k8s.io/v1beta1",
-					"kind":       "Ingress",
-					"metadata": tm{
-						"name":      "test-name",
-						"namespace": "",
+			groupID:      "test-group",
+			manifestPath: "/test",
+			mock: func(m *modelmock.KubernetesDiscoveryClient) {
+				m.On("GetServerGroupsAndResources", mock.Anything).Once().Return(nil, testAPIResourceList, nil)
+			},
+			expResource: model.Resource{
+				ID:           "networking.k8s.io/v1beta1/Ingress/test-ns/test-name",
+				GroupID:      "test-group",
+				ManifestPath: "/test",
+				K8sObject: &unstructured.Unstructured{
+					Object: tm{
+						"apiVersion": "networking.k8s.io/v1beta1",
+						"kind":       "Ingress",
+						"metadata": tm{
+							"name":      "test-name",
+							"namespace": "test-ns",
+						},
 					},
 				},
 			},
 		},
 
-		"A resource witho core group should gen correct ID": {
-			expID: "core/v1/Pod/test-ns/test-name",
+		"A namespaced known type without namespace set, should return correctly the resource.": {
+			obj: &unstructured.Unstructured{
+				Object: tm{
+					"apiVersion": "networking.k8s.io/v1beta1",
+					"kind":       "Ingress",
+					"metadata": tm{
+						"name": "test-name",
+					},
+				},
+			},
+			groupID:      "test-group",
+			manifestPath: "/test",
+			mock: func(m *modelmock.KubernetesDiscoveryClient) {
+				m.On("GetServerGroupsAndResources", mock.Anything).Once().Return(nil, testAPIResourceList, nil)
+			},
+			expResource: model.Resource{
+				ID:           "networking.k8s.io/v1beta1/Ingress/default/test-name",
+				GroupID:      "test-group",
+				ManifestPath: "/test",
+				K8sObject: &unstructured.Unstructured{
+					Object: tm{
+						"apiVersion": "networking.k8s.io/v1beta1",
+						"kind":       "Ingress",
+						"metadata": tm{
+							"name": "test-name",
+						},
+					},
+				},
+			},
+		},
+
+		"A core known type, should return correctly the resource.": {
 			obj: &unstructured.Unstructured{
 				Object: tm{
 					"apiVersion": "v1",
@@ -58,18 +142,87 @@ func TestGenResourceID(t *testing.T) {
 					},
 				},
 			},
+			groupID:      "test-group",
+			manifestPath: "/test",
+			mock: func(m *modelmock.KubernetesDiscoveryClient) {
+				m.On("GetServerGroupsAndResources", mock.Anything).Once().Return(nil, testAPIResourceList, nil)
+			},
+			expResource: model.Resource{
+				ID:           "core/v1/Pod/test-ns/test-name",
+				GroupID:      "test-group",
+				ManifestPath: "/test",
+				K8sObject: &unstructured.Unstructured{
+					Object: tm{
+						"apiVersion": "v1",
+						"kind":       "Pod",
+						"metadata": tm{
+							"name":      "test-name",
+							"namespace": "test-ns",
+						},
+					},
+				},
+			},
+		},
+
+		"A cluster scoped known type should return correctly the resource (ignoring the namespace).": {
+			obj: &unstructured.Unstructured{
+				Object: tm{
+					"apiVersion": "rbac.authorization.k8s.io/v1",
+					"kind":       "ClusterRoleBinding",
+					"metadata": tm{
+						"name":      "test-name",
+						"namespace": "test-ns",
+					},
+				},
+			},
+			groupID:      "test-group",
+			manifestPath: "/test",
+			mock: func(m *modelmock.KubernetesDiscoveryClient) {
+				m.On("GetServerGroupsAndResources", mock.Anything).Once().Return(nil, testAPIResourceList, nil)
+			},
+			expResource: model.Resource{
+				ID:           "rbac.authorization.k8s.io/v1/ClusterRoleBinding/default/test-name",
+				GroupID:      "test-group",
+				ManifestPath: "/test",
+				K8sObject: &unstructured.Unstructured{
+					Object: tm{
+						"apiVersion": "rbac.authorization.k8s.io/v1",
+						"kind":       "ClusterRoleBinding",
+						"metadata": tm{
+							"name":      "test-name",
+							"namespace": "test-ns",
+						},
+					},
+				},
+			},
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			id := model.GenResourceID(test.obj)
-			assert.Equal(t, test.expID, id)
+			require := require.New(t)
+			assert := assert.New(t)
+
+			// Mocks.
+			mk := &modelmock.KubernetesDiscoveryClient{}
+			test.mock(mk)
+
+			// Prepare and create.
+			f, err := model.NewResourceAndGroupFactory(mk, log.Noop)
+			require.NoError(err)
+			gotResource, err := f.NewResource(test.obj, test.groupID, test.manifestPath)
+
+			// Check.
+			if test.expErr {
+				assert.Error(err)
+			} else if assert.NoError(err) {
+				assert.Equal(test.expResource, *gotResource)
+			}
 		})
 	}
 }
 
-func TestNewGroup(t *testing.T) {
+func TestTestResourceAndGroupFactoryNewGroup(t *testing.T) {
 	fourtyTwo := 42
 
 	tests := map[string]struct {
@@ -118,7 +271,17 @@ func TestNewGroup(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotGroup := model.NewGroup(test.id, test.path, test.config)
+			require := require.New(t)
+
+			// Prepare and create.
+			mk := &modelmock.KubernetesDiscoveryClient{}
+			mk.On("GetServerGroupsAndResources", mock.Anything).Once().Return(nil, nil, nil)
+
+			f, err := model.NewResourceAndGroupFactory(mk, log.Noop)
+			require.NoError(err)
+			gotGroup := f.NewGroup(test.id, test.path, test.config)
+
+			// Check.
 			assert.Equal(t, test.expGroup, gotGroup)
 		})
 	}

@@ -52,6 +52,22 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	fsExclude := append(cmdConfig.Apply.ExcludeManifests, globalConfig.AppConfig.Fs.Exclude...)
 	fsInclude := append(cmdConfig.Apply.IncludeManifests, globalConfig.AppConfig.Fs.Include...)
 
+	// Create Kubernetes client.
+	kubeCfg, err := loadKubernetesConfig(cmdConfig)
+	if err != nil {
+		return fmt.Errorf("could not load Kubernetes configuration: %w", err)
+	}
+	kubeRawCli, err := kubernetes.NewForConfig(kubeCfg)
+	if err != nil {
+		return fmt.Errorf("could not create client-go kubernetes client: %w", err)
+	}
+	kubeCli := internalkubernetes.NewClient(kubeRawCli, logger)
+
+	modelResGroupFactory, err := model.NewResourceAndGroupFactory(kubeCli, logger)
+	if err != nil {
+		return fmt.Errorf("could not create resource and group models factory: %w", err)
+	}
+
 	var (
 		oldResourceRepo, newResourceRepo storage.ResourceRepository
 		newGroupRepo                     storage.GroupRepository
@@ -69,6 +85,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			KubernetesDecoder:  kubernetesSerializer,
 			AppConfig:          &globalConfig.AppConfig,
 			Logger:             logger,
+			ModelFactory:       modelResGroupFactory,
 		})
 		if err != nil {
 			return fmt.Errorf("could not create git based fs repos storage: %w", err)
@@ -86,6 +103,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			NewPath:           cmdConfig.Apply.ManifestsPathNew,
 			KubernetesDecoder: kubernetesSerializer,
 			AppConfig:         &globalConfig.AppConfig,
+			ModelFactory:      modelResGroupFactory,
 			Logger:            logger,
 		})
 		if err != nil {
@@ -97,21 +115,13 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		newGroupRepo = newRepo
 
 	case ApplyProviderK8s:
-		kubeCfg, err := loadKubernetesConfig(cmdConfig)
-		if err != nil {
-			return fmt.Errorf("could not load Kubernetes configuration: %w", err)
-		}
-		cli, err := kubernetes.NewForConfig(kubeCfg)
-		if err != nil {
-			return fmt.Errorf("could not create client-go kubernetes client: %w", err)
-		}
-
 		k8sRepo, err := storagekubernetes.NewRepository(storagekubernetes.RepositoryConfig{
-			Namespace:  cmdConfig.Apply.KubeProviderNs,
-			StorageID:  cmdConfig.Apply.KubeProviderID,
-			Serializer: kubernetesSerializer,
-			Client:     internalkubernetes.NewClient(cli, logger),
-			Logger:     logger.WithValues(log.Kv{"repo-state": "old"}),
+			Namespace:    cmdConfig.Apply.KubeProviderNs,
+			StorageID:    cmdConfig.Apply.KubeProviderID,
+			Serializer:   kubernetesSerializer,
+			Client:       kubeCli,
+			ModelFactory: modelResGroupFactory,
+			Logger:       logger.WithValues(log.Kv{"repo-state": "old"}),
 		})
 		if err != nil {
 			return fmt.Errorf("could not create state storer: %w", err)
@@ -124,6 +134,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			NewPath:           cmdConfig.Apply.ManifestsPathNew,
 			KubernetesDecoder: kubernetesSerializer,
 			AppConfig:         &globalConfig.AppConfig,
+			ModelFactory:      modelResGroupFactory,
 			Logger:            logger.WithValues(log.Kv{"repo-state": "new"}),
 		})
 		if err != nil {
@@ -352,7 +363,8 @@ func splitPlan(statePlan []plan.State) (apply, delete []model.Resource, err erro
 	return applyRes, deleteRes, nil
 }
 
-// newResourceProcessor will create the resource processor using a chain of multiple resource processors.
+// newResourceProcessor will create the resource processor using a chain of multiple resource processors that will
+// be executed after the resource plan.
 func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceprocess.ResourceProcessor, error) {
 	exclKubeTypeProc, err := resourceprocess.NewExcludeKubeTypeProcessor(cmdConfig.Apply.ExcludeKubeTypeResources, logger)
 	if err != nil {
