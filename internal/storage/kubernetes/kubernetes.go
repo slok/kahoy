@@ -174,6 +174,8 @@ func (r Repository) StoreState(ctx context.Context, state model.State) error {
 	return nil
 }
 
+const kubePathFmt = "kubernetes://%s/%s"
+
 func (r Repository) secretToResource(ctx context.Context, secret *corev1.Secret) (*model.Resource, error) {
 	_, ok := secret.Data[secretResIDKey]
 	if !ok {
@@ -190,7 +192,7 @@ func (r Repository) secretToResource(ctx context.Context, secret *corev1.Secret)
 		return nil, fmt.Errorf("missing resource data in kubernetes secret")
 	}
 
-	path, ok := secret.Data[secretResPathKey]
+	_, ok = secret.Data[secretResPathKey]
 	if !ok {
 		return nil, fmt.Errorf("missing resource fs path in kubernetes secret")
 	}
@@ -200,7 +202,9 @@ func (r Repository) secretToResource(ctx context.Context, secret *corev1.Secret)
 		return nil, fmt.Errorf("could not deserialize kubernetes object data: %w", err)
 	}
 
-	return r.modelFactory.NewResource(kobj, string(group), string(path))
+	path := fmt.Sprintf(kubePathFmt, secret.Namespace, secret.Name)
+
+	return r.modelFactory.NewResource(kobj, string(group), path)
 }
 
 const (

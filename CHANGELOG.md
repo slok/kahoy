@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Notes
+
+After the cluster scoped resource IDs change (ignores namespaces), Kubernetes storage could duplicate some of the resources state in case your cluster scoped resources had a namespace set by error. Check the warnings of Kubernetes storage `cluster scoped resource has namespace set` message. After fixing your resources, identify Kahoy Kubernetes state and remove them manually using `kubectl delete secret ...`).
+
 ### Added
 
 - Documentation page.
@@ -17,6 +21,7 @@
 ### Changed
 
 - Cluster scoped IDs ignore the namespace field for the kahoy resource ID.
+- Kubernetes storage resources, manifest path data shows to the Kubernetes resource instead of the original fs manifest path.
 
 ## [v2.0.0] - 2020-10-05
 

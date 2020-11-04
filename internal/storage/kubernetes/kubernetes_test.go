@@ -99,7 +99,7 @@ func TestRepositoryGetResource(t *testing.T) {
 				res1 := newResource("pid1", "gid1", "mp1", "ns1", "name1")
 				ms.On("DecodeObjects", mock.Anything, []byte("obj1")).Once().Return([]model.K8sObject{res1.K8sObject}, nil)
 			},
-			exp: newResource("core/v1/ConfigMap/ns1/name1", "gid1", "mp1", "ns1", "name1"),
+			exp: newResource("core/v1/ConfigMap/ns1/name1", "gid1", "kubernetes://test-ns/59d09a913a1718071b37a97cb2caf42d", "ns1", "name1"),
 		},
 
 		"Getting a resource from Kubernetes without raw data should fail.": {
@@ -340,8 +340,8 @@ func TestRepositoryListResources(t *testing.T) {
 			},
 			exp: &storage.ResourceList{
 				Items: []model.Resource{
-					newResource("core/v1/ConfigMap/ns1/name1", "gid1", "mp1", "ns1", "name1"),
-					newResource("core/v1/ConfigMap/ns2/name2", "gid2", "mp2", "ns2", "name2"),
+					newResource("core/v1/ConfigMap/ns1/name1", "gid1", "kubernetes://test-ns/59d09a913a1718071b37a97cb2caf42d", "ns1", "name1"),
+					newResource("core/v1/ConfigMap/ns2/name2", "gid2", "kubernetes://test-ns/2de89034e9e1afcf8cb49226e4433dba", "ns2", "name2"),
 				},
 			},
 		},
