@@ -73,7 +73,7 @@ type CmdConfig struct {
 		KubeProviderNs           string
 		IncludeNamespaces        []string
 		ExecutionTimeout         time.Duration
-		DeleteFirst              bool
+		ApplyFirst               bool
 	}
 }
 
@@ -118,7 +118,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("kube-provider-namespace", "Kubernetes storage provider namespace.").Default("default").StringVar(&c.Apply.KubeProviderNs)
 	apply.Flag("include-namespace", "Regex to include certain namespaces and ignore everything else. It's useful to scope down the execution. Can be repeated.").StringsVar(&c.Apply.IncludeNamespaces)
 	apply.Flag("execution-timeout", "This argments sets a timeout for each apply and delete execution. Use 0 to disable.").Default("5m").DurationVar(&c.Apply.ExecutionTimeout)
-	apply.Flag("delete-first", "Inverts execution of reserouce actions, if enabled, resource deletion happens before apply, by default it will apply and then delete.").BoolVar(&c.Apply.DeleteFirst)
+	apply.Flag("apply-first", "Inverts execution of reserouce actions, if enabled, resource apply stage happens before delete. By default it will delete and then apply.").BoolVar(&c.Apply.ApplyFirst)
 
 	// Version command.
 	app.Command(CmdArgVersion, "Show application version.")
