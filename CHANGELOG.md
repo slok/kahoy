@@ -14,7 +14,8 @@ After the cluster scoped resource IDs change (ignores namespaces), Kubernetes st
 - Default 5 minute timeout for any apply operation.
 - `--execution-timeout` flag for the apply method to override the default timeout
 - `--logger` flag to set the logger type, available optios are: default, json and simple.
-- `--delete-first` flag that inverts the actions order on resources, `delete` before `apply`.
+- By default now Kahoy will first delete and then apply. We find this way of execution safer than applying and then deleting.
+- `--apply-first` flag that inverts the actions order on resources, `apply` before `delete`.
 - Kubernetes storage ID validates with the same requirements as a Kubernetes label value.
 - Kahoy checks with the apiserver (using discovery API) if the loaded resource type is known by the API and fail if not.
 - Use `-` in `--fs-new-manifests-path` to load data from `stdin`.

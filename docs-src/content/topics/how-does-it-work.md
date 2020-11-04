@@ -17,8 +17,8 @@ A pipeline is probably the best way to illustrate all the things that are happen
 - Stage 3: Process Kubernetes resources.
   - Optional: There are filters available to exclude/include certain resources by properties like namespace, type, labels, etcetera.
 - Stage 4: Main command execution.
-  - Apply resources.
   - Delete resources
+  - Apply resources.
   - Optiional: Perform the operations in batches with configurable priorities.
 - Stage 5: Post operations.
   - Store state.
