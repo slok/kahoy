@@ -17,6 +17,7 @@ After the cluster scoped resource IDs change (ignores namespaces), Kubernetes st
 - `--delete-first` flag that inverts the actions order on resources, `delete` before `apply`.
 - Kubernetes storage ID validates with the same requirements as a Kubernetes label value.
 - Kahoy checks with the apiserver (using discovery API) if the loaded resource type is known by the API and fail if not.
+- Use `-` in `--fs-new-manifests-path` to load data from `stdin`.
 
 ### Changed
 
