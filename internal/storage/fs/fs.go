@@ -249,7 +249,6 @@ func (r *Repository) loadFS(rootPath string) error {
 
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("could not load fs manifests: %w", err)
 	}

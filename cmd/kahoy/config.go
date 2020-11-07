@@ -102,7 +102,7 @@ func NewCmdConfig(args []string) (*CmdConfig, error) {
 	apply.Flag("dry-run", "Execute in dry-run, is safe, can be run without Kubernetes cluster.").BoolVar(&c.Apply.DryRun)
 	apply.Flag("provider", "Selects which provider to use to load the old and new states. Git needs to be executed from a git repository.").Default(ApplyProviderK8s).EnumVar(&c.Apply.Provider, ApplyProviderPaths, ApplyProviderGit, ApplyProviderK8s)
 	apply.Flag("fs-old-manifests-path", "Kubernetes current manifests path.").Short('o').StringVar(&c.Apply.ManifestsPathOld)
-	apply.Flag("fs-new-manifests-path", "Kubernetes expected manifests path.").Short('n').Required().StringVar(&c.Apply.ManifestsPathNew)
+	apply.Flag("fs-new-manifests-path", "Kubernetes expected manifests path, use `-` for stdin.").Short('n').Required().StringVar(&c.Apply.ManifestsPathNew)
 	apply.Flag("fs-exclude", "Regex to ignore manifest files and dirs. Can be repeated.").Short('e').StringsVar(&c.Apply.ExcludeManifests)
 	apply.Flag("fs-include", "Regex to include manifest files and dirs, everything else will be ignored. Exclude has preference. Can be repeated.").Short('i').StringsVar(&c.Apply.IncludeManifests)
 	apply.Flag("git-before-commit-sha", "The git hash used as the old state to get the apply/delete plan, if not passed, it will search using merge-base common ancestor of current HEAD and default branch.").Short('c').StringVar(&c.Apply.GitBeforeCommit)

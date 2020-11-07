@@ -97,6 +97,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	case ApplyProviderPaths:
 		oldRepo, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
+			Ctx:               ctx,
+			StdIn:             globalConfig.Stdin,
 			ExcludeRegex:      fsExclude,
 			IncludeRegex:      fsInclude,
 			OldPath:           cmdConfig.Apply.ManifestsPathOld,
@@ -128,6 +130,8 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		}
 
 		_, newRepo, err := storagefs.NewRepositories(storagefs.RepositoriesConfig{
+			Ctx:               ctx,
+			StdIn:             globalConfig.Stdin,
 			ExcludeRegex:      fsExclude,
 			IncludeRegex:      fsInclude,
 			OldPath:           os.DevNull,
