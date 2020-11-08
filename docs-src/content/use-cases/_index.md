@@ -22,7 +22,7 @@ kahoy apply \
 
 Same as above but with `--diff` instead of `--dry-run`
 
-## Deploying on master branch (when PR merged)
+## Deploying on master branch (when PR merged) using Git provider
 
 Kahoy needs to compare our `HEAD` against the previous applied state, that's why we need the `before-commit`.
 In this example, we use `--git-before-commit-sha` flag. Normally this variable can be obtained in the executing CI:
@@ -63,7 +63,7 @@ kahoy apply \
 
 ## Delete all
 
-Instead of using git, use the fs by using the `paths` provider. Use the new state as `dev/null`.
+Use the fs by using the `paths` provider. Use the new state as `dev/null`.
 
 ```bash
 kahoy apply \
@@ -74,7 +74,7 @@ kahoy apply \
 
 ## Deploy all
 
-Instead of using git, use the fs by using the `paths` provider. Use the old state as `dev/null`.
+Use the fs by using the `paths` provider. Use the old state as `dev/null`.
 
 ```bash
 kahoy apply \
