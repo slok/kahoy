@@ -15,7 +15,11 @@ The ID has the same requirements as a Kubernetes label value. More info [here](h
 The state is stored with a `Secret` per existing resource. Be aware of [object count quota](https://kubernetes.io/docs/concepts/policy/resource-quotas/#object-count-quota).
 {{< /hint >}}
 
-With this state storage, it will load the `old` manifest state from Kubernetes and `new` manifest state from an fs path. This means that unlike other modes, using dry-run with Kubernetes provider needs access to a cluster.
+With this state storage, it will load the `old` manifest state from Kubernetes and `new` manifest state from an fs path.
+
+{{< hint info >}}
+You can use `stdin` as the new manifests path with `-` (`-n-`/`--fs-new-manifests-path -`).
+{{< /hint >}}
 
 This provider gives reliable and easy management, but is slower (Needs to get the state from the cluster) and requires space on the cluster to store the state (however the stored resources are compressed).
 

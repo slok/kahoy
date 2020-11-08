@@ -15,3 +15,7 @@ kahoy apply \
   --fs-old-manifests-path "./old-manifests" \
   --fs-new-manifests-path "./manifests"
 ```
+
+{{< hint info >}}
+You can use `stdin` as the new manifests path with `-` (`-n-`/`--fs-new-manifests-path -`).
+{{< /hint >}}

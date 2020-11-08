@@ -10,9 +10,6 @@ Will prompt the user with an execution plan that lists the resources that would 
 Enable this mode using `--dry-run` flag.
 
 {{< hint info >}}
-This operation performs an in-memory comparison between the old and new states so it doesn't require to reach the Kubernetes cluster unless the [Kubernetes provider]({{< ref "topics/provider/kubernetes.md" >}}) is being used.
-{{< /hint >}}
-{{< hint info >}}
 Dry run execution mode is a read-only operation.
 {{< /hint >}}
 
