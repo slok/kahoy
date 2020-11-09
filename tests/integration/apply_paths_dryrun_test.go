@@ -64,6 +64,15 @@ func TestKahoyApplyPathsDryRunChanges(t *testing.T) {
 		"If resource are deleted from old to new it should apply existing and delete the others.": {
 			cmd: `kahoy apply --dry-run --provider=paths -o testdata/dry-run-all -n testdata/dry-run-some`,
 			expStdout: `
+⯈ Delete (4 resources)
+├── ⯈ app2 (1 resources)
+│   └── apps/v1/Deployment/kahoy-integration-test/app2 (testdata/dry-run-all/app2/app.yaml)
+├── ⯈ other (2 resources)
+│   ├── apps/v1/Deployment/kahoy-integration-test/app5 (testdata/dry-run-all/other/app5.yaml)
+│   └── core/v1/Service/kahoy-integration-test/app5 (testdata/dry-run-all/other/app5.yaml)
+└── ⯈ root (1 resources)
+    └── core/v1/Service/kahoy-integration-test/app1 (testdata/dry-run-all/app1.yaml)
+
 ⯈ Apply (6 resources)
 ├── ⯈ app2 (1 resources)
 │   └── core/v1/Service/kahoy-integration-test/app2 (testdata/dry-run-some/app2/svc.yaml)
@@ -75,16 +84,6 @@ func TestKahoyApplyPathsDryRunChanges(t *testing.T) {
 │   └── core/v1/Service/kahoy-integration-test/app4 (testdata/dry-run-some/other/app4.yaml)
 └── ⯈ root (1 resources)
     └── apps/v1/Deployment/kahoy-integration-test/app1 (testdata/dry-run-some/app1.yaml)
-
-
-⯈ Delete (4 resources)
-├── ⯈ app2 (1 resources)
-│   └── apps/v1/Deployment/kahoy-integration-test/app2 (testdata/dry-run-all/app2/app.yaml)
-├── ⯈ other (2 resources)
-│   ├── apps/v1/Deployment/kahoy-integration-test/app5 (testdata/dry-run-all/other/app5.yaml)
-│   └── core/v1/Service/kahoy-integration-test/app5 (testdata/dry-run-all/other/app5.yaml)
-└── ⯈ root (1 resources)
-    └── core/v1/Service/kahoy-integration-test/app1 (testdata/dry-run-all/app1.yaml)
 
 `,
 		},
@@ -119,13 +118,6 @@ func TestKahoyApplyPathsDryRunChanges(t *testing.T) {
 		"If include changes filter is used, it should only apply changes (using all and some).": {
 			cmd: `kahoy apply --dry-run --provider=paths -o testdata/dry-run-all -n testdata/dry-run-some-changes --include-changes`,
 			expStdout: `
-⯈ Apply (2 resources)
-├── ⯈ app2 (1 resources)
-│   └── core/v1/Service/kahoy-integration-test/app2 (testdata/dry-run-some-changes/app2/svc.yaml)
-└── ⯈ root (1 resources)
-    └── apps/v1/Deployment/kahoy-integration-test/app1 (testdata/dry-run-some-changes/app1.yaml)
-
-
 ⯈ Delete (4 resources)
 ├── ⯈ app2 (1 resources)
 │   └── apps/v1/Deployment/kahoy-integration-test/app2 (testdata/dry-run-all/app2/app.yaml)
@@ -134,6 +126,12 @@ func TestKahoyApplyPathsDryRunChanges(t *testing.T) {
 │   └── core/v1/Service/kahoy-integration-test/app5 (testdata/dry-run-all/other/app5.yaml)
 └── ⯈ root (1 resources)
     └── core/v1/Service/kahoy-integration-test/app1 (testdata/dry-run-all/app1.yaml)
+
+⯈ Apply (2 resources)
+├── ⯈ app2 (1 resources)
+│   └── core/v1/Service/kahoy-integration-test/app2 (testdata/dry-run-some-changes/app2/svc.yaml)
+└── ⯈ root (1 resources)
+    └── apps/v1/Deployment/kahoy-integration-test/app1 (testdata/dry-run-some-changes/app1.yaml)
 
 `,
 		},
