@@ -73,6 +73,7 @@ func TestKahoyApplyPathsDryRunChanges(t *testing.T) {
 └── ⯈ root (1 resources)
     └── core/v1/Service/kahoy-integration-test/app1 (testdata/dry-run-all/app1.yaml)
 
+
 ⯈ Apply (6 resources)
 ├── ⯈ app2 (1 resources)
 │   └── core/v1/Service/kahoy-integration-test/app2 (testdata/dry-run-some/app2/svc.yaml)
@@ -126,6 +127,7 @@ func TestKahoyApplyPathsDryRunChanges(t *testing.T) {
 │   └── core/v1/Service/kahoy-integration-test/app5 (testdata/dry-run-all/other/app5.yaml)
 └── ⯈ root (1 resources)
     └── core/v1/Service/kahoy-integration-test/app1 (testdata/dry-run-all/app1.yaml)
+
 
 ⯈ Apply (2 resources)
 ├── ⯈ app2 (1 resources)
