@@ -324,7 +324,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 	}
 
 	// Execute actions on resources.
-	err = applyDeleteResources(ctx, manager, applyRes, deleteRes, cmdConfig.Apply.DeleteFirst)
+	err = deleteApplyResources(ctx, manager, applyRes, deleteRes, cmdConfig.Apply.ApplyFirst)
 	if err != nil {
 		return err
 	}
@@ -444,7 +444,7 @@ func loadKubernetesConfig(cmdCfg CmdConfig) (*rest.Config, error) {
 	return config, nil
 }
 
-func applyDeleteResources(ctx context.Context, manager resourcemanage.ResourceManager, applyRes, deleteRes []model.Resource, deleteFirst bool) error {
+func deleteApplyResources(ctx context.Context, manager resourcemanage.ResourceManager, applyRes, deleteRes []model.Resource, applyFirst bool) error {
 	// Prepare.
 	apply := func() error {
 		err := manager.Apply(ctx, applyRes)
@@ -462,9 +462,9 @@ func applyDeleteResources(ctx context.Context, manager resourcemanage.ResourceMa
 	}
 
 	// Sort.
-	funcs := []func() error{apply, delete}
-	if deleteFirst {
-		funcs = []func() error{delete, apply}
+	funcs := []func() error{delete, apply}
+	if applyFirst {
+		funcs = []func() error{apply, delete}
 	}
 
 	// Execute.
