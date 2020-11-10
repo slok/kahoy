@@ -195,10 +195,10 @@ func (d diffManager) Apply(ctx context.Context, resources []model.Resource) erro
 }
 
 // Delete will get the diff for the deleted sources.
-// We can't do the diff for things that will be deleted usin Kubectl, also we can't be sure of
+// We can't do the diff for things that will be deleted using Kubectl, also we can't be sure of
 // the resources that are on the server, maybe some of them don't exist neither on the server.
 // To solve this, we ask the server for the current content of the resources that we want to delete,
-// decode them to resources to validate individual resources and then get a diff against /dev/null
+// decode them to resources to validate individual resources and then get a diff against "empty"
 // for each object.
 // With this solution, we get a real diff of that fields will be removed from the server.
 // If anytime Kubectl handles deletion with diff, we should use that and remove all this logic.
@@ -250,8 +250,8 @@ func (d diffManager) Delete(ctx context.Context, resources []model.Resource) err
 
 		// Create a diff commmand with the 2nd file as empty and execute.
 		var errOut bytes.Buffer
-		args := []string{"-u", "-N", filePath, "-"}
-		cmd := exec.CommandContext(ctx, "diff", args...)
+		cmdBin, cmdArgs := getDeleteDiffCommand(filePath)
+		cmd := exec.CommandContext(ctx, cmdBin, cmdArgs...)
 		cmd.Stdin = strings.NewReader("")
 		cmd.Stdout = d.out
 		cmd.Stderr = &errOut
@@ -320,4 +320,26 @@ func (d diffManager) getResourcesFromAPIServer(ctx context.Context, objs []model
 	}
 
 	return k8sResources, nil
+}
+
+// getDeleteDiffCommand knows how to get diff command for our deletes.
+// This should not exist if we could call kubectl directly for the delete diffs, but we are not there right now.
+// So this returns the diff command for the deteles in the same way kubectl would do, this way we have consistent diffs.
+// We don't allow configuring this outside this component as it should be the behaviour of kubectl, this is,
+// supporting `KUBECTL_EXTERNAL_DIFF`.
+// Check: https://github.com/kubernetes/kubectl/blob/53f5c5a2fb0fd42a360dea64b1f515f9e6705f58/pkg/cmd/diff/diff.go#L173
+func getDeleteDiffCommand(filePath string) (cmd string, args []string) {
+	const deleteDiffCmd = "diff -u -N"
+
+	allCmd := deleteDiffCmd
+
+	// Check Kubectl standard.
+	kubectlDiff := os.Getenv("KUBECTL_EXTERNAL_DIFF")
+	if kubectlDiff != "" {
+		allCmd = kubectlDiff
+	}
+
+	splitCmd := strings.Split(allCmd, " ")
+	splitCmd = append(splitCmd, filePath, "-")
+	return splitCmd[0], splitCmd[1:]
 }

@@ -18,6 +18,7 @@ After the cluster scoped resource IDs change (ignores namespaces), Kubernetes st
 - Kubernetes storage ID validates with the same requirements as a Kubernetes label value.
 - Kahoy checks with the apiserver (using discovery API) if the loaded resource type is known by the API and fail if not.
 - Use `-` in `--fs-new-manifests-path` to load data from `stdin`.
+- Support same kubectl external diff option behaviour on diff of deleted resources, using `KUBECTL_EXTERNAL_DIFF` env var.
 
 ### Changed
 
