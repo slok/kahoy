@@ -2,13 +2,15 @@
 
 ## Unreleased
 
+## [v2.1.0] - 2020-11-12
+
 ### Notes
 
 After the cluster scoped resource IDs change (ignores namespaces), Kubernetes storage could duplicate some of the resources state in case your cluster scoped resources had a namespace set by error. Check the warnings of Kubernetes storage `cluster scoped resource has namespace set` message. After fixing your resources, identify Kahoy Kubernetes state and remove them manually using `kubectl delete secret ...`).
 
 ### Added
 
-- Documentation page.
+- Documentation page in https://docs.kahoy.dev/.
 - `version` command.
 - Override Kubectl path with `--kubectl-path` flag.
 - Default 5 minute timeout for any apply operation.
@@ -85,6 +87,7 @@ After the cluster scoped resource IDs change (ignores namespaces), Kubernetes st
 - No color mode.
 - Debug mode.
 
-[unreleased]: https://github.com/slok/kahoy/compare/v2.0.0...HEAD
+[unreleased]: https://github.com/slok/kahoy/compare/v2.1.0...HEAD
+[v2.1.0]: https://github.com/slok/kahoy/compare/v2.0.0...v2.1.0
 [v2.0.0]: https://github.com/slok/kahoy/compare/v1.0.0...v2.0.0
 [v1.0.0]: https://github.com/slok/kahoy/releases/tag/v1.0.0
