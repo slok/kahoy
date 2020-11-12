@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Add `make` to docker image.
+
 ## [v2.1.0] - 2020-11-12
 
 ### Notes
