@@ -5,6 +5,7 @@
 ### Added
 
 - Add `make` to docker image.
+- Add `--only-changes` flag alias for `--include-changes`.
 
 ## [v2.1.0] - 2020-11-12
 
