@@ -2,10 +2,20 @@
 
 ## Unreleased
 
+### Breaking
+
+- `wait` configuration has been deleted in favor of pre and post hooks.
+
 ### Added
 
-- Add `make` to docker image.
-- Add `--only-changes` flag alias for `--include-changes`.
+- `make` to docker image.
+- `--only-changes` flag alias for `--include-changes`.
+- Pre and post hooks.
+
+### Removed
+
+- `wait` configuration block
+- Waiting using `duration` has been deprecated in favor of hooks.
 
 ## [v2.1.0] - 2020-11-12
 

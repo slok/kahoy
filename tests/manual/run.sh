@@ -25,7 +25,7 @@ function kahoy_apply() {
 }
 
 function kahoy_kube_apply() {
-    [[ $# -ne 1 ]] && echo "USAGE: kahoy_apply NEW_MANIFESTS_PATH" && exit 1
+    [[ $# -ne 1 ]] && echo "USAGE: kahoy_kube_apply NEW_MANIFESTS_PATH" && exit 1
     new_path="${1}"
 
     go run ./cmd/kahoy apply \

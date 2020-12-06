@@ -44,8 +44,17 @@ fs:
 groups:
   - id: "prometheus/crd"
     priority: 50
-    wait:
-      duration: 15s
+    hooks:
+      pre:
+        cmd: [cmd1]
+
+      post:
+        timeout: 15s
+        cmd:
+          - cmd2
+          - --arg1=value1
+          - --arg2
+          - value2
 `,
 			expConfig: model.AppConfig{
 				Fs: model.FsConfig{
@@ -61,12 +70,46 @@ groups:
 				Groups: map[string]model.GroupConfig{
 					"prometheus/crd": {
 						Priority: intVal(50),
-						WaitConfig: &model.GroupWaitConfig{
-							Duration: 15 * time.Second,
+						HooksConfig: model.GroupHooksConfig{
+							Pre: &model.GroupHookConfigSpec{
+								Cmd:     []string{"cmd1"},
+								Timeout: 0,
+							},
+							Post: &model.GroupHookConfigSpec{
+								Cmd:     []string{"cmd2", "--arg1=value1", "--arg2", "value2"},
+								Timeout: 15 * time.Second,
+							},
 						},
 					},
 				},
 			},
+		},
+
+		"Invalid timeout on hook should fail.": {
+			data: `
+version: v1
+groups:
+  - id: "test"
+    priority: 50
+    hooks:
+      pre:
+        timeout: wrong
+        cmd: [cmd1]
+`,
+			expErr: true,
+		},
+
+		"Setting a timeout on a hook and not a command should fail.": {
+			data: `
+version: v1
+groups:
+  - id: "test"
+    priority: 50
+    hooks:
+      post:
+        timeout: 10s
+`,
+			expErr: true,
 		},
 
 		"Empty group IDs can't be mapped to model.": {
@@ -79,31 +122,14 @@ groups:
 			expErr: true,
 		},
 
-		"A group without waiting options should be nil.": {
-			data: `
-version: v1
-groups:
-  - id: "test"
-    priority: 50
-`,
-			expConfig: model.AppConfig{
-				Groups: map[string]model.GroupConfig{
-					"test": {
-						Priority:   intVal(50),
-						WaitConfig: nil,
-					},
-				},
-			},
-		},
-
-		"Invalid wait duration should fail.": {
+		"Deprecated usage of wait duration should fail.": {
 			data: `
 version: v1
 groups:
   - id: "test"
     priority: 50
     wait:
-      duration: 15
+      duration: 15s
 `,
 			expErr: true,
 		},

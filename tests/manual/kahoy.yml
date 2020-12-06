@@ -9,18 +9,24 @@ fs:
 groups:
   - id: ns
     priority: 100
-    wait:
-      duration: 3s
+    hooks:
+      post:
+        cmd: ["sleep", "2"]
 
   - id: root
     priority: 200
-    wait:
-      duration: 1s
+    hooks:
+      pre:
+        cmd: ["./tests/manual/hooks/root-pre.sh"]
+      post:
+        cmd: ["./tests/manual/hooks/root-post.sh"]
 
   - id: group-a/group-c/group-d
     priority: 200
-    wait:
-      duration: 2s
+    hooks:
+      pre:
+        cmd: ["./tests/manual/hooks/group-d-pre.sh"]
+        timeout: 1m
 
   - id: group-b/group-e
     priority: 550
