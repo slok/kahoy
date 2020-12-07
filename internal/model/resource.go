@@ -31,12 +31,19 @@ type Group struct {
 	ID       string
 	Path     string
 	Priority int
-	Wait     GroupWait
+	Hooks    GroupHooks
 }
 
-// GroupWait options.
-type GroupWait struct {
-	Duration time.Duration
+// GroupHooks tells what are the hooks.
+type GroupHooks struct {
+	Pre  *GroupHookSpec
+	Post *GroupHookSpec
+}
+
+// GroupHookSpec are the hook options.
+type GroupHookSpec struct {
+	Cmd     []string
+	Timeout time.Duration
 }
 
 // KubernetesDiscoveryClient is the client used to discover resource types on
@@ -144,9 +151,19 @@ func (r ResourceAndGroupFactory) NewGroup(id, path string, config GroupConfig) G
 	}
 
 	// Set wait options.
-	if config.WaitConfig != nil {
-		g.Wait.Duration = config.WaitConfig.Duration
+	if config.HooksConfig.Pre != nil {
+		g.Hooks.Pre = waitConfigToGroupModel(*config.HooksConfig.Pre)
+	}
+	if config.HooksConfig.Post != nil {
+		g.Hooks.Post = waitConfigToGroupModel(*config.HooksConfig.Post)
 	}
 
 	return g
+}
+
+func waitConfigToGroupModel(cfg GroupHookConfigSpec) *GroupHookSpec {
+	return &GroupHookSpec{
+		Cmd:     cfg.Cmd,
+		Timeout: cfg.Timeout,
+	}
 }

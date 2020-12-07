@@ -236,16 +236,18 @@ func TestTestResourceAndGroupFactoryNewGroup(t *testing.T) {
 			path: "tests/test1",
 			config: model.GroupConfig{
 				Priority: &fourtyTwo,
-				WaitConfig: &model.GroupWaitConfig{
-					Duration: 555 * time.Millisecond,
+				HooksConfig: model.GroupHooksConfig{
+					Pre:  &model.GroupHookConfigSpec{Cmd: []string{"cmd1"}, Timeout: 555 * time.Millisecond},
+					Post: &model.GroupHookConfigSpec{Cmd: []string{"cmd2"}, Timeout: 444 * time.Millisecond},
 				},
 			},
 			expGroup: model.Group{
 				ID:       "test1",
 				Path:     "tests/test1",
 				Priority: 42,
-				Wait: model.GroupWait{
-					Duration: 555 * time.Millisecond,
+				Hooks: model.GroupHooks{
+					Pre:  &model.GroupHookSpec{Cmd: []string{"cmd1"}, Timeout: 555 * time.Millisecond},
+					Post: &model.GroupHookSpec{Cmd: []string{"cmd2"}, Timeout: 444 * time.Millisecond},
 				},
 			},
 		},
@@ -254,16 +256,18 @@ func TestTestResourceAndGroupFactoryNewGroup(t *testing.T) {
 			id:   "test1",
 			path: "tests/test1",
 			config: model.GroupConfig{
-				WaitConfig: &model.GroupWaitConfig{
-					Duration: 555 * time.Millisecond,
+				HooksConfig: model.GroupHooksConfig{
+					Pre:  &model.GroupHookConfigSpec{Cmd: []string{"cmd1"}, Timeout: 555 * time.Millisecond},
+					Post: &model.GroupHookConfigSpec{Cmd: []string{"cmd2"}, Timeout: 444 * time.Millisecond},
 				},
 			},
 			expGroup: model.Group{
 				ID:       "test1",
 				Path:     "tests/test1",
 				Priority: 1000,
-				Wait: model.GroupWait{
-					Duration: 555 * time.Millisecond,
+				Hooks: model.GroupHooks{
+					Pre:  &model.GroupHookSpec{Cmd: []string{"cmd1"}, Timeout: 555 * time.Millisecond},
+					Post: &model.GroupHookSpec{Cmd: []string{"cmd2"}, Timeout: 444 * time.Millisecond},
 				},
 			},
 		},

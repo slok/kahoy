@@ -21,13 +21,20 @@ type FsConfig struct {
 
 // GroupConfig is the group configuration.
 type GroupConfig struct {
-	Priority   *int
-	WaitConfig *GroupWaitConfig
+	Priority    *int
+	HooksConfig GroupHooksConfig
 }
 
-// GroupWaitConfig has a group wait options.
-type GroupWaitConfig struct {
-	Duration time.Duration
+// GroupHooksConfig has a group hooks options.
+type GroupHooksConfig struct {
+	Pre  *GroupHookConfigSpec
+	Post *GroupHookConfigSpec
+}
+
+// GroupHookConfigSpec is the spec of hook configuration.
+type GroupHookConfigSpec struct {
+	Cmd     []string
+	Timeout time.Duration
 }
 
 // Validate will validate the app configuration.

@@ -20,9 +20,9 @@ import (
 	resourcemanage "github.com/slok/kahoy/internal/resource/manage"
 	managebatch "github.com/slok/kahoy/internal/resource/manage/batch"
 	managedryrun "github.com/slok/kahoy/internal/resource/manage/dryrun"
+	managehook "github.com/slok/kahoy/internal/resource/manage/hook"
 	managekubectl "github.com/slok/kahoy/internal/resource/manage/kubectl"
 	manageTimeout "github.com/slok/kahoy/internal/resource/manage/timeout"
-	managewait "github.com/slok/kahoy/internal/resource/manage/wait"
 	resourceprocess "github.com/slok/kahoy/internal/resource/process"
 	"github.com/slok/kahoy/internal/storage"
 	storagefs "github.com/slok/kahoy/internal/storage/fs"
@@ -241,15 +241,18 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 			return fmt.Errorf("could not create resource manager: %w", err)
 		}
 
-		// Wrap the executor manger with wait manager. This is wrapped here because
-		// wait manager should only wait on real executions.
-		manager, err = managewait.NewManager(managewait.ManagerConfig{
+		// Wrap the executor manager with hook manager. This is wrapped here because
+		// hooks should only be executed on real executions.
+		manager, err = managehook.NewManager(managehook.ManagerConfig{
 			Manager:         manager,
 			GroupRepository: newGroupRepo,
+			KubeConfig:      cmdConfig.Apply.KubeConfig,
+			KubeContext:     cmdConfig.Apply.KubeContext,
+			KubectlCmd:      cmdConfig.Apply.KubectlPath,
 			Logger:          logger,
 		})
 		if err != nil {
-			return fmt.Errorf("could not create wait resource manager: %w", err)
+			return fmt.Errorf("could not create hook resource manager: %w", err)
 		}
 
 		// Set up report output.
