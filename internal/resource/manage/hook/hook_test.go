@@ -90,7 +90,26 @@ func TestManagerApply(t *testing.T) {
 				{ID: "resource1", GroupID: "group1"},
 			},
 			mock: func(mrm *managemock.ResourceManager, mgr *storagemock.GroupRepository, mcr *hookmock.CmdRunner) {
-				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Pre: &model.GroupHookSpec{Cmd: []string{"cmd1", "prehook"}, Timeout: 42 * time.Minute}}}
+				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Pre: &model.GroupHookSpec{Cmd: "cmd1 prehook", Timeout: 42 * time.Minute}}}
+				mgr.On("GetGroup", mock.Anything, "group1").Once().Return(group1, nil)
+
+				// Pre hook.
+				mcr.On("CombinedOutputPipe", mock.Anything).Once().Return(nopR, nil)
+				expCmd := expCmdMatcher([]string{"cmd1", "prehook"})
+				mcr.On("Start", mock.MatchedBy(expCmd)).Once().Return(nil)
+				mcr.On("Wait", mock.MatchedBy(expCmd)).Once().Return(nil)
+
+				expResources := []model.Resource{{ID: "resource1", GroupID: "group1"}}
+				mrm.On("Apply", mock.Anything, expResources).Once().Return(nil)
+			},
+		},
+
+		"Having a non sane hook cmd, should sanitize and execute correctly.": {
+			resources: []model.Resource{
+				{ID: "resource1", GroupID: "group1"},
+			},
+			mock: func(mrm *managemock.ResourceManager, mgr *storagemock.GroupRepository, mcr *hookmock.CmdRunner) {
+				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Pre: &model.GroupHookSpec{Cmd: "	cmd1   		prehook   	", Timeout: 42 * time.Minute}}}
 				mgr.On("GetGroup", mock.Anything, "group1").Once().Return(group1, nil)
 
 				// Pre hook.
@@ -109,7 +128,7 @@ func TestManagerApply(t *testing.T) {
 				{ID: "resource1", GroupID: "group1"},
 			},
 			mock: func(mrm *managemock.ResourceManager, mgr *storagemock.GroupRepository, mcr *hookmock.CmdRunner) {
-				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Post: &model.GroupHookSpec{Cmd: []string{"cmd1", "posthook"}, Timeout: 42 * time.Minute}}}
+				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Post: &model.GroupHookSpec{Cmd: "cmd1 posthook", Timeout: 42 * time.Minute}}}
 				mgr.On("GetGroup", mock.Anything, "group1").Once().Return(group1, nil)
 
 				expResources := []model.Resource{{ID: "resource1", GroupID: "group1"}}
@@ -128,7 +147,7 @@ func TestManagerApply(t *testing.T) {
 				{ID: "resource1", GroupID: "group1"},
 			},
 			mock: func(mrm *managemock.ResourceManager, mgr *storagemock.GroupRepository, mcr *hookmock.CmdRunner) {
-				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Pre: &model.GroupHookSpec{Cmd: []string{"cmd1", "prehook"}, Timeout: 42 * time.Minute}}}
+				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Pre: &model.GroupHookSpec{Cmd: "cmd1 prehook", Timeout: 42 * time.Minute}}}
 				mgr.On("GetGroup", mock.Anything, "group1").Once().Return(group1, nil)
 
 				// Pre hook.
@@ -145,7 +164,7 @@ func TestManagerApply(t *testing.T) {
 				{ID: "resource1", GroupID: "group1"},
 			},
 			mock: func(mrm *managemock.ResourceManager, mgr *storagemock.GroupRepository, mcr *hookmock.CmdRunner) {
-				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Post: &model.GroupHookSpec{Cmd: []string{"cmd1", "posthook"}, Timeout: 42 * time.Minute}}}
+				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{Post: &model.GroupHookSpec{Cmd: "cmd1 posthook", Timeout: 42 * time.Minute}}}
 				mgr.On("GetGroup", mock.Anything, "group1").Once().Return(group1, nil)
 
 				expResources := []model.Resource{{ID: "resource1", GroupID: "group1"}}
@@ -166,8 +185,8 @@ func TestManagerApply(t *testing.T) {
 			},
 			mock: func(mrm *managemock.ResourceManager, mgr *storagemock.GroupRepository, mcr *hookmock.CmdRunner) {
 				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{
-					Pre:  &model.GroupHookSpec{Cmd: []string{"cmd1", "prehook"}, Timeout: 42 * time.Minute},
-					Post: &model.GroupHookSpec{Cmd: []string{"cmd2", "posthook"}, Timeout: 42 * time.Minute},
+					Pre:  &model.GroupHookSpec{Cmd: "cmd1 prehook", Timeout: 42 * time.Minute},
+					Post: &model.GroupHookSpec{Cmd: "cmd2 posthook", Timeout: 42 * time.Minute},
 				}}
 				mgr.On("GetGroup", mock.Anything, "group1").Once().Return(group1, nil)
 
@@ -196,14 +215,14 @@ func TestManagerApply(t *testing.T) {
 			},
 			mock: func(mrm *managemock.ResourceManager, mgr *storagemock.GroupRepository, mcr *hookmock.CmdRunner) {
 				group1 := &model.Group{ID: "group1", Hooks: model.GroupHooks{
-					Pre:  &model.GroupHookSpec{Cmd: []string{"cmd1", "prehook"}, Timeout: 1 * time.Minute},
-					Post: &model.GroupHookSpec{Cmd: []string{"cmd2", "posthook"}, Timeout: 2 * time.Minute},
+					Pre:  &model.GroupHookSpec{Cmd: "cmd1 prehook", Timeout: 1 * time.Minute},
+					Post: &model.GroupHookSpec{Cmd: "cmd2 posthook", Timeout: 2 * time.Minute},
 				}}
 				group2 := &model.Group{ID: "group2", Hooks: model.GroupHooks{
-					Pre: &model.GroupHookSpec{Cmd: []string{"cmd3", "prehook"}, Timeout: 3 * time.Minute},
+					Pre: &model.GroupHookSpec{Cmd: "cmd3 prehook", Timeout: 3 * time.Minute},
 				}}
 				group3 := &model.Group{ID: "group3", Hooks: model.GroupHooks{
-					Post: &model.GroupHookSpec{Cmd: []string{"cmd4", "posthook"}, Timeout: 4 * time.Minute},
+					Post: &model.GroupHookSpec{Cmd: "cmd4 posthook", Timeout: 4 * time.Minute},
 				}}
 				mgr.On("GetGroup", mock.Anything, "group1").Once().Return(group1, nil)
 				mgr.On("GetGroup", mock.Anything, "group2").Once().Return(group2, nil)

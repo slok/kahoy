@@ -42,7 +42,7 @@ type GroupHooks struct {
 
 // GroupHookSpec are the hook options.
 type GroupHookSpec struct {
-	Cmd     []string
+	Cmd     string
 	Timeout time.Duration
 }
 

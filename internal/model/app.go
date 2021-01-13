@@ -33,7 +33,7 @@ type GroupHooksConfig struct {
 
 // GroupHookConfigSpec is the spec of hook configuration.
 type GroupHookConfigSpec struct {
-	Cmd     []string
+	Cmd     string
 	Timeout time.Duration
 }
 

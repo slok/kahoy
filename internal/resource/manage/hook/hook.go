@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
+	"strings"
 
 	"golang.org/x/sync/errgroup"
 
@@ -191,15 +193,30 @@ const (
 	hookPostType = "post"
 )
 
+var (
+	cmdWhitespaceRegex = regexp.MustCompile(`\s+`)
+	noopHook           = func(ctx context.Context) error { return nil }
+)
+
 func (h hookManager) createHook(group *model.Group, config *model.GroupHookSpec, hookType string) hook {
 	if config == nil || len(config.Cmd) == 0 {
-		return func(ctx context.Context) error { return nil } // Noop.
+		return noopHook
+	}
+
+	// Prepare command string.
+	// TODO(slok): Should we sanitize this on configuration load?.
+	sanitizedCmd := cmdWhitespaceRegex.ReplaceAllString(config.Cmd, " ")
+	sanitizedCmd = strings.Trim(sanitizedCmd, " ")
+	splitCmd := strings.Split(sanitizedCmd, " ")
+	if len(splitCmd) < 1 {
+		h.logger.Errorf("%q is an empty hook command, ignoring", config.Cmd)
+		return noopHook
 	}
 
 	logger := h.logger.WithValues(log.Kv{
 		"group":     group.ID,
 		"hook-type": hookType,
-		"hook-cmd":  config.Cmd[0],
+		"hook-cmd":  splitCmd[0],
 	})
 
 	return func(ctx context.Context) error {
@@ -213,7 +230,7 @@ func (h hookManager) createHook(group *model.Group, config *model.GroupHookSpec,
 		}
 
 		// Prepare command.
-		cmd := exec.CommandContext(ctx, config.Cmd[0], config.Cmd[1:]...)
+		cmd := exec.CommandContext(ctx, splitCmd[0], splitCmd[1:]...)
 		out, err := h.cmdRunner.CombinedOutputPipe(cmd)
 		if err != nil {
 			return err
