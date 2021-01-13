@@ -46,15 +46,11 @@ groups:
     priority: 50
     hooks:
       pre:
-        cmd: [cmd1]
+        cmd: cmd1
 
       post:
         timeout: 15s
-        cmd:
-          - cmd2
-          - --arg1=value1
-          - --arg2
-          - value2
+        cmd: cmd2 --arg1=value1 --arg2 value2
 `,
 			expConfig: model.AppConfig{
 				Fs: model.FsConfig{
@@ -72,11 +68,11 @@ groups:
 						Priority: intVal(50),
 						HooksConfig: model.GroupHooksConfig{
 							Pre: &model.GroupHookConfigSpec{
-								Cmd:     []string{"cmd1"},
+								Cmd:     "cmd1",
 								Timeout: 0,
 							},
 							Post: &model.GroupHookConfigSpec{
-								Cmd:     []string{"cmd2", "--arg1=value1", "--arg2", "value2"},
+								Cmd:     "cmd2 --arg1=value1 --arg2 value2",
 								Timeout: 15 * time.Second,
 							},
 						},
@@ -94,7 +90,7 @@ groups:
     hooks:
       pre:
         timeout: wrong
-        cmd: [cmd1]
+        cmd: cmd1
 `,
 			expErr: true,
 		},

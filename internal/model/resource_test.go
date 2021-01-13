@@ -237,8 +237,8 @@ func TestTestResourceAndGroupFactoryNewGroup(t *testing.T) {
 			config: model.GroupConfig{
 				Priority: &fourtyTwo,
 				HooksConfig: model.GroupHooksConfig{
-					Pre:  &model.GroupHookConfigSpec{Cmd: []string{"cmd1"}, Timeout: 555 * time.Millisecond},
-					Post: &model.GroupHookConfigSpec{Cmd: []string{"cmd2"}, Timeout: 444 * time.Millisecond},
+					Pre:  &model.GroupHookConfigSpec{Cmd: "cmd1", Timeout: 555 * time.Millisecond},
+					Post: &model.GroupHookConfigSpec{Cmd: "cmd2", Timeout: 444 * time.Millisecond},
 				},
 			},
 			expGroup: model.Group{
@@ -246,8 +246,8 @@ func TestTestResourceAndGroupFactoryNewGroup(t *testing.T) {
 				Path:     "tests/test1",
 				Priority: 42,
 				Hooks: model.GroupHooks{
-					Pre:  &model.GroupHookSpec{Cmd: []string{"cmd1"}, Timeout: 555 * time.Millisecond},
-					Post: &model.GroupHookSpec{Cmd: []string{"cmd2"}, Timeout: 444 * time.Millisecond},
+					Pre:  &model.GroupHookSpec{Cmd: "cmd1", Timeout: 555 * time.Millisecond},
+					Post: &model.GroupHookSpec{Cmd: "cmd2", Timeout: 444 * time.Millisecond},
 				},
 			},
 		},
@@ -257,8 +257,8 @@ func TestTestResourceAndGroupFactoryNewGroup(t *testing.T) {
 			path: "tests/test1",
 			config: model.GroupConfig{
 				HooksConfig: model.GroupHooksConfig{
-					Pre:  &model.GroupHookConfigSpec{Cmd: []string{"cmd1"}, Timeout: 555 * time.Millisecond},
-					Post: &model.GroupHookConfigSpec{Cmd: []string{"cmd2"}, Timeout: 444 * time.Millisecond},
+					Pre:  &model.GroupHookConfigSpec{Cmd: "cmd1", Timeout: 555 * time.Millisecond},
+					Post: &model.GroupHookConfigSpec{Cmd: "cmd2", Timeout: 444 * time.Millisecond},
 				},
 			},
 			expGroup: model.Group{
@@ -266,8 +266,8 @@ func TestTestResourceAndGroupFactoryNewGroup(t *testing.T) {
 				Path:     "tests/test1",
 				Priority: 1000,
 				Hooks: model.GroupHooks{
-					Pre:  &model.GroupHookSpec{Cmd: []string{"cmd1"}, Timeout: 555 * time.Millisecond},
-					Post: &model.GroupHookSpec{Cmd: []string{"cmd2"}, Timeout: 444 * time.Millisecond},
+					Pre:  &model.GroupHookSpec{Cmd: "cmd1", Timeout: 555 * time.Millisecond},
+					Post: &model.GroupHookSpec{Cmd: "cmd2", Timeout: 444 * time.Millisecond},
 				},
 			},
 		},

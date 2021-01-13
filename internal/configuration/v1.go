@@ -32,8 +32,8 @@ type jsonGroupV1 struct {
 }
 
 type jsonHookV1 struct {
-	Cmd     []string `json:"cmd,omitempty"`
-	Timeout string   `json:"timeout,omitempty"`
+	Cmd     string `json:"cmd,omitempty"`
+	Timeout string `json:"timeout,omitempty"`
 }
 
 func (j jsonV1) toModel() (*model.AppConfig, error) {
