@@ -12,6 +12,10 @@
 - `--only-changes` flag alias for `--include-changes`.
 - Pre and post hooks.
 
+### Changed
+
+- Use Kubernetes v1.19 as the base dependencies.
+
 ### Removed
 
 - `wait` configuration block

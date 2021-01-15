@@ -16,7 +16,7 @@ COPY . .
 RUN ./scripts/build/build.sh
 
 # Get kubectl.
-ARG KUBERNETES_VERSION="v1.18.8"
+ARG KUBERNETES_VERSION="v1.19.7"
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl && \
     chmod a+x kubectl && \
     mv kubectl /usr/bin/
