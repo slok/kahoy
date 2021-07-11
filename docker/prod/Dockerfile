@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine as build-stage
+FROM golang:1.16-alpine as build-stage
 
 RUN apk --no-cache add \
     g++ \
@@ -16,7 +16,7 @@ COPY . .
 RUN ./scripts/build/build.sh
 
 # Get kubectl.
-ARG KUBERNETES_VERSION="v1.19.7"
+ARG KUBERNETES_VERSION="v1.21.2"
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl && \
     chmod a+x kubectl && \
     mv kubectl /usr/bin/

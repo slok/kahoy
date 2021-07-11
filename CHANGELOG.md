@@ -14,7 +14,7 @@
 
 ### Changed
 
-- Use Kubernetes v1.19 as the base dependencies.
+- Use Kubernetes v1.21 as the base dependencies.
 
 ### Removed
 
