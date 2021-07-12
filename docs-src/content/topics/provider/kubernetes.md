@@ -57,3 +57,17 @@ In the strange case that you want to reset Kahoy state, you can do it by removin
 ```bash
 kubectl -n {STORAGE_NAMESPACE} delete secrets -l 'kahoy.slok.dev/storage-id={STORAGE_ID}'
 ```
+
+## Get the state of a resource
+
+Identify the resource:
+
+```bash
+kubectl -n {STORAGE_NAMESPACE} get secrets -l 'kahoy.slok.dev/storage-id={STORAGE_ID}' -o jsonpath='{range .items[*]}{.metadata.name} {.metadata.annotations}{"\n"}{end}' | grep dex-config
+```
+
+Get the ID and fetch from Kubernetes.
+
+```bash
+kubectl -n {STORAGE_NAMESPACE} get secrets {GOT_ID} -o jsonpath='{.data.raw}' | base64 -d | gzip -d
+```
