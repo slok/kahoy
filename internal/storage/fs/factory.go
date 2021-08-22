@@ -16,7 +16,7 @@ type ResourceGroupRepository interface {
 	storage.GroupRepository
 }
 
-// RepositoriesConfig is the configuration for NewRepositories
+// RepositoriesConfig is the configuration for NewRepositories.
 type RepositoriesConfig struct {
 	Ctx               context.Context
 	StdIn             io.Reader

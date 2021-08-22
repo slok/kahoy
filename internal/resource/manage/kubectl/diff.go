@@ -248,7 +248,7 @@ func (d diffManager) Delete(ctx context.Context, resources []model.Resource) err
 			return fmt.Errorf("could not write in file: %w", err)
 		}
 
-		// Create a diff commmand with the 2nd file as empty and execute.
+		// Create a diff command with the 2nd file as empty and execute.
 		var errOut bytes.Buffer
 		cmdBin, cmdArgs := getDeleteDiffCommand(filePath)
 		cmd := exec.CommandContext(ctx, cmdBin, cmdArgs...)

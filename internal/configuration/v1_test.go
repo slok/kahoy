@@ -21,12 +21,12 @@ func TestYAMLV1(t *testing.T) {
 		expConfig model.AppConfig
 		expErr    bool
 	}{
-		"Invalid YAML sould error.": {
+		"Invalid YAML should error.": {
 			data:   `()`,
 			expErr: true,
 		},
 
-		"Invalid config version sould error.": {
+		"Invalid config version should error.": {
 			data:   `version: v2`,
 			expErr: true,
 		},

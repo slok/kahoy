@@ -94,7 +94,7 @@ type hookManager struct {
 	logger      log.Logger
 }
 
-// NewManager returns a manager that knows how to execute hooks `Apply`
+// NewManager returns a manager that knows how to execute hooks `Apply`.
 func NewManager(config ManagerConfig) (manage.ResourceManager, error) {
 	err := config.defaults()
 	if err != nil {

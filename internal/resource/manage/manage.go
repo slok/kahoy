@@ -19,7 +19,7 @@ type noopManager struct {
 	logger log.Logger
 }
 
-// NewNoopManager returns a resource manager that noops the operations and logs them
+// NewNoopManager returns a resource manager that noops the operations and logs them.
 func NewNoopManager(logger log.Logger) ResourceManager {
 	return noopManager{
 		logger: logger.WithValues(log.Kv{"app-svc": "resource.NoopManager"}),

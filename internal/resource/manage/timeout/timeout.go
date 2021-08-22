@@ -10,15 +10,15 @@ import (
 	"github.com/slok/kahoy/internal/resource/manage"
 )
 
-// TimeoutManagerConfig is the configuration of the timeout resource manager.
-type TimeoutManagerConfig struct {
+// ManagerConfig is the configuration of the timeout resource manager.
+type ManagerConfig struct {
 	Timeout time.Duration
 	// Manager is the original manager use resourced to apply and delete.
 	Manager manage.ResourceManager
 	Logger  log.Logger
 }
 
-func (c *TimeoutManagerConfig) defaults() error {
+func (c *ManagerConfig) defaults() error {
 	if c.Manager == nil {
 		return fmt.Errorf("manager is required")
 	}
@@ -35,9 +35,9 @@ func (c *TimeoutManagerConfig) defaults() error {
 	return nil
 }
 
-// NewTimeoutManager wraps the application resource manager ensuring that the
+// NewManager wraps the application resource manager ensuring that the
 // executions to either apply or delete resources has timeouts.
-func NewTimeoutManager(config TimeoutManagerConfig) (manage.ResourceManager, error) {
+func NewManager(config ManagerConfig) (manage.ResourceManager, error) {
 	err := config.defaults()
 	if err != nil {
 		return nil, fmt.Errorf("invalid timeout manager configuration: %w", err)

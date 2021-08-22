@@ -34,7 +34,7 @@ const (
 	ApplyProviderK8s   = "kubernetes"
 )
 
-// CmdConfig is the configuration of the command
+// CmdConfig is the configuration of the command.
 type CmdConfig struct {
 	// Command is the loaded command.
 	Command string
@@ -77,7 +77,7 @@ type CmdConfig struct {
 	}
 }
 
-// NewCmdConfig returns the application
+// NewCmdConfig returns the application.
 func NewCmdConfig(args []string) (*CmdConfig, error) {
 	kubeHome := filepath.Join(homedir.HomeDir(), ".kube", "config")
 

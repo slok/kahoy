@@ -13,8 +13,8 @@ import (
 	"github.com/slok/kahoy/internal/resource/process"
 )
 
-func newResource(kAPIVersion, kType, ns, name string) model.Resource {
-	return newCustomResource(kAPIVersion, kType, ns, name, nil, nil)
+func newResource(kubeAPIVersion, kubeType, ns, name string) model.Resource {
+	return newCustomResource(kubeAPIVersion, kubeType, ns, name, nil, nil)
 }
 
 func newLabeledResource(name string, labels map[string]string) model.Resource {
@@ -25,7 +25,7 @@ func newAnnotatedResource(name string, annotations map[string]string) model.Reso
 	return newCustomResource("v1", "Pod", "testns", name, nil, annotations)
 }
 
-func newCustomResource(kAPIVersion, kType, ns, name string, labels, annotations map[string]string) model.Resource {
+func newCustomResource(kubeAPIVersion, kubeType, ns, name string, labels, annotations map[string]string) model.Resource {
 	type tm = map[string]interface{}
 
 	objAnnotations := tm{}
@@ -40,8 +40,8 @@ func newCustomResource(kAPIVersion, kType, ns, name string, labels, annotations 
 		ID: name,
 		K8sObject: &unstructured.Unstructured{
 			Object: tm{
-				"apiVersion": kAPIVersion,
-				"kind":       kType,
+				"apiVersion": kubeAPIVersion,
+				"kind":       kubeType,
 				"metadata": tm{
 					"name":        name,
 					"namespace":   ns,

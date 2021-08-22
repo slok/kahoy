@@ -13,7 +13,7 @@ import (
 	"github.com/slok/kahoy/internal/storage/report"
 )
 
-func newCustomResource(kAPIVersion, kType, ns, name, group string) model.Resource {
+func newCustomResource(kubeAPIVersion, kubeType, ns, name, group string) model.Resource {
 	type tm = map[string]interface{}
 
 	return model.Resource{
@@ -21,8 +21,8 @@ func newCustomResource(kAPIVersion, kType, ns, name, group string) model.Resourc
 		GroupID: group,
 		K8sObject: &unstructured.Unstructured{
 			Object: tm{
-				"apiVersion": kAPIVersion,
-				"kind":       kType,
+				"apiVersion": kubeAPIVersion,
+				"kind":       kubeType,
 				"metadata": tm{
 					"name":      name,
 					"namespace": ns,

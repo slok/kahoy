@@ -13,7 +13,7 @@ import (
 type ResourceState int
 
 const (
-	// ResourceStateUnknown represents an unknown state
+	// ResourceStateUnknown represents an unknown state.
 	ResourceStateUnknown ResourceState = iota
 	// ResourceStateExists represents a state where the resource should exists.
 	ResourceStateExists
