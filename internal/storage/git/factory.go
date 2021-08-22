@@ -22,7 +22,7 @@ const (
 	gitClonesRemoteName = "origin"
 )
 
-// RepositoriesConfig is the configuration for NewRepositories
+// RepositoriesConfig is the configuration for NewRepositories.
 type RepositoriesConfig struct {
 	ExcludeRegex      []string
 	IncludeRegex      []string
@@ -36,7 +36,7 @@ type RepositoriesConfig struct {
 	// GitBeforeCommitSHA Used to set the Git old repo state.
 	// If empty it will use merge-base to get the common ancestor
 	// of HEAD.
-	// If we are on the default branch this will be neccesary.
+	// If we are on the default branch this will be necessary.
 	GitBeforeCommitSHA string
 	// GitDefaultBranch is the base branch that will be used when no GitBeforeCommitSHA setting is passed.
 	// This branch will be the one used against HEAD to get the common parent commit  by using merge-base.

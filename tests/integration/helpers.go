@@ -69,7 +69,7 @@ func GetIntegrationConfig(ctx context.Context) (*Config, error) {
 
 // NewKubernetesClient returns a new client.
 func NewKubernetesClient(ctx context.Context, config Config) (kubernetes.Interface, error) {
-	kConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+	kubeConfig, err := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		&clientcmd.ClientConfigLoadingRules{
 			ExplicitPath: config.KubeConfig,
 		},
@@ -83,7 +83,7 @@ func NewKubernetesClient(ctx context.Context, config Config) (kubernetes.Interfa
 		return nil, fmt.Errorf("could not load Kubernetes configuration: %w", err)
 	}
 
-	cli, err := kubernetes.NewForConfig(kConfig)
+	cli, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not create client-go kubernetes client: %w", err)
 	}

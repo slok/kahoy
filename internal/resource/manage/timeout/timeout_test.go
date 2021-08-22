@@ -15,7 +15,7 @@ import (
 
 func TestTimeoutManagerApply(t *testing.T) {
 	tests := map[string]struct {
-		config  timeout.TimeoutManagerConfig
+		config  timeout.ManagerConfig
 		manager manage.ResourceManager
 		expErr  bool
 	}{
@@ -24,7 +24,7 @@ func TestTimeoutManagerApply(t *testing.T) {
 		},
 
 		"If Apply takes longer than timeout, apply should fail.": {
-			config: timeout.TimeoutManagerConfig{
+			config: timeout.ManagerConfig{
 				Timeout: 1 * time.Nanosecond,
 			},
 			manager: testManager{},
@@ -39,7 +39,7 @@ func TestTimeoutManagerApply(t *testing.T) {
 
 			// Execute.
 			test.config.Manager = test.manager
-			manager, err := timeout.NewTimeoutManager(test.config)
+			manager, err := timeout.NewManager(test.config)
 			require.NoError(err)
 
 			err = manager.Apply(context.Background(), []model.Resource{})
@@ -56,7 +56,7 @@ func TestTimeoutManagerApply(t *testing.T) {
 
 func TestTimeoutManagerDelete(t *testing.T) {
 	tests := map[string]struct {
-		config  timeout.TimeoutManagerConfig
+		config  timeout.ManagerConfig
 		manager manage.ResourceManager
 		expErr  bool
 	}{
@@ -65,7 +65,7 @@ func TestTimeoutManagerDelete(t *testing.T) {
 		},
 
 		"If Delete takes longer than timeout, apply should fail.": {
-			config: timeout.TimeoutManagerConfig{
+			config: timeout.ManagerConfig{
 				Timeout: 1 * time.Nanosecond,
 			},
 			manager: testManager{},
@@ -80,7 +80,7 @@ func TestTimeoutManagerDelete(t *testing.T) {
 
 			// Execute.
 			test.config.Manager = test.manager
-			manager, err := timeout.NewTimeoutManager(test.config)
+			manager, err := timeout.NewManager(test.config)
 			require.NoError(err)
 
 			err = manager.Delete(context.Background(), []model.Resource{})
@@ -96,13 +96,13 @@ func TestTimeoutManagerDelete(t *testing.T) {
 }
 
 // testManager is a custom resource manager that handles context deadline
-// exceeded and returns nil error
+// exceeded and returns nil error.
 type testManager struct{}
 
 // Delete provides a mock function with given fields: ctx, resources and also
-// handles context done
+// handles context done.
 func (n testManager) Apply(ctx context.Context, resources []model.Resource) error {
-	// Handle context deadline before noop
+	// Handle context deadline before noop.
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -112,9 +112,9 @@ func (n testManager) Apply(ctx context.Context, resources []model.Resource) erro
 }
 
 // Delete provides a mock function with given fields: ctx, resources and also
-// handles context done
+// handles context done.
 func (n testManager) Delete(ctx context.Context, resources []model.Resource) error {
-	// Handle context deadline before noop
+	// Handle context deadline before noop.
 	select {
 	case <-ctx.Done():
 		return ctx.Err()

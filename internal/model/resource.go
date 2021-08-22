@@ -18,7 +18,7 @@ type K8sObject interface {
 	metav1.Object
 }
 
-// Resource representes a resource.
+// Resource represents a resource.
 type Resource struct {
 	ID           string
 	GroupID      string

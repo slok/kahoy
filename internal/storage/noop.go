@@ -11,7 +11,7 @@ type noopStateRepository struct {
 	logger log.Logger
 }
 
-// NewNoopStateRepository returns a new NOOP state repository
+// NewNoopStateRepository returns a new NOOP state repository.
 func NewNoopStateRepository(logger log.Logger) StateRepository {
 	return noopStateRepository{
 		logger: logger.WithValues(log.Kv{"app-svc": "storage.noopStateRepository"}),

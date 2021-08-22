@@ -279,7 +279,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 
 	// Wrap resource manager with timeout manager if timeout is properly set
 	if cmdConfig.Apply.ExecutionTimeout != 0 {
-		manager, err = manageTimeout.NewTimeoutManager(manageTimeout.TimeoutManagerConfig{
+		manager, err = manageTimeout.NewManager(manageTimeout.ManagerConfig{
 			Timeout: cmdConfig.Apply.ExecutionTimeout,
 			Manager: manager,
 			Logger:  logger,
@@ -314,7 +314,7 @@ func RunApply(ctx context.Context, cmdConfig CmdConfig, globalConfig GlobalConfi
 		}
 	}
 
-	// Ask for confirmation
+	// Ask for confirmation.
 	if !cmdConfig.Apply.DryRun && !cmdConfig.Apply.DiffMode && !cmdConfig.Apply.AutoApprove {
 		proceed, err := askYesNo(globalConfig.Stdout, globalConfig.Stdin)
 		if err != nil {
@@ -404,7 +404,7 @@ func newResourceProcessor(cmdConfig CmdConfig, logger log.Logger) (resourceproce
 }
 
 // askYesNo prompts the user with a dialog to ask whether wants to proceed
-// or not
+// or not.
 func askYesNo(writer io.Writer, reader io.Reader) (bool, error) {
 	var s string
 
